@@ -89,23 +89,36 @@ export class NoteService {
     if (description.includes("Microsoft Teams meeting") || 
         description.includes("________________________________________________________________________________")) {
       
-      // Remove common Teams boilerplate
-      return description
-        // Remove the lines with just underscores
-        .replace(/_{2,}/g, '')
-        // Remove the "Click here to join" lines
-        .replace(/Click here to join.*\n?/g, '')
-        // Remove Microsoft Teams meeting join links
-        .replace(/https:\/\/teams\.microsoft\.com\/l\/meetup-join\/.*\n?/g, '')
-        // Remove the standard Teams footer
-        .replace(/(?:Join with a video conferencing device|Join on your computer.*|Meeting options.*)\n?.*/gs, '')
-        // Remove phone numbers and conference IDs
-        .replace(/(?:\+[0-9]{1,}[\s\d]*(?:\([0-9]+\))?[\s\d]*)+/g, '')
-        .replace(/Conference ID:[\s\d]+/g, '')
-        // Remove empty lines at start and end
-        .trim()
-        // Remove multiple consecutive empty lines
-        .replace(/\n{3,}/g, '\n\n');
+      let cleanedDesc = "";
+      
+      // Extract Teams meeting link
+      const joinLinkMatch = description.match(/https:\/\/teams\.microsoft\.com\/l\/meetup-join\/[^\s\n]*/);
+      if (joinLinkMatch) {
+        cleanedDesc += `[Join the meeting now](${joinLinkMatch[0]})\n\n`;
+      }
+
+      // Extract meeting ID if present (common format: Meeting ID: 123 456 789)
+      const meetingIdMatch = description.match(/Meeting ID:?\s*(\d[\d\s]+)/i);
+      if (meetingIdMatch) {
+        cleanedDesc += `Meeting ID: ${meetingIdMatch[1].trim()}\n`;
+      }
+
+      // Extract passcode if present (various formats)
+      const passcodeMatch = description.match(/(?:Passcode|Password|Security code):?\s*([^\s\n]+)/i);
+      if (passcodeMatch) {
+        cleanedDesc += `Passcode: ${passcodeMatch[1].trim()}\n`;
+      }
+
+      // Extract dial-in numbers (only take the first one for brevity)
+      const dialInMatch = description.match(/(?:\+\d{1,}[\d\s\-()]+)(?=\n|$)/);
+      if (dialInMatch) {
+        cleanedDesc += `\nDial in: ${dialInMatch[0].trim()}`;
+      }
+
+      // If we found any content, return it, otherwise return original cleaned description
+      if (cleanedDesc) {
+        return cleanedDesc.trim();
+      }
     }
     
     return description;
