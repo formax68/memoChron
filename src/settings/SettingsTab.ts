@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TextComponent } from "obsidian";
+import { App, PluginSettingTab, Setting, TextComponent, TextAreaComponent } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
 
@@ -26,6 +26,7 @@ export class SettingsTab extends PluginSettingTab {
             url: "",
             name: "New Calendar",
             enabled: true,
+            tags: [] // Initialize with empty tags array
           });
           await this.plugin.saveSettings();
           this.display();
@@ -53,6 +54,18 @@ export class SettingsTab extends PluginSettingTab {
             .setValue(source.name)
             .onChange(async (value) => {
               this.plugin.settings.calendarUrls[index].name = value;
+              await this.plugin.saveSettings();
+            })
+        )
+        .addText((text) =>
+          text
+            .setPlaceholder("Tags (comma-separated)")
+            .setValue(source.tags?.join(", ") || "")
+            .onChange(async (value) => {
+              this.plugin.settings.calendarUrls[index].tags = value
+                .split(",")
+                .map((tag) => tag.trim())
+                .filter((tag) => tag.length > 0);
               await this.plugin.saveSettings();
             })
         )
@@ -155,6 +168,57 @@ export class SettingsTab extends PluginSettingTab {
           .setValue(this.plugin.settings.noteDateFormat)
           .onChange(async (value) => {
             this.plugin.settings.noteDateFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Event Details Template
+    new Setting(containerEl)
+      .setName("Event Details Template")
+      .setDesc(
+        "Template for event details section. Available variables: {{title}}, {{date}}, {{startTime}}, {{endTime}}, {{description}}, {{location}}, {{source}}"
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}")
+          .setValue(this.plugin.settings.eventDetailsTemplate)
+          .onChange(async (value) => {
+            this.plugin.settings.eventDetailsTemplate = value;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 4;
+        text.inputEl.cols = 50;
+      });
+
+    // Default Frontmatter
+    new Setting(containerEl)
+      .setName("Default Frontmatter")
+      .setDesc("YAML frontmatter to add at the top of each event note")
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("---\ntype: event\nstatus: scheduled\n---")
+          .setValue(this.plugin.settings.defaultFrontmatter)
+          .onChange(async (value) => {
+            this.plugin.settings.defaultFrontmatter = value;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 4;
+        text.inputEl.cols = 50;
+      });
+
+    // Default Tags
+    new Setting(containerEl)
+      .setName("Default Tags")
+      .setDesc("Default tags for all event notes (comma-separated)")
+      .addText((text) =>
+        text
+          .setPlaceholder("event, meeting")
+          .setValue(this.plugin.settings.defaultTags.join(", "))
+          .onChange(async (value) => {
+            this.plugin.settings.defaultTags = value
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
             await this.plugin.saveSettings();
           })
       );

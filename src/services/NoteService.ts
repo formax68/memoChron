@@ -139,14 +139,17 @@ export class NoteService {
   }
 
   private getDefaultTemplate(): string {
+    const frontmatter =
+      this.settings.defaultFrontmatter ||
+      "---\ntype: event\nstatus: scheduled\n---";
+
     return [
+      frontmatter,
       "# {{title}}",
       "",
       "## Event Details",
-      "- Date: {{date}}",
-      "- Time: {{startTime}} - {{endTime}}",
-      "- Calendar: {{source}}",
-      "{{#if location}}- Location: {{location}}{{/if}}",
+      this.settings.eventDetailsTemplate ||
+        "- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}\n- Calendar: {{source}}\n{{#if location}}- Location: {{location}}{{/if}}",
       "",
       "## Description",
       "{{description}}",
@@ -154,6 +157,22 @@ export class NoteService {
       "## Notes",
       "",
     ].join("\n");
+  }
+
+  private getTagsForEvent(event: CalendarEvent): string[] {
+    // Start with default tags
+    const tags = [...(this.settings.defaultTags || [])];
+
+    // Add calendar-specific tags if they exist
+    const calendarSource = this.settings.calendarUrls.find(
+      (cal) => cal.name === event.source
+    );
+    if (calendarSource?.tags) {
+      tags.push(...calendarSource.tags);
+    }
+
+    // Remove duplicates and return
+    return [...new Set(tags)];
   }
 
   private formatTitle(format: string, event: CalendarEvent): string {
@@ -204,8 +223,14 @@ export class NoteService {
     const cleanedDescription = this.cleanTeamsDescription(
       event.description || ""
     );
+    const tags = this.getTagsForEvent(event);
 
-    return template
+    // Format tags in YAML style with each tag on a new line
+    const tagsYaml = tags.length > 0
+      ? "tags:\n" + tags.map(tag => `  - ${tag}`).join("\n")
+      : "";
+
+    let content = template
       .replace(/{{title}}/g, event.title)
       .replace(/{{date}}/g, dateStr)
       .replace(/{{startTime}}/g, startTime)
@@ -216,6 +241,19 @@ export class NoteService {
       .replace(/{{#if location}}(.*?){{\/if}}/g, (_, content) =>
         event.location ? content : ""
       );
+
+    // Insert tags into frontmatter before the closing marker
+    if (tags.length > 0) {
+      const frontmatterEnd = content.indexOf("---", 4);
+      if (frontmatterEnd !== -1) {
+        content =
+          content.slice(0, frontmatterEnd) +
+          "\n" + tagsYaml + "\n" +
+          content.slice(frontmatterEnd);
+      }
+    }
+
+    return content;
   }
 
   private async ensureFolderExists(path: string): Promise<void> {

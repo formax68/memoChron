@@ -4,6 +4,7 @@ export interface CalendarSource {
   url: string;
   name: string;
   enabled: boolean;
+  tags: string[];
 }
 
 export interface MemoChronSettings {
@@ -14,6 +15,9 @@ export interface MemoChronSettings {
   refreshInterval: number;
   defaultView: "month" | "week";
   noteDateFormat: string;
+  eventDetailsTemplate: string;
+  defaultFrontmatter: string;
+  defaultTags: string[];
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -23,5 +27,8 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   noteTitleFormat: "{{date}} - {{event_title}}",
   refreshInterval: 30,
   defaultView: "month",
-  noteDateFormat: "ISO", // Default to ISO format
+  noteDateFormat: "ISO",
+  eventDetailsTemplate: "- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}\n- Calendar: {{source}}\n{{#if location}}- Location: {{location}}{{/if}}",
+  defaultFrontmatter: "---\ntype: event\nstatus: scheduled\n---",
+  defaultTags: ["event", "meeting"]
 };
