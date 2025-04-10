@@ -28,7 +28,8 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   refreshInterval: 30,
   defaultView: "month",
   noteDateFormat: "ISO",
-  eventDetailsTemplate: "- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}\n- Calendar: {{source}}\n{{#if location}}- Location: {{location}}{{/if}}",
+  eventDetailsTemplate:
+    "- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}\n- Calendar: {{source}}\n{{#if location}}- Location: {{location}}{{/if}}",
   defaultFrontmatter: "---\ntype: event\nstatus: scheduled\n---",
-  defaultTags: ["event", "meeting"]
+  defaultTags: ["event", "meeting"],
 };

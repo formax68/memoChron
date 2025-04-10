@@ -226,9 +226,10 @@ export class NoteService {
     const tags = this.getTagsForEvent(event);
 
     // Format tags in YAML style with each tag on a new line
-    const tagsYaml = tags.length > 0
-      ? "tags:\n" + tags.map(tag => `  - ${tag}`).join("\n")
-      : "";
+    const tagsYaml =
+      tags.length > 0
+        ? "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n")
+        : "";
 
     let content = template
       .replace(/{{title}}/g, event.title)
@@ -248,7 +249,9 @@ export class NoteService {
       if (frontmatterEnd !== -1) {
         content =
           content.slice(0, frontmatterEnd) +
-          "\n" + tagsYaml + "\n" +
+          "\n" +
+          tagsYaml +
+          "\n" +
           content.slice(frontmatterEnd);
       }
     }

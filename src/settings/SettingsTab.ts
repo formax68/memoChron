@@ -1,4 +1,10 @@
-import { App, PluginSettingTab, Setting, TextComponent, TextAreaComponent } from "obsidian";
+import {
+  App,
+  PluginSettingTab,
+  Setting,
+  TextComponent,
+  TextAreaComponent,
+} from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
 
@@ -26,7 +32,7 @@ export class SettingsTab extends PluginSettingTab {
             url: "",
             name: "New Calendar",
             enabled: true,
-            tags: [] // Initialize with empty tags array
+            tags: [], // Initialize with empty tags array
           });
           await this.plugin.saveSettings();
           this.display();
@@ -180,7 +186,9 @@ export class SettingsTab extends PluginSettingTab {
       )
       .addTextArea((text) => {
         text
-          .setPlaceholder("- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}")
+          .setPlaceholder(
+            "- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}"
+          )
           .setValue(this.plugin.settings.eventDetailsTemplate)
           .onChange(async (value) => {
             this.plugin.settings.eventDetailsTemplate = value;
