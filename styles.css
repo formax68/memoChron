@@ -220,3 +220,37 @@ If your plugin does not need CSS, delete this file.
 .memochron-calendar-list .setting-item:last-child {
   border-bottom: none;
 }
+
+.setting-item {
+  position: relative;
+}
+
+.suggestion-container {
+  position: absolute;
+  z-index: 1000;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px var(--background-modifier-box-shadow);
+  max-height: 200px;
+  overflow-y: auto;
+  width: var(--input-width);
+  top: 100%;
+  margin-top: 4px;
+}
+
+.suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.suggestion-list li {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.suggestion-list li:hover {
+  background: var(--background-modifier-hover);
+}

@@ -1,4 +1,4 @@
-import { App, TFile, normalizePath } from "obsidian";
+import { App, TFile, normalizePath, TFolder, TAbstractFile, getAllTags } from "obsidian";
 import { CalendarEvent } from "./CalendarService";
 import { MemoChronSettings } from "../settings/types";
 
@@ -9,22 +9,22 @@ export class NoteService {
     const { vault } = this.app;
     const { templatePath, noteLocation, noteTitleFormat } = this.settings;
 
-    // Generate note title and path
+    // Clean up note location path
+    const normalizedLocation = normalizePath(noteLocation);
+    
+    // Generate the file name and full path
     const fileName = this.formatTitle(noteTitleFormat, event);
-    const fullPath = normalizePath(`${noteLocation}/${fileName}.md`);
+    const fullPath = normalizePath(`${normalizedLocation}/${fileName}.md`);
 
-    // Get template content
     const template = await this.getTemplate(templatePath);
-
-    // Replace template variables
     const noteContent = this.populateTemplate(template, event);
 
-    // Create note
     try {
-      // Create folders if they don't exist
-      await this.ensureFolderExists(noteLocation);
-
-      // Create or update note
+      // Ensure folder exists before creating note
+      if (normalizedLocation !== '/') {
+        await this.ensureFolderExists(normalizedLocation);
+      }
+      
       let file = vault.getAbstractFileByPath(fullPath);
       if (file instanceof TFile) {
         await vault.modify(file, noteContent);
@@ -36,6 +36,35 @@ export class NoteService {
       console.error("Error creating note:", error);
       throw error;
     }
+  }
+
+  async getAllTemplatePaths(): Promise<string[]> {
+    const files = this.app.vault.getFiles();
+    return files
+      .filter(file => file.extension === 'md')
+      .map(file => file.path);
+  }
+
+  async getAllFolders(): Promise<string[]> {
+    const folders = new Set<string>(['/']);
+    
+    const processFolder = (folder: TFolder) => {
+      folders.add(folder.path);
+      folder.children.forEach(child => {
+        if (child instanceof TFolder) {
+          processFolder(child);
+        }
+      });
+    };
+
+    this.app.vault.getAllLoadedFiles().forEach(file => {
+      if (file instanceof TFolder) {
+        processFolder(file);
+      }
+    });
+
+    // Convert Set to array and sort for consistent ordering
+    return Array.from(folders).sort((a, b) => a.localeCompare(b));
   }
 
   private async getTemplate(templatePath: string): Promise<string> {
@@ -51,6 +80,35 @@ export class NoteService {
     }
 
     return this.getDefaultTemplate();
+  }
+
+  private cleanTeamsDescription(description: string): string {
+    if (!description) return "";
+    
+    // Check if it's a Teams meeting description
+    if (description.includes("Microsoft Teams meeting") || 
+        description.includes("________________________________________________________________________________")) {
+      
+      // Remove common Teams boilerplate
+      return description
+        // Remove the lines with just underscores
+        .replace(/_{2,}/g, '')
+        // Remove the "Click here to join" lines
+        .replace(/Click here to join.*\n?/g, '')
+        // Remove Microsoft Teams meeting join links
+        .replace(/https:\/\/teams\.microsoft\.com\/l\/meetup-join\/.*\n?/g, '')
+        // Remove the standard Teams footer
+        .replace(/(?:Join with a video conferencing device|Join on your computer.*|Meeting options.*)\n?.*/gs, '')
+        // Remove phone numbers and conference IDs
+        .replace(/(?:\+[0-9]{1,}[\s\d]*(?:\([0-9]+\))?[\s\d]*)+/g, '')
+        .replace(/Conference ID:[\s\d]+/g, '')
+        // Remove empty lines at start and end
+        .trim()
+        // Remove multiple consecutive empty lines
+        .replace(/\n{3,}/g, '\n\n');
+    }
+    
+    return description;
   }
 
   private getDefaultTemplate(): string {
@@ -83,13 +141,14 @@ export class NoteService {
     const dateStr = event.start.toLocaleDateString();
     const startTime = event.start.toLocaleTimeString();
     const endTime = event.end.toLocaleTimeString();
+    const cleanedDescription = this.cleanTeamsDescription(event.description || "");
 
     return template
       .replace(/{{title}}/g, event.title)
       .replace(/{{date}}/g, dateStr)
       .replace(/{{startTime}}/g, startTime)
       .replace(/{{endTime}}/g, endTime)
-      .replace(/{{description}}/g, event.description || "")
+      .replace(/{{description}}/g, cleanedDescription)
       .replace(/{{location}}/g, event.location || "")
       .replace(/{{source}}/g, event.source)
       .replace(/{{#if location}}(.*?){{\/if}}/g, (_, content) =>
@@ -99,13 +158,29 @@ export class NoteService {
 
   private async ensureFolderExists(path: string): Promise<void> {
     const { vault } = this.app;
-    const folders = path.split("/").filter((p) => p.length);
-
+    
+    // Split the path into folder segments and filter out empty ones
+    const folders = path.split("/").filter(p => p.length);
+    
+    // Build the path incrementally
     let currentPath = "";
     for (const folder of folders) {
-      currentPath += "/" + folder;
-      if (!vault.getAbstractFileByPath(currentPath)) {
-        await vault.createFolder(currentPath);
+      currentPath = currentPath ? `${currentPath}/${folder}` : folder;
+      
+      // Check if folder exists
+      const existing = vault.getAbstractFileByPath(currentPath);
+      if (!existing) {
+        try {
+          await vault.createFolder(currentPath);
+        } catch (error) {
+          // If folder already exists (race condition), continue
+          if (!error.message.includes('already exists')) {
+            throw error;
+          }
+        }
+      } else if (!(existing instanceof TFolder)) {
+        // Path exists but is not a folder
+        throw new Error(`Cannot create folder '${currentPath}' because a file with that name already exists`);
       }
     }
   }

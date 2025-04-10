@@ -1,9 +1,9 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, TextComponent } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
 
 export class SettingsTab extends PluginSettingTab {
-  plugin: MemoChron;
+  private plugin: MemoChron;
 
   constructor(app: App, plugin: MemoChron) {
     super(app, plugin);
@@ -76,32 +76,57 @@ export class SettingsTab extends PluginSettingTab {
     // Note Creation Settings
     containerEl.createEl("h3", { text: "Note Settings" });
 
-    new Setting(containerEl)
+    // Template Path with suggestions
+    const templateSetting = new Setting(containerEl)
       .setName("Template File")
-      .setDesc("Path to the template file for new event notes")
-      .addText((text) =>
-        text
-          .setPlaceholder("templates/event-template.md")
-          .setValue(this.plugin.settings.templatePath)
-          .onChange(async (value) => {
-            this.plugin.settings.templatePath = value;
-            await this.plugin.saveSettings();
-          })
-      );
+      .setDesc("Path to the template file for new event notes");
 
-    new Setting(containerEl)
+    const templateInput = new TextComponent(templateSetting.controlEl);
+    templateInput
+      .setPlaceholder("templates/event-template.md")
+      .setValue(this.plugin.settings.templatePath);
+
+    const templateSuggestionContainer = templateSetting.controlEl.createDiv({
+      cls: "suggestion-container",
+    });
+    templateSuggestionContainer.style.display = "none";
+
+    this.setupPathSuggestions(
+      templateInput,
+      templateSuggestionContainer,
+      async () => await this.plugin.noteService.getAllTemplatePaths(),
+      async (value) => {
+        this.plugin.settings.templatePath = value;
+        await this.plugin.saveSettings();
+      }
+    );
+
+    // Note Location with suggestions
+    const locationSetting = new Setting(containerEl)
       .setName("Note Location")
-      .setDesc("Where to save new event notes")
-      .addText((text) =>
-        text
-          .setPlaceholder("calendar-notes/")
-          .setValue(this.plugin.settings.noteLocation)
-          .onChange(async (value) => {
-            this.plugin.settings.noteLocation = value;
-            await this.plugin.saveSettings();
-          })
-      );
+      .setDesc("Where to save new event notes");
 
+    const locationInput = new TextComponent(locationSetting.controlEl);
+    locationInput
+      .setPlaceholder("calendar-notes/")
+      .setValue(this.plugin.settings.noteLocation);
+
+    const locationSuggestionContainer = locationSetting.controlEl.createDiv({
+      cls: "suggestion-container",
+    });
+    locationSuggestionContainer.style.display = "none";
+
+    this.setupPathSuggestions(
+      locationInput,
+      locationSuggestionContainer,
+      async () => await this.plugin.noteService.getAllFolders(),
+      async (value) => {
+        this.plugin.settings.noteLocation = value;
+        await this.plugin.saveSettings();
+      }
+    );
+
+    // Note Title Format
     new Setting(containerEl)
       .setName("Note Title Format")
       .setDesc(
@@ -149,5 +174,73 @@ export class SettingsTab extends PluginSettingTab {
             }
           })
       );
+  }
+
+  private setupPathSuggestions(
+    input: TextComponent,
+    suggestionContainer: HTMLElement,
+    getSuggestions: () => Promise<string[]>,
+    onSelect: (value: string) => Promise<void>
+  ): void {
+    input.inputEl.addEventListener("focus", async () => {
+      const suggestions = await getSuggestions();
+      this.showSuggestions(
+        input,
+        suggestionContainer,
+        suggestions,
+        input.getValue(),
+        onSelect
+      );
+    });
+
+    input.inputEl.addEventListener("input", async () => {
+      const suggestions = await getSuggestions();
+      this.showSuggestions(
+        input,
+        suggestionContainer,
+        suggestions,
+        input.getValue(),
+        onSelect
+      );
+    });
+
+    input.inputEl.addEventListener("blur", () => {
+      // Small delay to allow clicking on suggestions
+      setTimeout(() => {
+        suggestionContainer.style.display = "none";
+      }, 200);
+    });
+  }
+
+  private showSuggestions(
+    input: TextComponent,
+    container: HTMLElement,
+    allSuggestions: string[],
+    query: string,
+    onSelect: (value: string) => Promise<void>
+  ): void {
+    container.empty();
+    
+    const matchingSuggestions = allSuggestions.filter((s) =>
+      s.toLowerCase().includes(query.toLowerCase())
+    );
+
+    if (matchingSuggestions.length === 0) {
+      container.style.display = "none";
+      return;
+    }
+
+    container.style.display = "block";
+    const ul = container.createEl("ul", { cls: "suggestion-list" });
+
+    matchingSuggestions.slice(0, 5).forEach((suggestion) => {
+      const li = ul.createEl("li", { text: suggestion });
+      li.addEventListener("mousedown", async (e) => {
+        e.preventDefault();
+        input.setValue(suggestion);
+        await onSelect(suggestion);
+        container.style.display = "none";
+      });
+    });
   }
 }

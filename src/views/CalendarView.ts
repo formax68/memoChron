@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 
@@ -156,10 +156,7 @@ export class CalendarView extends ItemView {
       this.currentMonthDays.set(dateString, dayEl);
 
       // Add selected class if this is the selected date
-      if (
-        this.selectedDate &&
-        dateString === this.selectedDate.toDateString()
-      ) {
+      if (this.selectedDate && dateString === this.selectedDate.toDateString()) {
         dayEl.addClass("selected");
       }
 
@@ -245,19 +242,41 @@ export class CalendarView extends ItemView {
         });
       }
 
-      eventEl.onclick = () => this.showEventDetails(event);
+      // Add clear click handler for event
+      eventEl.addEventListener("click", async (e) => {
+        e.stopPropagation(); // Prevent triggering the day click
+        try {
+          await this.showEventDetails(event);
+        } catch (error) {
+          console.error("Failed to create note:", error);
+          new Notice("Failed to create note. Check the console for details.");
+        }
+      });
     });
   }
 
   private async showEventDetails(event: CalendarEvent) {
     try {
+      // First ensure we have a note location set
+      if (!this.plugin.settings.noteLocation) {
+        new Notice("Please set a note location in settings first");
+        return;
+      }
+
       const file = await this.plugin.noteService.createEventNote(event);
+      if (!file) {
+        throw new Error("Failed to create or update note");
+      }
+
       const leaf = this.app.workspace.getLeaf("tab");
       if (leaf) {
         await leaf.openFile(file);
+      } else {
+        new Notice("Could not open the note in a new tab");
       }
     } catch (error) {
       console.error("Error showing event details:", error);
+      throw error; // Re-throw to be handled by the caller
     }
   }
 }
