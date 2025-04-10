@@ -156,7 +156,10 @@ export class CalendarView extends ItemView {
       this.currentMonthDays.set(dateString, dayEl);
 
       // Add selected class if this is the selected date
-      if (this.selectedDate && dateString === this.selectedDate.toDateString()) {
+      if (
+        this.selectedDate &&
+        dateString === this.selectedDate.toDateString()
+      ) {
         dayEl.addClass("selected");
       }
 
@@ -211,8 +214,12 @@ export class CalendarView extends ItemView {
       eventEl.createEl("div", {
         cls: "memochron-event-time",
         text: `${event.start.toLocaleTimeString([], {
-          timeStyle: "short",
-        })} - ${event.end.toLocaleTimeString([], { timeStyle: "short" })}`,
+          hour: "2-digit",
+          minute: "2-digit",
+        })} - ${event.end.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`,
       });
 
       eventEl.createEl("div", {

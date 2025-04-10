@@ -142,6 +142,23 @@ export class SettingsTab extends PluginSettingTab {
           })
       );
 
+    // Note Date Format
+    new Setting(containerEl)
+      .setName("Note Date Format")
+      .setDesc("Choose how dates appear in event notes")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("ISO", "ISO (YYYY-MM-DD)")
+          .addOption("US", "US (MM/DD/YYYY)")
+          .addOption("UK", "UK (DD/MM/YYYY)")
+          .addOption("Long", "Long (Month DD, YYYY)")
+          .setValue(this.plugin.settings.noteDateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.noteDateFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     // Calendar View Settings
     containerEl.createEl("h3", { text: "View Settings" });
 
@@ -220,7 +237,7 @@ export class SettingsTab extends PluginSettingTab {
     onSelect: (value: string) => Promise<void>
   ): void {
     container.empty();
-    
+
     const matchingSuggestions = allSuggestions.filter((s) =>
       s.toLowerCase().includes(query.toLowerCase())
     );

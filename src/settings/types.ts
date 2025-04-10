@@ -13,6 +13,7 @@ export interface MemoChronSettings {
   noteTitleFormat: string;
   refreshInterval: number;
   defaultView: "month" | "week";
+  noteDateFormat: string;
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -22,4 +23,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   noteTitleFormat: "{{date}} - {{event_title}}",
   refreshInterval: 30,
   defaultView: "month",
+  noteDateFormat: "ISO", // Default to ISO format
 };

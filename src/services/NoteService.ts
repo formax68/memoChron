@@ -1,4 +1,11 @@
-import { App, TFile, normalizePath, TFolder, TAbstractFile, getAllTags } from "obsidian";
+import {
+  App,
+  TFile,
+  normalizePath,
+  TFolder,
+  TAbstractFile,
+  getAllTags,
+} from "obsidian";
 import { CalendarEvent } from "./CalendarService";
 import { MemoChronSettings } from "../settings/types";
 
@@ -11,7 +18,7 @@ export class NoteService {
 
     // Clean up note location path
     const normalizedLocation = normalizePath(noteLocation);
-    
+
     // Generate the file name and full path
     const fileName = this.formatTitle(noteTitleFormat, event);
     const fullPath = normalizePath(`${normalizedLocation}/${fileName}.md`);
@@ -21,10 +28,10 @@ export class NoteService {
 
     try {
       // Ensure folder exists before creating note
-      if (normalizedLocation !== '/') {
+      if (normalizedLocation !== "/") {
         await this.ensureFolderExists(normalizedLocation);
       }
-      
+
       let file = vault.getAbstractFileByPath(fullPath);
       if (file instanceof TFile) {
         await vault.modify(file, noteContent);
@@ -41,23 +48,23 @@ export class NoteService {
   async getAllTemplatePaths(): Promise<string[]> {
     const files = this.app.vault.getFiles();
     return files
-      .filter(file => file.extension === 'md')
-      .map(file => file.path);
+      .filter((file) => file.extension === "md")
+      .map((file) => file.path);
   }
 
   async getAllFolders(): Promise<string[]> {
-    const folders = new Set<string>(['/']);
-    
+    const folders = new Set<string>(["/"]);
+
     const processFolder = (folder: TFolder) => {
       folders.add(folder.path);
-      folder.children.forEach(child => {
+      folder.children.forEach((child) => {
         if (child instanceof TFolder) {
           processFolder(child);
         }
       });
     };
 
-    this.app.vault.getAllLoadedFiles().forEach(file => {
+    this.app.vault.getAllLoadedFiles().forEach((file) => {
       if (file instanceof TFolder) {
         processFolder(file);
       }
@@ -84,15 +91,20 @@ export class NoteService {
 
   private cleanTeamsDescription(description: string): string {
     if (!description) return "";
-    
+
     // Check if it's a Teams meeting description
-    if (description.includes("Microsoft Teams meeting") || 
-        description.includes("________________________________________________________________________________")) {
-      
+    if (
+      description.includes("Microsoft Teams meeting") ||
+      description.includes(
+        "________________________________________________________________________________"
+      )
+    ) {
       let cleanedDesc = "";
-      
+
       // Extract Teams meeting link
-      const joinLinkMatch = description.match(/https:\/\/teams\.microsoft\.com\/l\/meetup-join\/[^\s\n]*/);
+      const joinLinkMatch = description.match(
+        /https:\/\/teams\.microsoft\.com\/l\/meetup-join\/[^\s\n]*/
+      );
       if (joinLinkMatch) {
         cleanedDesc += `[Join the meeting now](${joinLinkMatch[0]})\n\n`;
       }
@@ -104,7 +116,9 @@ export class NoteService {
       }
 
       // Extract passcode if present (various formats)
-      const passcodeMatch = description.match(/(?:Passcode|Password|Security code):?\s*([^\s\n]+)/i);
+      const passcodeMatch = description.match(
+        /(?:Passcode|Password|Security code):?\s*([^\s\n]+)/i
+      );
       if (passcodeMatch) {
         cleanedDesc += `Passcode: ${passcodeMatch[1].trim()}\n`;
       }
@@ -120,7 +134,7 @@ export class NoteService {
         return cleanedDesc.trim();
       }
     }
-    
+
     return description;
   }
 
@@ -150,11 +164,46 @@ export class NoteService {
       .replace(/{{source}}/g, this.sanitizeFileName(event.source));
   }
 
+  private formatDate(date: Date): string {
+    switch (this.settings.noteDateFormat) {
+      case "ISO":
+        return date.toISOString().split("T")[0]; // YYYY-MM-DD
+      case "US":
+        return date.toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        });
+      case "UK":
+        return date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      case "Long":
+        return date.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      default:
+        return date.toISOString().split("T")[0];
+    }
+  }
+
   private populateTemplate(template: string, event: CalendarEvent): string {
-    const dateStr = event.start.toLocaleDateString();
-    const startTime = event.start.toLocaleTimeString();
-    const endTime = event.end.toLocaleTimeString();
-    const cleanedDescription = this.cleanTeamsDescription(event.description || "");
+    const dateStr = this.formatDate(event.start);
+    const startTime = event.start.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const endTime = event.end.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const cleanedDescription = this.cleanTeamsDescription(
+      event.description || ""
+    );
 
     return template
       .replace(/{{title}}/g, event.title)
@@ -171,15 +220,15 @@ export class NoteService {
 
   private async ensureFolderExists(path: string): Promise<void> {
     const { vault } = this.app;
-    
+
     // Split the path into folder segments and filter out empty ones
-    const folders = path.split("/").filter(p => p.length);
-    
+    const folders = path.split("/").filter((p) => p.length);
+
     // Build the path incrementally
     let currentPath = "";
     for (const folder of folders) {
       currentPath = currentPath ? `${currentPath}/${folder}` : folder;
-      
+
       // Check if folder exists
       const existing = vault.getAbstractFileByPath(currentPath);
       if (!existing) {
@@ -187,13 +236,15 @@ export class NoteService {
           await vault.createFolder(currentPath);
         } catch (error) {
           // If folder already exists (race condition), continue
-          if (!error.message.includes('already exists')) {
+          if (!error.message.includes("already exists")) {
             throw error;
           }
         }
       } else if (!(existing instanceof TFolder)) {
         // Path exists but is not a folder
-        throw new Error(`Cannot create folder '${currentPath}' because a file with that name already exists`);
+        throw new Error(
+          `Cannot create folder '${currentPath}' because a file with that name already exists`
+        );
       }
     }
   }
