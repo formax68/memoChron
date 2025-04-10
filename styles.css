@@ -6,3 +6,217 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+/* Controls */
+.memochron-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+}
+
+.memochron-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.memochron-nav button {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.memochron-nav button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.memochron-title {
+  font-size: 0.9em;
+  padding: 0 0.5rem;
+  color: var(--text-muted);
+}
+
+/* Month View */
+.memochron-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  font-size: 0.85em;
+}
+
+.memochron-weekday {
+  padding: 0.25rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8em;
+}
+
+.memochron-day {
+  min-height: 2rem;
+  padding: 0.25rem;
+  position: relative;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.memochron-day:hover {
+  background: var(--background-modifier-hover);
+}
+
+.memochron-day.empty {
+  background: none;
+  cursor: default;
+}
+
+.memochron-day.selected {
+  background: var(--interactive-accent);
+}
+
+.memochron-day.selected .memochron-day-header,
+.memochron-day.selected .memochron-event-dot {
+  color: var(--text-on-accent);
+}
+
+.memochron-day.today {
+  background: var(--background-modifier-hover);
+}
+
+.memochron-day-header {
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.memochron-day.has-events .memochron-day-header {
+  color: var(--text-normal);
+}
+
+.memochron-event-dot {
+  color: var(--text-accent);
+  font-size: 1.2em;
+  line-height: 1;
+  height: 8px;
+  margin-top: 2px;
+}
+
+/* Week View */
+.memochron-week-grid {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  gap: 1px;
+  background: var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.memochron-week-header {
+  display: contents;
+}
+
+.memochron-week-day {
+  background: var(--background-secondary-alt);
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  grid-column: span 1;
+}
+
+.memochron-week-row {
+  display: contents;
+}
+
+.memochron-week-time {
+  background: var(--background-secondary-alt);
+  padding: 0.5rem;
+  text-align: right;
+  font-size: 0.8em;
+}
+
+.memochron-week-cell {
+  background: var(--background-primary);
+  min-height: 40px;
+  padding: 0.25rem;
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.memochron-week-event {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  padding: 0.25rem;
+  margin: 0.125rem 0;
+  border-radius: 3px;
+  font-size: 0.9em;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Agenda View */
+.memochron-agenda {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.memochron-agenda h3 {
+  margin: 0 0 1rem;
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.memochron-agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.memochron-agenda-event {
+  padding: 0.5rem;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.memochron-agenda-event:hover {
+  background: var(--background-modifier-hover);
+}
+
+.memochron-event-time {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.memochron-event-title {
+  margin: 0.25rem 0;
+}
+
+.memochron-event-location {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* Settings */
+.memochron-calendar-list {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin: 1rem 0;
+}
+
+.memochron-calendar-list .setting-item {
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding: 0.5rem;
+}
+
+.memochron-calendar-list .setting-item:last-child {
+  border-bottom: none;
+}
