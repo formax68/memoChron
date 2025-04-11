@@ -53,8 +53,8 @@ export class CalendarView extends ItemView {
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
 
-    // Initial render
-    await this.refreshEvents();
+    // Automatically select today's date and show events
+    await this.goToday();
   }
 
   private async navigate(delta: number) {

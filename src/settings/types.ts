@@ -28,5 +28,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   defaultView: "month",
   noteDateFormat: "ISO",
   defaultFrontmatter: "---\ntype: event\nstatus: scheduled\n---",
-  defaultTags: ["event", "meeting"]
+  defaultTags: ["event", "meeting"],
 };

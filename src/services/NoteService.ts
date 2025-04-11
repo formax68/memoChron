@@ -222,24 +222,29 @@ export class NoteService {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const cleanedDescription = this.cleanTeamsDescription(event.description || "");
+    const cleanedDescription = this.cleanTeamsDescription(
+      event.description || ""
+    );
     const tags = this.getTagsForEvent(event);
-    
+
     // Format tags in YAML style
-    const tagsYaml = tags.length > 0 
-      ? "tags:\n" + tags.map(tag => `  - ${tag}`).join("\n")
-      : "";
+    const tagsYaml =
+      tags.length > 0
+        ? "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n")
+        : "";
 
     // Add location with appropriate emoji
     let locationText = "";
     if (event.location) {
-      const isUrl = event.location.startsWith("http://") || 
-                   event.location.startsWith("https://") || 
-                   event.location.startsWith("www.");
-      const isVirtual = event.location.toLowerCase().includes("zoom") ||
-                       event.location.toLowerCase().includes("meet.") ||
-                       event.location.toLowerCase().includes("teams") ||
-                       event.location.toLowerCase().includes("webex");
+      const isUrl =
+        event.location.startsWith("http://") ||
+        event.location.startsWith("https://") ||
+        event.location.startsWith("www.");
+      const isVirtual =
+        event.location.toLowerCase().includes("zoom") ||
+        event.location.toLowerCase().includes("meet.") ||
+        event.location.toLowerCase().includes("teams") ||
+        event.location.toLowerCase().includes("webex");
       const locationEmoji = isUrl ? "🔗" : isVirtual ? "💻" : "📍";
       locationText = `${locationEmoji} ${event.location}`;
     }
@@ -255,17 +260,20 @@ export class NoteService {
       .replace(/{{location}}/g, locationText);
 
     // Then handle the conditional location block if it exists
-    content = content.replace(/{{#if location}}(.*?){{\/if}}/g, (_, innerContent) =>
-      event.location ? innerContent : ""
+    content = content.replace(
+      /{{#if location}}(.*?){{\/if}}/g,
+      (_, innerContent) => (event.location ? innerContent : "")
     );
 
     // Insert tags into frontmatter before the closing marker
     if (tags.length > 0) {
       const frontmatterEnd = content.indexOf("---", 4);
       if (frontmatterEnd !== -1) {
-        content = 
-          content.slice(0, frontmatterEnd) + 
-          "\n" + tagsYaml + "\n" + 
+        content =
+          content.slice(0, frontmatterEnd) +
+          "\n" +
+          tagsYaml +
+          "\n" +
           content.slice(frontmatterEnd);
       }
     }
