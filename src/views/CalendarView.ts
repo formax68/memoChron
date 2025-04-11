@@ -125,9 +125,15 @@ export class CalendarView extends ItemView {
       cls: "memochron-calendar-grid",
     });
 
-    // Add weekday headers
+    // Add weekday headers with respect to first day of week
     const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-    weekdays.forEach((day) => {
+    const firstDay = this.plugin.settings.firstDayOfWeek;
+    const reorderedWeekdays = [
+      ...weekdays.slice(firstDay),
+      ...weekdays.slice(0, firstDay),
+    ];
+
+    reorderedWeekdays.forEach((day) => {
       grid.createEl("div", {
         cls: "memochron-weekday",
         text: day,
@@ -135,12 +141,16 @@ export class CalendarView extends ItemView {
     });
 
     // Get first day of month and number of days
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+
+    // Calculate the day of week adjusted for first day of week setting
+    let adjustedFirstDay = firstDayOfMonth.getDay() - firstDay;
+    if (adjustedFirstDay < 0) adjustedFirstDay += 7;
 
     // Add empty cells for days before start of month
-    for (let i = 0; i < firstDay.getDay(); i++) {
+    for (let i = 0; i < adjustedFirstDay; i++) {
       grid.createEl("div", { cls: "memochron-day empty" });
     }
 

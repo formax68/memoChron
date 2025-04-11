@@ -5,10 +5,13 @@ import { CalendarEvent } from "./CalendarService";
 export class NoteService {
   constructor(private app: App, private settings: MemoChronSettings) {}
 
-  private async updateExistingNote(file: TFile, event: CalendarEvent): Promise<void> {
+  private async updateExistingNote(
+    file: TFile,
+    event: CalendarEvent
+  ): Promise<void> {
     const existingContent = await this.app.vault.read(file);
     const notesSection = existingContent.indexOf("## 📝 Notes");
-    
+
     if (notesSection === -1) {
       // If we can't find the Notes section, just update the whole file
       await this.app.vault.modify(file, this.generateNoteContent(event));
@@ -16,12 +19,14 @@ export class NoteService {
     }
 
     // Get the notes content after the Notes section
-    const notesContent = existingContent.slice(notesSection + "## 📝 Notes".length).trim();
-    
+    const notesContent = existingContent
+      .slice(notesSection + "## 📝 Notes".length)
+      .trim();
+
     // Generate new content but preserve the notes
     const newContent = this.generateNoteContent(event);
     const newNotesSection = newContent.indexOf("## 📝 Notes");
-    
+
     if (newNotesSection === -1) {
       // Shouldn't happen as our template always includes Notes section
       await this.app.vault.modify(file, newContent);
@@ -29,9 +34,11 @@ export class NoteService {
     }
 
     // Combine new content with existing notes
-    const updatedContent = newContent.slice(0, newNotesSection + "## 📝 Notes".length) + "\n" + 
-                         (notesContent ? "\n" + notesContent : "");
-    
+    const updatedContent =
+      newContent.slice(0, newNotesSection + "## 📝 Notes".length) +
+      "\n" +
+      (notesContent ? "\n" + notesContent : "");
+
     await this.app.vault.modify(file, updatedContent);
   }
 

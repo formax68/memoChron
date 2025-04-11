@@ -206,6 +206,28 @@ export class SettingsTab extends PluginSettingTab {
     // Calendar View Settings
     containerEl.createEl("h3", { text: "View Settings" });
 
+    // First Day of Week
+    new Setting(containerEl)
+      .setName("First Day of Week")
+      .setDesc("Choose which day the week starts on")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("0", "Sunday")
+          .addOption("1", "Monday")
+          .addOption("2", "Tuesday")
+          .addOption("3", "Wednesday")
+          .addOption("4", "Thursday")
+          .addOption("5", "Friday")
+          .addOption("6", "Saturday")
+          .setValue(String(this.plugin.settings.firstDayOfWeek))
+          .onChange(async (value) => {
+            this.plugin.settings.firstDayOfWeek = parseInt(value);
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          })
+      );
+
+    // Refresh Interval
     new Setting(containerEl)
       .setName("Refresh Interval")
       .setDesc("How often to refresh calendar data (in minutes)")

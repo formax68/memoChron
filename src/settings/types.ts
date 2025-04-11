@@ -16,6 +16,7 @@ export interface MemoChronSettings {
   defaultFrontmatter: string;
   defaultTags: string[];
   noteTemplate: string;
+  firstDayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -39,4 +40,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
 
 ## 📝 Notes
 `,
+  firstDayOfWeek: 1, // Monday
 };
