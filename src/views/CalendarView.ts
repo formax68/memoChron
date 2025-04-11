@@ -25,7 +25,7 @@ export class CalendarView extends ItemView {
   }
 
   getIcon(): string {
-    return "calendar";
+    return "calendar-range";
   }
 
   async onOpen() {
@@ -36,10 +36,14 @@ export class CalendarView extends ItemView {
     const controls = container.createEl("div", { cls: "memochron-controls" });
     const nav = controls.createEl("div", { cls: "memochron-nav" });
 
-    const prevBtn = nav.createEl("button", { text: "←" });
-    const todayBtn = nav.createEl("button", { text: "Today" });
-    const nextBtn = nav.createEl("button", { text: "→" });
+    // Title on the left
     const title = nav.createEl("span", { cls: "memochron-title" });
+
+    // Navigation buttons grouped on the right
+    const navButtons = nav.createEl("div", { cls: "memochron-nav-buttons" });
+    const prevBtn = navButtons.createEl("button", { text: "<" });
+    const todayBtn = navButtons.createEl("button", { text: "Today" });
+    const nextBtn = navButtons.createEl("button", { text: ">" });
 
     prevBtn.onclick = () => this.navigate(-1);
     todayBtn.onclick = () => this.goToday();

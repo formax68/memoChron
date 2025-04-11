@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Calendar integration and note creation for Obsidian with support for public iCalendar URLs",
-  "author": "Mike",
+  "author": "Michalis Efstratiadis<mike@efstratiadis.me>",
   "authorUrl": "",
-  "isDesktopOnly": false
+  "isDesktopOnly": false,
+  "icon": "calendar-range"
 }
