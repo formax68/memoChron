@@ -178,26 +178,6 @@ export class SettingsTab extends PluginSettingTab {
           })
       );
 
-    // Event Details Template
-    new Setting(containerEl)
-      .setName("Event Details Template")
-      .setDesc(
-        "Template for event details section. Available variables: {{title}}, {{date}}, {{startTime}}, {{endTime}}, {{description}}, {{location}}, {{source}}"
-      )
-      .addTextArea((text) => {
-        text
-          .setPlaceholder(
-            "- Date: {{date}}\n- Time: {{startTime}} - {{endTime}}"
-          )
-          .setValue(this.plugin.settings.eventDetailsTemplate)
-          .onChange(async (value) => {
-            this.plugin.settings.eventDetailsTemplate = value;
-            await this.plugin.saveSettings();
-          });
-        text.inputEl.rows = 4;
-        text.inputEl.cols = 50;
-      });
-
     // Default Frontmatter
     new Setting(containerEl)
       .setName("Default Frontmatter")
