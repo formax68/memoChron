@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Plugin, Platform } from "obsidian";
 import { CalendarService } from "./services/CalendarService";
 import { NoteService } from "./services/NoteService";
 import { CalendarView } from "./views/CalendarView";
@@ -62,7 +62,14 @@ export default class MemoChron extends Plugin {
     const leaves = this.app.workspace.getLeavesOfType("memochron-calendar");
 
     if (leaves.length === 0) {
-      const leaf = this.app.workspace.getRightLeaf(false);
+      // Always try to create the view in the right sidebar, even on mobile
+      let leaf = this.app.workspace.getRightLeaf(false);
+      
+      if (!leaf) {
+        // If right sidebar isn't available, create it
+        leaf = this.app.workspace.getLeaf('split', 'vertical');
+      }
+
       if (leaf) {
         await leaf.setViewState({
           type: "memochron-calendar",

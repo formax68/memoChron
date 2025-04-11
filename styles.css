@@ -273,3 +273,68 @@ If your plugin does not need CSS, delete this file.
 .suggestion-list li:hover {
   background: var(--background-modifier-hover);
 }
+
+/* Mobile Specific Styles */
+@media screen and (max-width: 768px) {
+  .memochron-calendar-grid {
+    font-size: 0.9em;
+  }
+
+  .memochron-day {
+    min-height: 2.5rem; /* Larger touch target */
+    padding: 0.35rem;
+  }
+
+  .memochron-nav button {
+    padding: 0.4rem 0.6rem; /* Larger touch targets */
+    font-size: 1em;
+  }
+
+  .memochron-title {
+    font-size: 1em;
+  }
+
+  .memochron-agenda-event {
+    padding: 0.75rem; /* Larger touch target */
+  }
+
+  .memochron-event-time,
+  .memochron-event-location {
+    font-size: 0.9em; /* Slightly larger on mobile */
+  }
+
+  /* Improve tap targets in settings */
+  .memochron-calendar-list .setting-item {
+    padding: 0.75rem;
+  }
+
+  .setting-item-control input[type="text"],
+  .setting-item-control button {
+    min-height: 36px; /* Better touch targets */
+  }
+}
+
+/* Additional mobile optimizations for very small screens */
+@media screen and (max-width: 480px) {
+  .memochron-weekday {
+    font-size: 0.8em;
+    padding: 0.2rem;
+  }
+
+  .memochron-day-header {
+    font-size: 0.9em;
+  }
+
+  .memochron-controls {
+    padding: 0.35rem;
+  }
+
+  .memochron-nav-buttons {
+    gap: 0.35rem;
+  }
+
+  .memochron-title {
+    font-size: 0.9em;
+    margin: 0 0.35rem;
+  }
+}

@@ -1,6 +1,6 @@
 // src/services/CalendarService.ts
 
-import { requestUrl } from "obsidian";
+import { requestUrl, Platform } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { CalendarSource } from "../settings/types";
 
@@ -26,6 +26,15 @@ export class CalendarService {
   async fetchCalendars(sources: CalendarSource[]): Promise<CalendarEvent[]> {
     const now = Date.now();
     const enabledSources = sources.filter((source) => source.enabled);
+
+    // Log platform info on initial fetch
+    if (this.events.length === 0) {
+      console.debug("MemoChron platform info:", {
+        mobile: Platform.isMobile,
+        electron: Platform.isDesktop,
+        networkAvailable: navigator.onLine,
+      });
+    }
 
     // First check if we have any enabled sources
     if (enabledSources.length === 0) {
@@ -71,7 +80,19 @@ export class CalendarService {
       const response = await requestUrl({
         url: source.url,
         method: "GET",
+        headers: {
+          Accept: "text/calendar",
+          "User-Agent": "MemoChron-ObsidianPlugin",
+        },
+        throw: false, // Don't throw on non-200 responses
       });
+
+      if (response.status !== 200) {
+        console.error(
+          `Failed to fetch calendar ${source.name}: ${response.status} ${response.text}`
+        );
+        return [];
+      }
 
       const jcalData = parse(response.text);
       const comp = new Component(jcalData);
@@ -134,6 +155,11 @@ export class CalendarService {
       return events;
     } catch (error) {
       console.error(`Error fetching calendar ${source.name}:`, error);
+      console.debug("Platform info:", {
+        mobile: Platform.isMobile,
+        electron: Platform.isDesktop,
+        networkAvailable: navigator.onLine,
+      });
       return [];
     }
   }

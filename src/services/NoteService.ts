@@ -128,11 +128,9 @@ export class NoteService {
     }
 
     // Create frontmatter with proper YAML formatting
-    const frontmatterContent = [
-      "type: meeting",
-      `date: "${dateStr}"`,
-      tagsYaml
-    ].filter(line => line).join("\n");
+    const frontmatterContent = ["type: meeting", `date: "${dateStr}"`, tagsYaml]
+      .filter((line) => line)
+      .join("\n");
 
     const frontmatter = `---\n${frontmatterContent}\n---`;
 

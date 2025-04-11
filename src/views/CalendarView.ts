@@ -198,7 +198,19 @@ export class CalendarView extends ItemView {
         });
       }
 
-      dayEl.onclick = () => this.selectDate(date);
+      // Improve touch handling
+      dayEl.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault(); // Prevent double-tap zoom
+        },
+        { passive: false }
+      );
+
+      dayEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.selectDate(date);
+      });
     }
   }
 
@@ -269,9 +281,18 @@ export class CalendarView extends ItemView {
         });
       }
 
-      // Add clear click handler for event
+      // Improve touch handling for event items
+      eventEl.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault(); // Prevent double-tap zoom
+        },
+        { passive: false }
+      );
+
       eventEl.addEventListener("click", async (e) => {
-        e.stopPropagation(); // Prevent triggering the day click
+        e.preventDefault();
+        e.stopPropagation();
         try {
           await this.showEventDetails(event);
         } catch (error) {
