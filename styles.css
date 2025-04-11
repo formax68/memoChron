@@ -204,6 +204,11 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-modifier-hover);
 }
 
+/* Grey out past events in agenda view */
+.memochron-agenda-event.past-event {
+  color: var(--text-muted);
+}
+
 .memochron-event-time {
   color: var(--text-muted);
   font-size: 0.85em;

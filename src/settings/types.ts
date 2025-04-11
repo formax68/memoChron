@@ -13,7 +13,6 @@ export interface MemoChronSettings {
   noteLocation: string;
   noteTitleFormat: string;
   refreshInterval: number;
-  defaultView: "month" | "week";
   noteDateFormat: string;
   defaultFrontmatter: string;
   defaultTags: string[];
@@ -25,7 +24,6 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   noteLocation: "/",
   noteTitleFormat: "{{date}} - {{event_title}}",
   refreshInterval: 30,
-  defaultView: "month",
   noteDateFormat: "ISO",
   defaultFrontmatter: "---\ntype: event\nstatus: scheduled\n---",
   defaultTags: ["event", "meeting"],

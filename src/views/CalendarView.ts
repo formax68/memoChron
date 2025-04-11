@@ -211,9 +211,15 @@ export class CalendarView extends ItemView {
     }
 
     const list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
+    const now = new Date();
 
     events.forEach((event) => {
       const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
+
+      // Add past-event class if the event has ended
+      if (event.end < now) {
+        eventEl.addClass("past-event");
+      }
 
       eventEl.createEl("div", {
         cls: "memochron-event-time",

@@ -215,21 +215,6 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.createEl("h3", { text: "View Settings" });
 
     new Setting(containerEl)
-      .setName("Default View")
-      .setDesc("Choose the default calendar view")
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("month", "Month")
-          .addOption("week", "Week")
-          .setValue(this.plugin.settings.defaultView)
-          .onChange(async (value: "month" | "week") => {
-            this.plugin.settings.defaultView = value;
-            await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView();
-          })
-      );
-
-    new Setting(containerEl)
       .setName("Refresh Interval")
       .setDesc("How often to refresh calendar data (in minutes)")
       .addText((text) =>
