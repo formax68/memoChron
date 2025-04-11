@@ -1,7 +1,7 @@
 {
   "id": "memochron",
   "name": "MemoChron",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "minAppVersion": "0.15.0",
   "description": "Calendar integration and note creation for Obsidian with support for public iCalendar URLs",
   "author": "Michalis Efstratiadis<mike@efstratiadis.me>",
