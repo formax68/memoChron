@@ -9,22 +9,34 @@ export interface CalendarSource {
 
 export interface MemoChronSettings {
   calendarUrls: CalendarSource[];
-  templatePath: string;
   noteLocation: string;
   noteTitleFormat: string;
   refreshInterval: number;
   noteDateFormat: string;
   defaultFrontmatter: string;
   defaultTags: string[];
+  noteTemplate: string;
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
   calendarUrls: [],
-  templatePath: "",
   noteLocation: "/",
   noteTitleFormat: "{{date}} - {{event_title}}",
   refreshInterval: 30,
   noteDateFormat: "ISO",
-  defaultFrontmatter: "---\ntype: event\nstatus: scheduled\n---",
+  defaultFrontmatter: "---\ntype: event\ndate: {{date}}\n---",
   defaultTags: ["event", "meeting"],
+  noteTemplate: `# {{event_title}}
+
+## 📝 Event Details
+📅 {{date}}
+⏰ {{start_time}} - {{end_time}}
+📆 {{source}}
+{{location}}
+
+## 📋 Description
+{{description}}
+
+## 📝 Notes
+`,
 };

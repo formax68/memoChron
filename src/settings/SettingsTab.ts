@@ -32,7 +32,7 @@ export class SettingsTab extends PluginSettingTab {
             url: "",
             name: "New Calendar",
             enabled: true,
-            tags: [], // Initialize with empty tags array
+            tags: [],
           });
           await this.plugin.saveSettings();
           this.display();
@@ -94,31 +94,6 @@ export class SettingsTab extends PluginSettingTab {
 
     // Note Creation Settings
     containerEl.createEl("h3", { text: "Note Settings" });
-
-    // Template Path with suggestions
-    const templateSetting = new Setting(containerEl)
-      .setName("Template File")
-      .setDesc("Path to the template file for new event notes");
-
-    const templateInput = new TextComponent(templateSetting.controlEl);
-    templateInput
-      .setPlaceholder("templates/event-template.md")
-      .setValue(this.plugin.settings.templatePath);
-
-    const templateSuggestionContainer = templateSetting.controlEl.createDiv({
-      cls: "suggestion-container",
-    });
-    templateSuggestionContainer.style.display = "none";
-
-    this.setupPathSuggestions(
-      templateInput,
-      templateSuggestionContainer,
-      async () => await this.plugin.noteService.getAllTemplatePaths(),
-      async (value) => {
-        this.plugin.settings.templatePath = value;
-        await this.plugin.saveSettings();
-      }
-    );
 
     // Note Location with suggestions
     const locationSetting = new Setting(containerEl)
@@ -184,13 +159,30 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc("YAML frontmatter to add at the top of each event note")
       .addTextArea((text) => {
         text
-          .setPlaceholder("---\ntype: event\nstatus: scheduled\n---")
+          .setPlaceholder("---\ntype: event\ndate: {{date}}\n---")
           .setValue(this.plugin.settings.defaultFrontmatter)
           .onChange(async (value) => {
             this.plugin.settings.defaultFrontmatter = value;
             await this.plugin.saveSettings();
           });
         text.inputEl.rows = 4;
+        text.inputEl.cols = 50;
+      });
+
+    // Note Template
+    new Setting(containerEl)
+      .setName("Note Template")
+      .setDesc(
+        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
+      )
+      .addTextArea((text) => {
+        text
+          .setValue(this.plugin.settings.noteTemplate)
+          .onChange(async (value) => {
+            this.plugin.settings.noteTemplate = value;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 10;
         text.inputEl.cols = 50;
       });
 
