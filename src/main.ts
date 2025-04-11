@@ -64,10 +64,10 @@ export default class MemoChron extends Plugin {
     if (leaves.length === 0) {
       // Always try to create the view in the right sidebar, even on mobile
       let leaf = this.app.workspace.getRightLeaf(false);
-      
+
       if (!leaf) {
         // If right sidebar isn't available, create it
-        leaf = this.app.workspace.getLeaf('split', 'vertical');
+        leaf = this.app.workspace.getLeaf("split", "vertical");
       }
 
       if (leaf) {
