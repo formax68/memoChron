@@ -5,6 +5,36 @@ import { CalendarEvent } from "./CalendarService";
 export class NoteService {
   constructor(private app: App, private settings: MemoChronSettings) {}
 
+  private async updateExistingNote(file: TFile, event: CalendarEvent): Promise<void> {
+    const existingContent = await this.app.vault.read(file);
+    const notesSection = existingContent.indexOf("## 📝 Notes");
+    
+    if (notesSection === -1) {
+      // If we can't find the Notes section, just update the whole file
+      await this.app.vault.modify(file, this.generateNoteContent(event));
+      return;
+    }
+
+    // Get the notes content after the Notes section
+    const notesContent = existingContent.slice(notesSection + "## 📝 Notes".length).trim();
+    
+    // Generate new content but preserve the notes
+    const newContent = this.generateNoteContent(event);
+    const newNotesSection = newContent.indexOf("## 📝 Notes");
+    
+    if (newNotesSection === -1) {
+      // Shouldn't happen as our template always includes Notes section
+      await this.app.vault.modify(file, newContent);
+      return;
+    }
+
+    // Combine new content with existing notes
+    const updatedContent = newContent.slice(0, newNotesSection + "## 📝 Notes".length) + "\n" + 
+                         (notesContent ? "\n" + notesContent : "");
+    
+    await this.app.vault.modify(file, updatedContent);
+  }
+
   async createEventNote(event: CalendarEvent): Promise<TFile> {
     const { vault } = this.app;
     const { noteLocation, noteTitleFormat } = this.settings;
@@ -14,23 +44,21 @@ export class NoteService {
     const title = this.formatTitle(noteTitleFormat, event);
     const filePath = normalizePath(`${normalizedPath}/${title}.md`);
 
-    // Generate note content
-    const content = this.generateNoteContent(event);
-
     try {
       // Create folder if needed
       if (normalizedPath !== "/") {
         await this.ensureFolderExists(normalizedPath);
       }
 
-      // Create or update the note
+      // If file exists, just return it without modifications
       const existingFile = vault.getAbstractFileByPath(filePath);
       if (existingFile instanceof TFile) {
-        await vault.modify(existingFile, content);
         return existingFile;
-      } else {
-        return await vault.create(filePath, content);
       }
+
+      // If file doesn't exist, create it with the template content
+      const content = this.generateNoteContent(event);
+      return await vault.create(filePath, content);
     } catch (error) {
       console.error("Error creating note:", error);
       throw error;
