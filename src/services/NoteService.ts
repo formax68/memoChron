@@ -127,22 +127,14 @@ export class NoteService {
       locationText = `${locationEmoji} ${event.location}`;
     }
 
-    // Create the frontmatter section and handle tags
-    let frontmatter =
-      this.settings.defaultFrontmatter ||
-      "---\ntype: event\nstatus: scheduled\n---";
+    // Create frontmatter with proper YAML formatting
+    const frontmatterContent = [
+      "type: meeting",
+      `date: "${dateStr}"`,
+      tagsYaml
+    ].filter(line => line).join("\n");
 
-    // Insert tags into frontmatter before the closing marker
-    if (tags.length > 0) {
-      const frontmatterEnd = frontmatter.indexOf("---", 4);
-      if (frontmatterEnd !== -1) {
-        frontmatter =
-          frontmatter.slice(0, frontmatterEnd) +
-          tagsYaml +
-          "\n" +
-          frontmatter.slice(frontmatterEnd);
-      }
-    }
+    const frontmatter = `---\n${frontmatterContent}\n---`;
 
     // Get the template and replace variables
     const cleanedDescription = this.cleanTeamsDescription(

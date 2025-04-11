@@ -25,28 +25,35 @@ export class CalendarService {
 
   async fetchCalendars(sources: CalendarSource[]): Promise<CalendarEvent[]> {
     const now = Date.now();
-
-    // Lazy load: Only fetch if it's been longer than refresh interval since last fetch
-    if (
-      this.events.length > 0 &&
-      now - this.lastFetch < this.refreshMinutes * 60 * 1000
-    ) {
-      return this.events;
-    }
-
     const enabledSources = sources.filter((source) => source.enabled);
 
-    // Lazy load: Fetch only when sources are enabled
+    // First check if we have any enabled sources
     if (enabledSources.length === 0) {
+      this.events = [];
       console.warn("No enabled calendar sources to fetch.");
       return [];
     }
 
-    const fetchPromises = enabledSources.map((source) =>
-      this.fetchCalendar(source)
-    );
+    // Force a refresh if the number of enabled calendars changed
+    const needsRefresh =
+      this.events.length === 0 || // No events yet
+      now - this.lastFetch >= this.refreshMinutes * 60 * 1000 || // Cache expired
+      this.events.some(
+        (event) =>
+          !enabledSources.find((source) => source.name === event.source)
+      ) || // Has events from now-disabled calendars
+      enabledSources.some(
+        (source) => !this.events.find((event) => event.source === source.name)
+      ); // Has newly enabled calendars
+
+    if (!needsRefresh) {
+      return this.events;
+    }
 
     try {
+      const fetchPromises = enabledSources.map((source) =>
+        this.fetchCalendar(source)
+      );
       const results = await Promise.all(fetchPromises);
       this.events = results.flat();
       this.lastFetch = now;
