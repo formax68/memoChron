@@ -256,6 +256,11 @@ If your plugin does not need CSS, delete this file.
   width: var(--input-width);
   top: 100%;
   margin-top: 4px;
+  display: none; /* Hidden by default */
+}
+
+.suggestion-container.is-visible {
+  display: block; /* Show when class is applied */
 }
 
 .suggestion-list {

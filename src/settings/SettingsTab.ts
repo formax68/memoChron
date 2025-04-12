@@ -108,7 +108,7 @@ export class SettingsTab extends PluginSettingTab {
     const locationSuggestionContainer = locationSetting.controlEl.createDiv({
       cls: "suggestion-container",
     });
-    locationSuggestionContainer.style.display = "none";
+    locationSuggestionContainer.classList.remove("is-visible");
 
     this.setupPathSuggestions(
       locationInput,
@@ -275,7 +275,7 @@ export class SettingsTab extends PluginSettingTab {
     input.inputEl.addEventListener("blur", () => {
       // Small delay to allow clicking on suggestions
       setTimeout(() => {
-        suggestionContainer.style.display = "none";
+        suggestionContainer.classList.remove("is-visible");
       }, 200);
     });
   }
@@ -294,11 +294,11 @@ export class SettingsTab extends PluginSettingTab {
     );
 
     if (matchingSuggestions.length === 0) {
-      container.style.display = "none";
+      container.classList.remove("is-visible");
       return;
     }
 
-    container.style.display = "block";
+    container.classList.add("is-visible");
     const ul = container.createEl("ul", { cls: "suggestion-list" });
 
     matchingSuggestions.slice(0, 5).forEach((suggestion) => {
@@ -307,7 +307,7 @@ export class SettingsTab extends PluginSettingTab {
         e.preventDefault();
         input.setValue(suggestion);
         await onSelect(suggestion);
-        container.style.display = "none";
+        container.classList.remove("is-visible");
       });
     });
   }
