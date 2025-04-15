@@ -106,7 +106,7 @@ export class SettingsTab extends PluginSettingTab {
       .setValue(this.plugin.settings.noteLocation);
 
     const locationSuggestionContainer = locationSetting.controlEl.createDiv({
-      cls: "suggestion-container",
+      cls: "memochron-suggestion-container",
     });
     locationSuggestionContainer.classList.remove("is-visible");
 
@@ -299,7 +299,7 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     container.classList.add("is-visible");
-    const ul = container.createEl("ul", { cls: "suggestion-list" });
+    const ul = container.createEl("ul", { cls: "memochron-suggestion-list" });
 
     matchingSuggestions.slice(0, 5).forEach((suggestion) => {
       const li = ul.createEl("li", { text: suggestion });

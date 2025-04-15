@@ -244,7 +244,7 @@ If your plugin does not need CSS, delete this file.
   position: relative;
 }
 
-.suggestion-container {
+.memochron-suggestion-container {
   position: absolute;
   z-index: 1000;
   background: var(--background-primary);
@@ -259,23 +259,23 @@ If your plugin does not need CSS, delete this file.
   display: none; /* Hidden by default */
 }
 
-.suggestion-container.is-visible {
+.memochron-suggestion-container.is-visible {
   display: block; /* Show when class is applied */
 }
 
-.suggestion-list {
+.memochron-suggestion-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.suggestion-list li {
+.memochron-suggestion-list li {
   padding: 8px 12px;
   cursor: pointer;
   font-size: 0.9em;
 }
 
-.suggestion-list li:hover {
+.memochron-suggestion-list li:hover {
   background: var(--background-modifier-hover);
 }
 
