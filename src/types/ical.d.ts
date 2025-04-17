@@ -3,6 +3,7 @@ declare module "ical.js" {
     constructor(jCal: any);
     getAllSubcomponents(name: string): Component[];
     getFirstProperty(name: string): Property;
+    getAllProperties(name: string): Property[];
     hasProperty(name: string): boolean;
     getFirstPropertyValue(name: string): any;
   }

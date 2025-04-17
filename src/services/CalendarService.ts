@@ -110,7 +110,42 @@ export class CalendarService {
       periodEnd.setMonth(periodEnd.getMonth() + 2);
       periodEnd.setHours(23, 59, 59, 999);
 
+      // First, collect all recurrence exceptions (for handling rescheduled events)
+      const recurrenceExceptions = new Map<string, ICalEvent>();
+      
+      // Find all events with RECURRENCE-ID (these are modified instances)
       for (const vevent of vevents) {
+        if (vevent.hasProperty("recurrence-id")) {
+          const event = new ICalEvent(vevent);
+          const uid = event.uid;
+          const recurrenceId = vevent.getFirstProperty("recurrence-id").getFirstValue();
+          
+          // Skip if cancelled
+          if (vevent.hasProperty("status") && vevent.getFirstPropertyValue("status") === "CANCELLED") {
+            continue;
+          }
+          
+          // Create a unique key combining the UID and the recurrence date
+          const recKey = `${uid}-${recurrenceId.toJSDate().toISOString().substring(0, 10)}`;
+          recurrenceExceptions.set(recKey, event);
+        }
+      }
+      
+      // Now process all events
+      for (const vevent of vevents) {
+        // Skip if this event has a recurrence-id (we'll process these separately)
+        if (vevent.hasProperty("recurrence-id")) {
+          continue;
+        }
+        
+        // Skip cancelled events
+        if (vevent.hasProperty("status")) {
+          const status = vevent.getFirstPropertyValue("status");
+          if (status === "CANCELLED") {
+            continue; // Skip this event
+          }
+        }
+        
         const event = new ICalEvent(vevent);
         let startDate, endDate;
         
@@ -127,15 +162,88 @@ export class CalendarService {
         if (vevent.hasProperty("rrule")) {
           const iterator = event.iterator();
           let next: Time | null;
+          
+          // Get excluded dates (EXDATE) if any
+          const excludedDates: Date[] = [];
+          if (vevent.hasProperty("exdate")) {
+            // Handle multiple EXDATE properties if they exist
+            const exdateProps = vevent.getAllProperties("exdate");
+            for (const exdateProp of exdateProps) {
+              // Get the excluded dates
+              const values = exdateProp.getValues();
+              values.forEach((value: any) => {
+                if (value && value.toJSDate) {
+                  excludedDates.push(value.toJSDate());
+                }
+              });
+            }
+          }
 
           while ((next = iterator.next())) {
             const occurEnd = next.clone();
             const duration = event.duration;
             occurEnd.addDuration(duration);
-
+            
+            // Get the date of this occurrence
+            const rawDate = next.toJSDate();
+            
             // Convert to local timezone 
-            startDate = this.convertTimezone(next.toJSDate(), tzid);
+            startDate = this.convertTimezone(rawDate, tzid);
             endDate = this.convertTimezone(occurEnd.toJSDate(), tzid);
+            
+            // Skip this occurrence if it's in the excluded dates list
+            const isExcluded = excludedDates.some(exDate => {
+              // Compare year, month, and day to check if this date is excluded
+              return exDate.getFullYear() === rawDate.getFullYear() &&
+                     exDate.getMonth() === rawDate.getMonth() &&
+                     exDate.getDate() === rawDate.getDate();
+            });
+            
+            // Check if this occurrence has a rescheduled exception
+            const dateStr = rawDate.toISOString().substring(0, 10);
+            const recKey = `${event.uid}-${dateStr}`;
+            const hasException = recurrenceExceptions.has(recKey);
+            
+            if (isExcluded || hasException) {
+              // If there's an exception, we'll add it separately - skip the original
+              if (hasException) {
+                // Get the exception event
+                const exceptionEvent = recurrenceExceptions.get(recKey);
+                
+                // Get timezone for the exception
+                let exTzid = tzid; // Default to parent event timezone
+                if (exceptionEvent && exceptionEvent.component.hasProperty("dtstart")) {
+                  const exDtstart = exceptionEvent.component.getFirstProperty("dtstart");
+                  if (exDtstart) {
+                    const paramTzid = exDtstart.getParameter("tzid");
+                    if (paramTzid) {
+                      exTzid = paramTzid;
+                    }
+                  }
+                }
+                
+                // Get start and end dates from the exception and convert to local timezone
+                if (exceptionEvent) {
+                  const exStartDate = this.convertTimezone(exceptionEvent.startDate.toJSDate(), exTzid);
+                  const exEndDate = this.convertTimezone(exceptionEvent.endDate.toJSDate(), exTzid);
+                  
+                  // Add the exception to events if it's in our date range
+                  if (exStartDate <= periodEnd && exEndDate >= periodStart) {
+                    events.push({
+                      id: `${event.uid}-${next.toUnixTime()}`,
+                      title: exceptionEvent.summary,
+                      start: exStartDate,
+                      end: exEndDate,
+                      description: exceptionEvent.description,
+                      location: exceptionEvent.location,
+                      source: source.name,
+                    });
+                  }
+                }
+              }
+              
+              continue; // Skip this original occurrence
+            }
 
             if (
               startDate <= periodEnd &&
@@ -165,8 +273,11 @@ export class CalendarService {
           startDate = this.convertTimezone(eventStartDate, tzid);
           endDate = this.convertTimezone(eventEndDate, tzid);
           
+          // Create ID for the event
+          const eventId = event.uid;
+          
           events.push({
-            id: event.uid,
+            id: eventId,
             title: event.summary,
             start: startDate,
             end: endDate,
