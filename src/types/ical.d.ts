@@ -4,10 +4,13 @@ declare module "ical.js" {
     getAllSubcomponents(name: string): Component[];
     getFirstProperty(name: string): Property;
     hasProperty(name: string): boolean;
+    getFirstPropertyValue(name: string): any;
   }
 
   export class Property {
     getFirstValue(): any;
+    getParameter(name: string): string;
+    getValues(): any[];
   }
 
   export class Event {
@@ -20,13 +23,18 @@ declare module "ical.js" {
     readonly endDate: Time;
     readonly duration: Duration;
     iterator(): RecurExpansion;
+    component: Component;
   }
 
   export class Time {
+    constructor();
     toJSDate(): Date;
+    fromJSDate(date: Date): void;
     clone(): Time;
     addDuration(duration: Duration): void;
     toUnixTime(): number;
+    zone: Timezone | null;
+    convertToZone(timezone: Timezone): Time;
   }
 
   export class Duration {
@@ -35,6 +43,13 @@ declare module "ical.js" {
 
   export class RecurExpansion {
     next(): Time | null;
+  }
+
+  export class Timezone {
+    static fromData(data: any): Timezone;
+    static utcTimezone: Timezone;
+    static localTimezone: Timezone;
+    tzid: string;
   }
 
   export function parse(input: string): any;

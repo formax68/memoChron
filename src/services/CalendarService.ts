@@ -2,6 +2,7 @@
 
 import { requestUrl, Platform } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
+import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
 
 export interface CalendarEvent {
@@ -93,10 +94,11 @@ export class CalendarService {
         );
         return [];
       }
-
+      
       const jcalData = parse(response.text);
       const comp = new Component(jcalData);
       const vevents = comp.getAllSubcomponents("vevent");
+      
       const events: CalendarEvent[] = [];
 
       // Optimize recurring event iteration
@@ -110,7 +112,18 @@ export class CalendarService {
 
       for (const vevent of vevents) {
         const event = new ICalEvent(vevent);
-
+        let startDate, endDate;
+        
+        // Extract timezone info if available
+        let tzid = null;
+        if (vevent.hasProperty("dtstart")) {
+          const dtstart = vevent.getFirstProperty("dtstart");
+          if (dtstart) {
+            tzid = dtstart.getParameter("tzid");
+          }
+        }
+        
+        // Fix timezone issues using specific handling
         if (vevent.hasProperty("rrule")) {
           const iterator = event.iterator();
           let next: Time | null;
@@ -120,38 +133,50 @@ export class CalendarService {
             const duration = event.duration;
             occurEnd.addDuration(duration);
 
+            // Convert to local timezone 
+            startDate = this.convertTimezone(next.toJSDate(), tzid);
+            endDate = this.convertTimezone(occurEnd.toJSDate(), tzid);
+
             if (
-              next.toJSDate() <= periodEnd &&
-              occurEnd.toJSDate() >= periodStart
+              startDate <= periodEnd &&
+              endDate >= periodStart
             ) {
               events.push({
                 id: `${event.uid}-${next.toUnixTime()}`,
                 title: event.summary,
-                start: next.toJSDate(),
-                end: occurEnd.toJSDate(),
+                start: startDate,
+                end: endDate,
                 description: event.description,
                 location: event.location,
                 source: source.name,
               });
             }
 
-            if (next.toJSDate() > periodEnd) {
+            if (startDate > periodEnd) {
               break;
             }
           }
         } else {
+          // Get original dates from event
+          const eventStartDate = event.startDate.toJSDate();
+          const eventEndDate = event.endDate.toJSDate();
+          
+          // Convert to local dates with specific timezone handling
+          startDate = this.convertTimezone(eventStartDate, tzid);
+          endDate = this.convertTimezone(eventEndDate, tzid);
+          
           events.push({
             id: event.uid,
             title: event.summary,
-            start: event.startDate.toJSDate(),
-            end: event.endDate.toJSDate(),
+            start: startDate,
+            end: endDate,
             description: event.description,
             location: event.location,
             source: source.name,
           });
         }
       }
-
+      
       return events;
     } catch (error) {
       console.error(`Error fetching calendar ${source.name}:`, error);
@@ -161,6 +186,71 @@ export class CalendarService {
         networkAvailable: navigator.onLine,
       });
       return [];
+    }
+  }
+
+  /**
+   * Convert a date from a source timezone to local timezone using Luxon
+   */
+  private convertTimezone(date: Date, tzid: string | null): Date {
+    try {
+      if (!tzid) {
+        // If no timezone provided, assume UTC
+        return DateTime.fromJSDate(date, { zone: 'UTC' })
+          .toLocal()
+          .toJSDate();
+      }
+      
+      // Map Microsoft Exchange timezone IDs to IANA timezone names
+      // These are common Exchange timezone IDs that might appear in calendars
+      const timezoneMap: Record<string, string> = {
+        "Pacific Standard Time": "America/Los_Angeles",
+        "Mountain Standard Time": "America/Denver",
+        "Central Standard Time": "America/Chicago",
+        "Eastern Standard Time": "America/New_York",
+        "US Eastern Standard Time": "America/Indianapolis",
+        "US Mountain Standard Time": "America/Phoenix",
+        "Hawaii-Aleutian Standard Time": "Pacific/Honolulu",
+        "Alaskan Standard Time": "America/Anchorage",
+        "Atlantic Standard Time": "America/Halifax",
+        
+        "GMT Standard Time": "Europe/London",
+        "W. Europe Standard Time": "Europe/Berlin",
+        "Romance Standard Time": "Europe/Paris",
+        "Central European Standard Time": "Europe/Budapest",
+        "E. Europe Standard Time": "Europe/Bucharest",
+        "GTB Standard Time": "Europe/Athens",
+        "Russian Standard Time": "Europe/Moscow",
+        
+        "Singapore Standard Time": "Asia/Singapore",
+        "China Standard Time": "Asia/Shanghai",
+        "Tokyo Standard Time": "Asia/Tokyo",
+        "Korea Standard Time": "Asia/Seoul",
+        "India Standard Time": "Asia/Kolkata",
+        
+        "UTC": "UTC",
+        "Coordinated Universal Time": "UTC"
+      };
+      
+      // Map the Microsoft timezone to IANA timezone
+      const ianaZone = timezoneMap[tzid] || tzid;
+      
+      // Create a DateTime in the source timezone
+      let dt = DateTime.fromJSDate(date);
+      
+      // Try to set the source timezone
+      try {
+        dt = dt.setZone(ianaZone, { keepLocalTime: true });
+      } catch (e) {
+        // If the timezone is invalid, use UTC as a fallback
+        dt = dt.setZone("UTC", { keepLocalTime: true });
+      }
+      
+      // Convert to local timezone
+      return dt.toLocal().toJSDate();
+    } catch (error) {
+      console.error("Failed to convert timezone:", error);
+      return date; // Fall back to original date
     }
   }
 

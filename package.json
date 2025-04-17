@@ -17,6 +17,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@types/luxon": "^3.6.2",
     "@types/node": "^16.11.6",
     "@typescript-eslint/eslint-plugin": "5.29.0",
     "@typescript-eslint/parser": "5.29.0",
@@ -27,6 +28,7 @@
     "typescript": "4.7.4"
   },
   "dependencies": {
-    "ical.js": "^1.5.0"
+    "ical.js": "^1.5.0",
+    "luxon": "^3.6.1"
   }
 }
