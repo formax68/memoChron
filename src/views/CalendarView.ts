@@ -41,13 +41,23 @@ export class CalendarView extends ItemView {
 
     // Navigation buttons grouped on the right
     const navButtons = nav.createEl("div", { cls: "memochron-nav-buttons" });
-    const prevBtn = navButtons.createEl("button", { text: "<" });
-    const todayBtn = navButtons.createEl("button", { text: "Today" });
-    const nextBtn = navButtons.createEl("button", { text: ">" });
+    // Replace buttons with clickable text
+    const prevText = navButtons.createEl("span", {
+      text: "<",
+      cls: "memochron-nav-link",
+    });
+    const todayText = navButtons.createEl("span", {
+      text: "Today",
+      cls: "memochron-nav-link",
+    });
+    const nextText = navButtons.createEl("span", {
+      text: ">",
+      cls: "memochron-nav-link",
+    });
 
-    prevBtn.onclick = () => this.navigate(-1);
-    todayBtn.onclick = () => this.goToday();
-    nextBtn.onclick = () => this.navigate(1);
+    prevText.onclick = () => this.navigate(-1);
+    todayText.onclick = () => this.goToday();
+    nextText.onclick = () => this.navigate(1);
 
     // Create calendar and agenda containers
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });

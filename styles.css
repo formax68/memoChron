@@ -61,6 +61,26 @@ If your plugin does not need CSS, delete this file.
   outline-offset: 1px;
 }
 
+.memochron-nav-link {
+  cursor: pointer;
+  color: var(--color-arrow);
+  font-size: 0.9em;
+  padding: var(--memochron-padding-xs) var(--memochron-padding-sm);
+  border-radius: var(--radius-s);
+  transition: color 0.1s ease, background-color 0.1s ease;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.memochron-nav-link:hover,
+.memochron-nav-link:focus {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
 .memochron-title {
   font-size: 0.9em;
   color: var(--text-normal);
