@@ -56,6 +56,8 @@ export default class MemoChron extends Plugin {
     if (this.calendarService) {
       this.setupAutoRefresh();
     }
+    // Refresh calendar view after settings change (e.g., calendar added)
+    await this.refreshCalendarView();
   }
 
   private async activateView() {
