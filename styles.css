@@ -40,27 +40,6 @@ If your plugin does not need CSS, delete this file.
   gap: var(--memochron-gap);
 }
 
-.memochron-nav button {
-  all: unset;
-  cursor: pointer;
-  color: var(--color-arrow);
-  font-size: 0.9em;
-  padding: var(--memochron-padding-xs) var(--memochron-padding-sm);
-  border-radius: var(--radius-s);
-  transition: color 0.1s ease, background-color 0.1s ease;
-  user-select: none;
-  display: inline-flex;
-  align-items: center;
-}
-
-.memochron-nav button:hover,
-.memochron-nav button:focus {
-  color: var(--text-normal);
-  background-color: var(--background-modifier-hover);
-  outline: 2px solid var(--interactive-accent);
-  outline-offset: 1px;
-}
-
 .memochron-nav-link {
   cursor: pointer;
   color: var(--color-arrow);
