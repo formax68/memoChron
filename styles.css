@@ -5,11 +5,11 @@
   --memochron-padding-md: var(--size-4-3, 0.75rem);
   --memochron-padding-lg: var(--size-4-4, 1rem);
   --memochron-gap: var(--size-4-2, 0.5rem);
-  
+
   /* Calendar styling variables */
   --color-text-day: var(--text-normal);
   --color-text-today: var(--interactive-accent);
-  
+
   /* Fallback for missing theme variables - use hex to avoid CSS variable loops */
   --text-on-accent: var(--text-on-accent, #ffffff);
 }
@@ -109,7 +109,9 @@
 
 /* Important: Always ensure text is visible on selected days */
 .memochron-day.selected .memochron-day-header {
-  color: var(--text-on-accent) !important; /* Use !important to override any theme styles */
+  color: var(
+    --text-on-accent
+  ) !important; /* Use !important to override any theme styles */
   font-weight: 600;
 }
 
@@ -140,7 +142,7 @@
   font-size: 1.2em;
   line-height: 1;
   height: 8px;
-  margin-top: 2px;
+  margin-bottom: 4px;
 }
 
 /* Week View */
