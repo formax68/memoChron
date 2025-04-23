@@ -1,12 +1,3 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-
 :root {
   /* Use Obsidian spacing variables for consistency */
   --memochron-padding-xs: var(--size-4-1, 0.25rem);
@@ -14,12 +5,17 @@ If your plugin does not need CSS, delete this file.
   --memochron-padding-md: var(--size-4-3, 0.75rem);
   --memochron-padding-lg: var(--size-4-4, 1rem);
   --memochron-gap: var(--size-4-2, 0.5rem);
+  
+  /* Calendar styling variables */
+  --color-text-day: var(--text-normal);
+  --color-text-today: var(--interactive-accent);
+  
+  /* Fallback for missing theme variables - use hex to avoid CSS variable loops */
+  --text-on-accent: var(--text-on-accent, #ffffff);
 }
 
 /* Controls */
 .memochron-controls {
-  --color-arrow: var(--text-muted);
-  --color-button: var(--text-muted);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -42,7 +38,7 @@ If your plugin does not need CSS, delete this file.
 
 .memochron-nav-link {
   cursor: pointer;
-  color: var(--color-arrow);
+  color: var(--text-muted);
   font-size: 0.9em;
   padding: var(--memochron-padding-xs) var(--memochron-padding-sm);
   border-radius: var(--radius-s);
@@ -91,13 +87,14 @@ If your plugin does not need CSS, delete this file.
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: transparent;
+  transition: background-color 0.1s ease-in, color 0.1s ease-in;
 }
 
 .memochron-day:hover,
 .memochron-day:focus {
-  background: var(--background-modifier-hover);
-  outline: 2px solid var(--interactive-accent);
-  outline-offset: 1px;
+  background-color: var(--interactive-hover);
+  outline: none;
 }
 
 .memochron-day.empty {
@@ -106,29 +103,40 @@ If your plugin does not need CSS, delete this file.
 }
 
 .memochron-day.selected {
-  background: var(--interactive-accent);
+  background-color: var(--interactive-accent);
+  box-shadow: inset 0 0 0 1px var(--background-modifier-border);
 }
 
-.memochron-day.selected .memochron-day-header,
+/* Important: Always ensure text is visible on selected days */
+.memochron-day.selected .memochron-day-header {
+  color: var(--text-on-accent) !important; /* Use !important to override any theme styles */
+  font-weight: 600;
+}
+
 .memochron-day.selected .memochron-event-dot {
   color: var(--text-on-accent);
 }
 
 .memochron-day.today {
-  background: var(--background-modifier-hover);
+  border: 1px solid var(--interactive-accent);
+}
+
+.memochron-day.today .memochron-day-header {
+  color: var(--color-text-today);
 }
 
 .memochron-day-header {
   font-size: 1em;
   color: var(--text-muted);
+  transition: color 0.1s ease-in;
 }
 
 .memochron-day.has-events .memochron-day-header {
-  color: var(--text-normal);
+  color: var(--color-text-day);
 }
 
 .memochron-event-dot {
-  color: var(--text-accent);
+  color: var(--interactive-accent);
   font-size: 1.2em;
   line-height: 1;
   height: 8px;
@@ -149,7 +157,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 .memochron-week-day {
-  background: var(--background-secondary-alt);
+  background: var(--background-secondary);
   padding: var(--memochron-padding-sm);
   text-align: center;
   font-weight: bold;
@@ -161,7 +169,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 .memochron-week-time {
-  background: var(--background-secondary-alt);
+  background: var(--background-secondary);
   padding: var(--memochron-padding-sm);
   text-align: right;
   font-size: 0.8em;
@@ -185,6 +193,7 @@ If your plugin does not need CSS, delete this file.
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border: 1px solid var(--background-modifier-border);
 }
 
 /* Agenda View */
@@ -220,6 +229,7 @@ If your plugin does not need CSS, delete this file.
 
 /* Grey out past events in agenda view */
 .memochron-agenda-event.past-event {
+  opacity: 0.8;
   color: var(--text-muted);
 }
 
@@ -264,7 +274,7 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
-  box-shadow: 0 2px 8px var(--background-modifier-box-shadow);
+  box-shadow: var(--shadow-s);
   max-height: 200px;
   overflow-y: auto;
   width: var(--input-width);
