@@ -134,6 +134,9 @@ export class SettingsTab extends PluginSettingTab {
     const locationSetting = new Setting(containerEl)
       .setName("Note location")
       .setDesc("Where to save new event notes");
+    
+    // Add our container class to the setting item
+    locationSetting.settingEl.addClass("memochron-setting-item-container");
 
     const locationInput = new TextComponent(locationSetting.controlEl);
     locationInput
