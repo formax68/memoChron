@@ -20,8 +20,6 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "MemoChron settings" });
-
     // Calendar Sources Section
     new Setting(containerEl)
       .setName("Calendar sources")
@@ -92,8 +90,45 @@ export class SettingsTab extends PluginSettingTab {
         );
     });
 
+    // First Day of Week
+    new Setting(containerEl)
+      .setName("First Day of Week")
+      .setDesc("Choose which day the week starts on")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("0", "Sunday")
+          .addOption("1", "Monday")
+          .addOption("2", "Tuesday")
+          .addOption("3", "Wednesday")
+          .addOption("4", "Thursday")
+          .addOption("5", "Friday")
+          .addOption("6", "Saturday")
+          .setValue(String(this.plugin.settings.firstDayOfWeek))
+          .onChange(async (value) => {
+            this.plugin.settings.firstDayOfWeek = parseInt(value);
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          })
+      );
+
+    // Refresh Interval
+    new Setting(containerEl)
+      .setName("Refresh interval")
+      .setDesc("How often to refresh calendar data (in minutes)")
+      .addText((text) =>
+        text
+          .setValue(String(this.plugin.settings.refreshInterval))
+          .onChange(async (value) => {
+            const interval = parseInt(value);
+            if (!isNaN(interval) && interval > 0) {
+              this.plugin.settings.refreshInterval = interval;
+              await this.plugin.saveSettings();
+            }
+          })
+      );
     // Note Creation Settings
-    containerEl.createEl("h3", { text: "Note Settings" });
+    new Setting(containerEl).setName("Notes").setHeading();
+    // containerEl.createEl("h3", { text: "Note Settings" });
 
     // Note Location with suggestions
     const locationSetting = new Setting(containerEl)
@@ -200,46 +235,6 @@ export class SettingsTab extends PluginSettingTab {
               .map((tag) => tag.trim())
               .filter((tag) => tag.length > 0);
             await this.plugin.saveSettings();
-          })
-      );
-
-    // Calendar View Settings
-    containerEl.createEl("h3", { text: "View Settings" });
-
-    // First Day of Week
-    new Setting(containerEl)
-      .setName("First Day of Week")
-      .setDesc("Choose which day the week starts on")
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("0", "Sunday")
-          .addOption("1", "Monday")
-          .addOption("2", "Tuesday")
-          .addOption("3", "Wednesday")
-          .addOption("4", "Thursday")
-          .addOption("5", "Friday")
-          .addOption("6", "Saturday")
-          .setValue(String(this.plugin.settings.firstDayOfWeek))
-          .onChange(async (value) => {
-            this.plugin.settings.firstDayOfWeek = parseInt(value);
-            await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView();
-          })
-      );
-
-    // Refresh Interval
-    new Setting(containerEl)
-      .setName("Refresh interval")
-      .setDesc("How often to refresh calendar data (in minutes)")
-      .addText((text) =>
-        text
-          .setValue(String(this.plugin.settings.refreshInterval))
-          .onChange(async (value) => {
-            const interval = parseInt(value);
-            if (!isNaN(interval) && interval > 0) {
-              this.plugin.settings.refreshInterval = interval;
-              await this.plugin.saveSettings();
-            }
           })
       );
   }
