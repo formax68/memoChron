@@ -20,17 +20,17 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "MemoChron Settings" });
+    containerEl.createEl("h2", { text: "MemoChron settings" });
 
     // Calendar Sources Section
     new Setting(containerEl)
-      .setName("Calendar Sources")
+      .setName("Calendar sources")
       .setDesc("Add and manage your iCalendar URLs")
       .addButton((btn) =>
-        btn.setButtonText("Add Calendar").onClick(async () => {
+        btn.setButtonText("Add calendar").onClick(async () => {
           this.plugin.settings.calendarUrls.push({
             url: "",
-            name: "New Calendar",
+            name: "New calendar",
             enabled: true,
             tags: [],
           });
@@ -97,7 +97,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Note Location with suggestions
     const locationSetting = new Setting(containerEl)
-      .setName("Note Location")
+      .setName("Note location")
       .setDesc("Where to save new event notes");
 
     const locationInput = new TextComponent(locationSetting.controlEl);
@@ -122,7 +122,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Note Title Format
     new Setting(containerEl)
-      .setName("Note Title Format")
+      .setName("Note title format")
       .setDesc(
         "Format for new note titles. Available variables: {{event_title}}, {{date}}, {{source}}"
       )
@@ -138,7 +138,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Note Date Format
     new Setting(containerEl)
-      .setName("Note Date Format")
+      .setName("Note date format")
       .setDesc("Choose how dates appear in event notes")
       .addDropdown((dropdown) =>
         dropdown
@@ -155,7 +155,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Default Frontmatter
     new Setting(containerEl)
-      .setName("Default Frontmatter")
+      .setName("Default frontmatter")
       .setDesc("YAML frontmatter to add at the top of each event note")
       .addTextArea((text) => {
         text
@@ -171,7 +171,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Note Template
     new Setting(containerEl)
-      .setName("Note Template")
+      .setName("Note template")
       .setDesc(
         "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
       )
@@ -188,7 +188,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Default Tags
     new Setting(containerEl)
-      .setName("Default Tags")
+      .setName("Default tags")
       .setDesc("Default tags for all event notes (comma-separated)")
       .addText((text) =>
         text
@@ -229,7 +229,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Refresh Interval
     new Setting(containerEl)
-      .setName("Refresh Interval")
+      .setName("Refresh interval")
       .setDesc("How often to refresh calendar data (in minutes)")
       .addText((text) =>
         text

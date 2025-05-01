@@ -21,7 +21,7 @@ export class CalendarView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "MemoChron Calendar";
+    return "MemoChron calendar";
   }
 
   getIcon(): string {
