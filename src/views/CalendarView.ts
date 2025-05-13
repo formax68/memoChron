@@ -322,13 +322,12 @@ export class CalendarView extends ItemView {
       eventEl.addEventListener(
         "touchstart",
         (e) => {
-          e.preventDefault(); // Prevent double-tap zoom
+          // Prevent double-tap zoom
         },
         { passive: false }
       );
 
       eventEl.addEventListener("click", async (e) => {
-        e.preventDefault();
         e.stopPropagation();
         try {
           await this.showEventDetails(event);
