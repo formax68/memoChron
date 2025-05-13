@@ -9,17 +9,17 @@ export class CalendarView extends ItemView {
   private currentDate: Date;
   private selectedDate: Date | null = null;
   private currentMonthDays: Map<string, HTMLElement> = new Map();
-  
+
   // Register for view visibility changes
   private registerViewEvents() {
     // Check if view is already registered for events
     if ((this as any).isViewEventsRegistered) {
       return;
     }
-    
+
     // Watch for workspace layout changes to detect when view becomes visible
     this.registerEvent(
-      this.app.workspace.on('layout-change', () => {
+      this.app.workspace.on("layout-change", () => {
         // If this view is now visible and wasn't before, refresh events
         const isVisible = this.leaf.view === this;
         if (isVisible) {
@@ -27,7 +27,7 @@ export class CalendarView extends ItemView {
         }
       })
     );
-    
+
     (this as any).isViewEventsRegistered = true;
   }
 
@@ -86,10 +86,10 @@ export class CalendarView extends ItemView {
 
     // Register for layout change events to detect when view becomes visible again
     this.registerViewEvents();
-    
+
     // Force refresh events when view is opened/reopened
     await this.refreshEvents();
-    
+
     // Automatically select today's date and show events
     await this.goToday();
   }
@@ -240,13 +240,12 @@ export class CalendarView extends ItemView {
       dayEl.addEventListener(
         "touchstart",
         (e) => {
-          e.preventDefault(); // Prevent double-tap zoom
+          // Prevent double-tap zoom
         },
         { passive: false }
       );
 
       dayEl.addEventListener("click", (e) => {
-        e.preventDefault();
         this.selectDate(date);
       });
     }
