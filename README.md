@@ -80,7 +80,7 @@ In the plugin settings, you can customize:
 
 ## Support
 
-If you encounter any issues or have suggestions, please visit our [GitHub repository](https://github.com/formax68/memoChron) and create an issue.
+If you encounter any issues or have suggestions, please visit my [GitHub repository](https://github.com/formax68/memoChron) and create an issue.
 
 ## License
 
