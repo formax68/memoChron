@@ -9,6 +9,27 @@ export class CalendarView extends ItemView {
   private currentDate: Date;
   private selectedDate: Date | null = null;
   private currentMonthDays: Map<string, HTMLElement> = new Map();
+  
+  // Register for view visibility changes
+  private registerViewEvents() {
+    // Check if view is already registered for events
+    if ((this as any).isViewEventsRegistered) {
+      return;
+    }
+    
+    // Watch for workspace layout changes to detect when view becomes visible
+    this.registerEvent(
+      this.app.workspace.on('layout-change', () => {
+        // If this view is now visible and wasn't before, refresh events
+        const isVisible = this.leaf.view === this;
+        if (isVisible) {
+          this.refreshEvents();
+        }
+      })
+    );
+    
+    (this as any).isViewEventsRegistered = true;
+  }
 
   constructor(leaf: WorkspaceLeaf, plugin: MemoChron) {
     super(leaf);
@@ -63,6 +84,12 @@ export class CalendarView extends ItemView {
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
 
+    // Register for layout change events to detect when view becomes visible again
+    this.registerViewEvents();
+    
+    // Force refresh events when view is opened/reopened
+    await this.refreshEvents();
+    
     // Automatically select today's date and show events
     await this.goToday();
   }
@@ -105,6 +132,7 @@ export class CalendarView extends ItemView {
   }
 
   async refreshEvents() {
+    // Force fetch from sources every time to ensure most up-to-date data
     await this.plugin.calendarService.fetchCalendars(
       this.plugin.settings.calendarUrls
     );
