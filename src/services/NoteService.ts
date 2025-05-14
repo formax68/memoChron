@@ -93,9 +93,26 @@ export class NoteService {
     return Array.from(folders).sort((a, b) => a.localeCompare(b));
   }
 
-  private generateNoteContent(event: CalendarEvent): string {
+  private formatLocationText(location?: string): string {
+    if (!location) {
+      return "";
+    }
+    const isUrl =
+      location.startsWith("http://") ||
+      location.startsWith("https://") ||
+      location.startsWith("www.");
+    const isVirtual =
+      location.toLowerCase().includes("zoom") ||
+      location.toLowerCase().includes("meet.") ||
+      location.toLowerCase().includes("teams") ||
+      location.toLowerCase().includes("webex");
+    const locationEmoji = isUrl ? "🔗" : isVirtual ? "💻" : "📍";
+    return `${locationEmoji} ${location}`;
+  }
+
+  private getEventTemplateVariables(event: CalendarEvent) {
     const dateStr = this.formatDate(event.start);
-    const dateIsoStr = event.start.toISOString().split("T")[0]; // ISO Date
+    const dateIsoStr = event.start.toISOString().split("T")[0];
     const startTime = event.start.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -104,6 +121,27 @@ export class NoteService {
       hour: "2-digit",
       minute: "2-digit",
     });
+    const location = event.location || "";
+    const locationText = this.formatLocationText(event.location);
+    const cleanedDescription = this.cleanTeamsDescription(
+      event.description || ""
+    );
+
+    return {
+      event_title: event.title,
+      date: dateStr,
+      "date-iso": dateIsoStr,
+      start_time: startTime,
+      end_time: endTime,
+      source: event.source,
+      location: location, // Raw location for title
+      locationText: locationText, // Formatted location for content
+      description: cleanedDescription,
+    };
+  }
+
+  private generateNoteContent(event: CalendarEvent): string {
+    const variables = this.getEventTemplateVariables(event);
     const tags = this.getTagsForEvent(event);
 
     // Format tags in YAML style
@@ -112,45 +150,32 @@ export class NoteService {
         ? "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n")
         : "";
 
-    // Add location with appropriate emoji
-    let locationText = "";
-    if (event.location) {
-      const isUrl =
-        event.location.startsWith("http://") ||
-        event.location.startsWith("https://") ||
-        event.location.startsWith("www.");
-      const isVirtual =
-        event.location.toLowerCase().includes("zoom") ||
-        event.location.toLowerCase().includes("meet.") ||
-        event.location.toLowerCase().includes("teams") ||
-        event.location.toLowerCase().includes("webex");
-      const locationEmoji = isUrl ? "🔗" : isVirtual ? "💻" : "📍";
-      locationText = `${locationEmoji} ${event.location}`;
-    }
-
     // Create frontmatter with proper YAML formatting
-    const frontmatterContent = ["type: meeting", `date: "${dateStr}"`, tagsYaml]
+    const frontmatterContent = [
+      "type: meeting",
+      `date: "${variables.date}"`,
+      tagsYaml,
+    ]
       .filter((line) => line)
       .join("\n");
 
-    const frontmatter = `---\n${frontmatterContent}\n---`;
+    const frontmatter = `---
+${frontmatterContent}
+---`;
 
     // Get the template and replace variables
-    const cleanedDescription = this.cleanTeamsDescription(
-      event.description || ""
-    );
     let content = this.settings.noteTemplate;
 
     // Replace template variables
     content = content
-      .replace(/{{event_title}}/g, event.title)
-      .replace(/{{date}}/g, dateStr)
-      .replace(/{{date-iso}}/g, dateIsoStr) // Add replacement for date-iso
-      .replace(/{{start_time}}/g, startTime)
-      .replace(/{{end_time}}/g, endTime)
-      .replace(/{{source}}/g, event.source)
-      .replace(/{{location}}/g, locationText)
-      .replace(/{{description}}/g, cleanedDescription);
+      .replace(/{{event_title}}/g, variables.event_title)
+      .replace(/{{date}}/g, variables.date)
+      .replace(/{{date-iso}}/g, variables["date-iso"])
+      .replace(/{{start_time}}/g, variables.start_time)
+      .replace(/{{end_time}}/g, variables.end_time)
+      .replace(/{{source}}/g, variables.source)
+      .replace(/{{location}}/g, variables.locationText) // Use formatted locationText here
+      .replace(/{{description}}/g, variables.description);
 
     return frontmatter + "\n" + content;
   }
@@ -167,26 +192,36 @@ export class NoteService {
   }
 
   private formatTitle(format: string, event: CalendarEvent): string {
-    const dateStr = this.formatDate(event.start);
-    const dateIsoStr = event.start.toISOString().split("T")[0];
-    const startTime = event.start.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const endTime = event.end.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const locationStr = event.location || ""; // Default to empty string if undefined
+    const variables = this.getEventTemplateVariables(event);
+    let title = format;
 
-    return format
-      .replace(/{{event_title}}/g, this.sanitizeFileName(event.title))
-      .replace(/{{date}}/g, this.sanitizeFileName(dateStr))
-      .replace(/{{source}}/g, this.sanitizeFileName(event.source))
-      .replace(/{{date-iso}}/g, this.sanitizeFileName(dateIsoStr))
-      .replace(/{{start_time}}/g, this.sanitizeFileName(startTime))
-      .replace(/{{end_time}}/g, this.sanitizeFileName(endTime))
-      .replace(/{{location}}/g, this.sanitizeFileName(locationStr));
+    // Define which variables can be used in the title
+    const allowedTitleVariables: (keyof typeof variables)[] = [
+      "event_title",
+      "date",
+      "source",
+      "date-iso",
+      "start_time",
+      "end_time",
+      "location", // Uses the raw 'location' variable
+    ];
+
+    for (const key of allowedTitleVariables) {
+      const placeholder = `{{${key}}}`;
+      // Escape special characters in placeholder for regex
+      const escapedPlaceholder = placeholder.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+      const value = variables[key];
+      if (typeof value === "string") {
+        title = title.replace(
+          new RegExp(escapedPlaceholder, "g"),
+          this.sanitizeFileName(value)
+        );
+      }
+    }
+    return title;
   }
 
   private formatDate(date: Date): string {
