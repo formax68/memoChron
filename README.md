@@ -55,6 +55,7 @@ In the plugin settings, you can customize:
 - Default template with variables like:
   - {{event_title}}
   - {{date}}
+  - {{date-iso}} - The event date in YYYY-MM-DD format, regardless of the "Note date format" setting.
   - {{start_time}}
   - {{end_time}}
   - {{description}}

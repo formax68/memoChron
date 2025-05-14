@@ -95,6 +95,7 @@ export class NoteService {
 
   private generateNoteContent(event: CalendarEvent): string {
     const dateStr = this.formatDate(event.start);
+    const dateIsoStr = event.start.toISOString().split("T")[0]; // ISO Date
     const startTime = event.start.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -144,6 +145,7 @@ export class NoteService {
     content = content
       .replace(/{{event_title}}/g, event.title)
       .replace(/{{date}}/g, dateStr)
+      .replace(/{{date-iso}}/g, dateIsoStr) // Add replacement for date-iso
       .replace(/{{start_time}}/g, startTime)
       .replace(/{{end_time}}/g, endTime)
       .replace(/{{source}}/g, event.source)
@@ -165,11 +167,26 @@ export class NoteService {
   }
 
   private formatTitle(format: string, event: CalendarEvent): string {
-    const dateStr = event.start.toISOString().split("T")[0];
+    const dateStr = this.formatDate(event.start);
+    const dateIsoStr = event.start.toISOString().split("T")[0];
+    const startTime = event.start.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const endTime = event.end.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const locationStr = event.location || ""; // Default to empty string if undefined
+
     return format
       .replace(/{{event_title}}/g, this.sanitizeFileName(event.title))
-      .replace(/{{date}}/g, dateStr)
-      .replace(/{{source}}/g, this.sanitizeFileName(event.source));
+      .replace(/{{date}}/g, this.sanitizeFileName(dateStr))
+      .replace(/{{source}}/g, this.sanitizeFileName(event.source))
+      .replace(/{{date-iso}}/g, this.sanitizeFileName(dateIsoStr))
+      .replace(/{{start_time}}/g, this.sanitizeFileName(startTime))
+      .replace(/{{end_time}}/g, this.sanitizeFileName(endTime))
+      .replace(/{{location}}/g, this.sanitizeFileName(locationStr));
   }
 
   private formatDate(date: Date): string {
