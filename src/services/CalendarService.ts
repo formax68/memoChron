@@ -1,9 +1,10 @@
 // src/services/CalendarService.ts
 
-import { requestUrl, Platform } from "obsidian";
+import { requestUrl, Platform, Notice } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
+import MemoChron from "../main";
 
 export interface CalendarEvent {
   id: string;
@@ -19,12 +20,114 @@ export class CalendarService {
   private events: CalendarEvent[] = [];
   private refreshMinutes: number;
   private lastFetch: number = 0;
+  private plugin: MemoChron;
+  private isLoadingCache: boolean = false;
+  private isFetchingCalendars: boolean = false;
 
-  constructor(refreshMinutes: number) {
+  constructor(plugin: MemoChron, refreshMinutes: number) {
+    this.plugin = plugin;
     this.refreshMinutes = refreshMinutes;
   }
 
-  async fetchCalendars(sources: CalendarSource[]): Promise<CalendarEvent[]> {
+  /**
+   * Load calendar events from local cache file
+   */
+  async loadFromCache(): Promise<CalendarEvent[]> {
+    if (this.isLoadingCache) return [];
+
+    this.isLoadingCache = true;
+    try {
+      const cacheFile = await this.plugin.app.vault.adapter.read(
+        `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`
+      );
+      const cache = JSON.parse(cacheFile);
+
+      // Check if cache is still valid based on settings
+      if (cache && cache.timestamp) {
+        console.log(
+          "MemoChron: Cache found, timestamp:",
+          new Date(cache.timestamp)
+        );
+
+        // Check if cache is for currently enabled calendars
+        const enabledSources = this.plugin.settings.calendarUrls.filter(
+          (source) => source.enabled
+        );
+        const cacheSources = cache.sources || [];
+
+        // Convert ISO strings back to Date objects for events
+        if (cache.events && Array.isArray(cache.events)) {
+          cache.events.forEach((event: any) => {
+            event.start = new Date(event.start);
+            event.end = new Date(event.end);
+          });
+
+          this.events = cache.events as CalendarEvent[];
+          this.lastFetch = cache.timestamp;
+
+          // Return events if cache is fresh enough, otherwise we'll still load them
+          // but also trigger a background refresh
+          this.isLoadingCache = false;
+          return cache.events;
+        }
+      }
+    } catch (error) {
+      console.log("MemoChron: No cache found or cache invalid", error);
+      // This is expected if cache doesn't exist or is invalid - we'll just fetch fresh data
+    }
+
+    this.isLoadingCache = false;
+    return [];
+  }
+
+  /**
+   * Save calendar events to local cache file
+   */
+  async saveToCache(): Promise<void> {
+    try {
+      // Create directory if it doesn't exist
+      const dirPath = `${this.plugin.app.vault.configDir}/plugins/memochron`;
+      try {
+        await this.plugin.app.vault.adapter.mkdir(dirPath);
+      } catch (e) {
+        // Directory likely already exists
+      }
+
+      // Get list of enabled calendar sources for cache invalidation
+      const enabledSources = this.plugin.settings.calendarUrls
+        .filter((source) => source.enabled)
+        .map((source) => ({
+          url: source.url,
+          name: source.name,
+        }));
+
+      // Create a cache object with a timestamp
+      const cache = {
+        timestamp: this.lastFetch,
+        sources: enabledSources,
+        events: this.events,
+      };
+
+      await this.plugin.app.vault.adapter.write(
+        `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`,
+        JSON.stringify(cache)
+      );
+
+      console.log("MemoChron: Calendar cache saved");
+    } catch (error) {
+      console.error("MemoChron: Failed to save calendar cache:", error);
+    }
+  }
+
+  async fetchCalendars(
+    sources: CalendarSource[],
+    forceRefresh = false
+  ): Promise<CalendarEvent[]> {
+    // Prevent concurrent fetches
+    if (this.isFetchingCalendars) {
+      return this.events;
+    }
+
     const now = Date.now();
     const enabledSources = sources.filter((source) => source.enabled);
 
@@ -44,8 +147,21 @@ export class CalendarService {
       return [];
     }
 
-    // Force a refresh if the number of enabled calendars changed
+    // If events array is empty, try to load from cache first
+    if (this.events.length === 0 && !forceRefresh) {
+      const cachedEvents = await this.loadFromCache();
+      if (cachedEvents.length > 0) {
+        // If we have cached events, schedule a background refresh and return the cached events
+        setTimeout(() => {
+          this.fetchCalendars(sources, true);
+        }, 100);
+        return this.events;
+      }
+    }
+
+    // Determine if we need to refresh based on cache expiration or calendar changes
     const needsRefresh =
+      forceRefresh || // Explicit force refresh
       this.events.length === 0 || // No events yet
       now - this.lastFetch >= this.refreshMinutes * 60 * 1000 || // Cache expired
       this.events.some(
@@ -61,15 +177,49 @@ export class CalendarService {
     }
 
     try {
+      this.isFetchingCalendars = true;
+
+      // If this is a background refresh, show a subtle notice
+      if (this.events.length > 0 && !forceRefresh) {
+        console.log("MemoChron: Background refresh started");
+      } else if (forceRefresh) {
+        new Notice("MemoChron: Refreshing calendars...");
+      }
+
       const fetchPromises = enabledSources.map((source) =>
         this.fetchCalendar(source)
       );
       const results = await Promise.all(fetchPromises);
       this.events = results.flat();
       this.lastFetch = now;
+
+      // Save to cache
+      await this.saveToCache();
+
+      this.isFetchingCalendars = false;
+
+      // Show completion notice for forced refreshes
+      if (forceRefresh) {
+        new Notice(
+          `MemoChron: Calendar refresh complete (${this.events.length} events)`
+        );
+      }
+
       return this.events;
     } catch (error) {
+      this.isFetchingCalendars = false;
       console.error("Error fetching calendars:", error);
+
+      if (forceRefresh) {
+        new Notice(
+          "MemoChron: Failed to refresh calendars. Check the console for details."
+        );
+      }
+
+      if (this.events.length > 0) {
+        // Return existing events if available, even on error
+        return this.events;
+      }
       throw error;
     }
   }
@@ -94,11 +244,11 @@ export class CalendarService {
         );
         return [];
       }
-      
+
       const jcalData = parse(response.text);
       const comp = new Component(jcalData);
       const vevents = comp.getAllSubcomponents("vevent");
-      
+
       const events: CalendarEvent[] = [];
 
       // Optimize recurring event iteration
@@ -112,32 +262,40 @@ export class CalendarService {
 
       // First, collect all recurrence exceptions (for handling rescheduled events)
       const recurrenceExceptions = new Map<string, ICalEvent>();
-      
+
       // Find all events with RECURRENCE-ID (these are modified instances)
       for (const vevent of vevents) {
         if (vevent.hasProperty("recurrence-id")) {
           const event = new ICalEvent(vevent);
           const uid = event.uid;
-          const recurrenceId = vevent.getFirstProperty("recurrence-id").getFirstValue();
-          
+          const recurrenceId = vevent
+            .getFirstProperty("recurrence-id")
+            .getFirstValue();
+
           // Skip if cancelled
-          if (vevent.hasProperty("status") && vevent.getFirstPropertyValue("status") === "CANCELLED") {
+          if (
+            vevent.hasProperty("status") &&
+            vevent.getFirstPropertyValue("status") === "CANCELLED"
+          ) {
             continue;
           }
-          
+
           // Create a unique key combining the UID and the recurrence date
-          const recKey = `${uid}-${recurrenceId.toJSDate().toISOString().substring(0, 10)}`;
+          const recKey = `${uid}-${recurrenceId
+            .toJSDate()
+            .toISOString()
+            .substring(0, 10)}`;
           recurrenceExceptions.set(recKey, event);
         }
       }
-      
+
       // Now process all events
       for (const vevent of vevents) {
         // Skip if this event has a recurrence-id (we'll process these separately)
         if (vevent.hasProperty("recurrence-id")) {
           continue;
         }
-        
+
         // Skip cancelled events
         if (vevent.hasProperty("status")) {
           const status = vevent.getFirstPropertyValue("status");
@@ -145,10 +303,10 @@ export class CalendarService {
             continue; // Skip this event
           }
         }
-        
+
         const event = new ICalEvent(vevent);
         let startDate, endDate;
-        
+
         // Extract timezone info if available
         let tzid = null;
         if (vevent.hasProperty("dtstart")) {
@@ -157,12 +315,12 @@ export class CalendarService {
             tzid = dtstart.getParameter("tzid");
           }
         }
-        
+
         // Fix timezone issues using specific handling
         if (vevent.hasProperty("rrule")) {
           const iterator = event.iterator();
           let next: Time | null;
-          
+
           // Get excluded dates (EXDATE) if any
           const excludedDates: Date[] = [];
           if (vevent.hasProperty("exdate")) {
@@ -183,37 +341,43 @@ export class CalendarService {
             const occurEnd = next.clone();
             const duration = event.duration;
             occurEnd.addDuration(duration);
-            
+
             // Get the date of this occurrence
             const rawDate = next.toJSDate();
-            
-            // Convert to local timezone 
+
+            // Convert to local timezone
             startDate = this.convertTimezone(rawDate, tzid);
             endDate = this.convertTimezone(occurEnd.toJSDate(), tzid);
-            
+
             // Skip this occurrence if it's in the excluded dates list
-            const isExcluded = excludedDates.some(exDate => {
+            const isExcluded = excludedDates.some((exDate) => {
               // Compare year, month, and day to check if this date is excluded
-              return exDate.getFullYear() === rawDate.getFullYear() &&
-                     exDate.getMonth() === rawDate.getMonth() &&
-                     exDate.getDate() === rawDate.getDate();
+              return (
+                exDate.getFullYear() === rawDate.getFullYear() &&
+                exDate.getMonth() === rawDate.getMonth() &&
+                exDate.getDate() === rawDate.getDate()
+              );
             });
-            
+
             // Check if this occurrence has a rescheduled exception
             const dateStr = rawDate.toISOString().substring(0, 10);
             const recKey = `${event.uid}-${dateStr}`;
             const hasException = recurrenceExceptions.has(recKey);
-            
+
             if (isExcluded || hasException) {
               // If there's an exception, we'll add it separately - skip the original
               if (hasException) {
                 // Get the exception event
                 const exceptionEvent = recurrenceExceptions.get(recKey);
-                
+
                 // Get timezone for the exception
                 let exTzid = tzid; // Default to parent event timezone
-                if (exceptionEvent && exceptionEvent.component.hasProperty("dtstart")) {
-                  const exDtstart = exceptionEvent.component.getFirstProperty("dtstart");
+                if (
+                  exceptionEvent &&
+                  exceptionEvent.component.hasProperty("dtstart")
+                ) {
+                  const exDtstart =
+                    exceptionEvent.component.getFirstProperty("dtstart");
                   if (exDtstart) {
                     const paramTzid = exDtstart.getParameter("tzid");
                     if (paramTzid) {
@@ -221,12 +385,18 @@ export class CalendarService {
                     }
                   }
                 }
-                
+
                 // Get start and end dates from the exception and convert to local timezone
                 if (exceptionEvent) {
-                  const exStartDate = this.convertTimezone(exceptionEvent.startDate.toJSDate(), exTzid);
-                  const exEndDate = this.convertTimezone(exceptionEvent.endDate.toJSDate(), exTzid);
-                  
+                  const exStartDate = this.convertTimezone(
+                    exceptionEvent.startDate.toJSDate(),
+                    exTzid
+                  );
+                  const exEndDate = this.convertTimezone(
+                    exceptionEvent.endDate.toJSDate(),
+                    exTzid
+                  );
+
                   // Add the exception to events if it's in our date range
                   if (exStartDate <= periodEnd && exEndDate >= periodStart) {
                     events.push({
@@ -241,14 +411,11 @@ export class CalendarService {
                   }
                 }
               }
-              
+
               continue; // Skip this original occurrence
             }
 
-            if (
-              startDate <= periodEnd &&
-              endDate >= periodStart
-            ) {
+            if (startDate <= periodEnd && endDate >= periodStart) {
               events.push({
                 id: `${event.uid}-${next.toUnixTime()}`,
                 title: event.summary,
@@ -268,14 +435,14 @@ export class CalendarService {
           // Get original dates from event
           const eventStartDate = event.startDate.toJSDate();
           const eventEndDate = event.endDate.toJSDate();
-          
+
           // Convert to local dates with specific timezone handling
           startDate = this.convertTimezone(eventStartDate, tzid);
           endDate = this.convertTimezone(eventEndDate, tzid);
-          
+
           // Create ID for the event
           const eventId = event.uid;
-          
+
           events.push({
             id: eventId,
             title: event.summary,
@@ -287,7 +454,7 @@ export class CalendarService {
           });
         }
       }
-      
+
       return events;
     } catch (error) {
       console.error(`Error fetching calendar ${source.name}:`, error);
@@ -307,11 +474,9 @@ export class CalendarService {
     try {
       if (!tzid) {
         // If no timezone provided, assume UTC
-        return DateTime.fromJSDate(date, { zone: 'UTC' })
-          .toLocal()
-          .toJSDate();
+        return DateTime.fromJSDate(date, { zone: "UTC" }).toLocal().toJSDate();
       }
-      
+
       // Map Microsoft Exchange timezone IDs to IANA timezone names
       // These are common Exchange timezone IDs that might appear in calendars
       const timezoneMap: Record<string, string> = {
@@ -324,7 +489,7 @@ export class CalendarService {
         "Hawaii-Aleutian Standard Time": "Pacific/Honolulu",
         "Alaskan Standard Time": "America/Anchorage",
         "Atlantic Standard Time": "America/Halifax",
-        
+
         "GMT Standard Time": "Europe/London",
         "W. Europe Standard Time": "Europe/Berlin",
         "Romance Standard Time": "Europe/Paris",
@@ -332,23 +497,23 @@ export class CalendarService {
         "E. Europe Standard Time": "Europe/Bucharest",
         "GTB Standard Time": "Europe/Athens",
         "Russian Standard Time": "Europe/Moscow",
-        
+
         "Singapore Standard Time": "Asia/Singapore",
         "China Standard Time": "Asia/Shanghai",
         "Tokyo Standard Time": "Asia/Tokyo",
         "Korea Standard Time": "Asia/Seoul",
         "India Standard Time": "Asia/Kolkata",
-        
-        "UTC": "UTC",
-        "Coordinated Universal Time": "UTC"
+
+        UTC: "UTC",
+        "Coordinated Universal Time": "UTC",
       };
-      
+
       // Map the Microsoft timezone to IANA timezone
       const ianaZone = timezoneMap[tzid] || tzid;
-      
+
       // Create a DateTime in the source timezone
       let dt = DateTime.fromJSDate(date);
-      
+
       // Try to set the source timezone
       try {
         dt = dt.setZone(ianaZone, { keepLocalTime: true });
@@ -356,7 +521,7 @@ export class CalendarService {
         // If the timezone is invalid, use UTC as a fallback
         dt = dt.setZone("UTC", { keepLocalTime: true });
       }
-      
+
       // Convert to local timezone
       return dt.toLocal().toJSDate();
     } catch (error) {

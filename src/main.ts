@@ -17,7 +17,10 @@ export default class MemoChron extends Plugin {
     await this.loadSettings();
 
     // Initialize services
-    this.calendarService = new CalendarService(this.settings.refreshInterval);
+    this.calendarService = new CalendarService(
+      this,
+      this.settings.refreshInterval
+    );
     this.noteService = new NoteService(this.app, this.settings);
 
     // Register calendar view
@@ -28,16 +31,15 @@ export default class MemoChron extends Plugin {
 
     // Add settings tab
     this.addSettingTab(new SettingsTab(this.app, this));
-    
+
     // Register commands
     this.addCommand({
-      id: 'force-refresh-calendars',
-      name: 'Force refresh calendars',
+      id: "force-refresh-calendars",
+      name: "Force refresh calendars",
       callback: async () => {
-        await this.refreshCalendarView();
-        // Show a notification that calendars have been refreshed
-        new Notice('MemoChron calendars refreshed');
-      }
+        await this.refreshCalendarView(true);
+        // Notice is now handled by the CalendarService
+      },
     });
 
     // Add calendar view to right sidebar
@@ -95,9 +97,9 @@ export default class MemoChron extends Plugin {
     await this.refreshCalendarView();
   }
 
-  async refreshCalendarView() {
+  async refreshCalendarView(forceRefresh = false) {
     if (this.calendarView) {
-      await this.calendarView.refreshEvents();
+      await this.calendarView.refreshEvents(forceRefresh);
     }
   }
 

@@ -131,10 +131,11 @@ export class CalendarView extends ItemView {
     await this.showDayAgenda(date);
   }
 
-  async refreshEvents() {
-    // Force fetch from sources every time to ensure most up-to-date data
+  async refreshEvents(forceRefresh = false) {
+    // Fetch from sources with option to force refresh
     await this.plugin.calendarService.fetchCalendars(
-      this.plugin.settings.calendarUrls
+      this.plugin.settings.calendarUrls,
+      forceRefresh
     );
     this.renderMonth();
     if (this.selectedDate) {
