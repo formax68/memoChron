@@ -141,42 +141,63 @@ export class NoteService {
     };
   }
 
-  private generateNoteContent(event: CalendarEvent): string {
-    const variables = this.getEventTemplateVariables(event);
-    const tags = this.getTagsForEvent(event);
-
-    // Format tags in YAML style
-    const tagsYaml =
-      tags.length > 0
-        ? "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n")
-        : "";
-
-    // Create frontmatter with proper YAML formatting
-    const frontmatterContent = [
-      "type: meeting",
-      `date: "${variables.date}"`,
-      tagsYaml,
-    ]
-      .filter((line) => line)
-      .join("\n");
-
-    const frontmatter = `---
-${frontmatterContent}
----`;
-
-    // Get the template and replace variables
-    let content = this.settings.noteTemplate;
-
-    // Replace template variables
-    content = content
+  private applyTemplateVariables(
+    template: string,
+    variables: Record<string, string>
+  ): string {
+    return template
       .replace(/{{event_title}}/g, variables.event_title)
       .replace(/{{date}}/g, variables.date)
       .replace(/{{date-iso}}/g, variables["date-iso"])
       .replace(/{{start_time}}/g, variables.start_time)
       .replace(/{{end_time}}/g, variables.end_time)
       .replace(/{{source}}/g, variables.source)
-      .replace(/{{location}}/g, variables.locationText) // Use formatted locationText here
+      .replace(/{{location}}/g, variables.locationText)
       .replace(/{{description}}/g, variables.description);
+  }
+
+  private generateNoteContent(event: CalendarEvent): string {
+    const variables = this.getEventTemplateVariables(event);
+    const tags = this.getTagsForEvent(event);
+
+    // Prepare tags YAML
+    const tagsYaml =
+      tags.length > 0
+        ? "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n")
+        : "";
+
+    // Base frontmatter from settings
+    let frontmatterContent = this.settings.defaultFrontmatter.trim();
+
+    if (frontmatterContent.startsWith("---")) {
+      frontmatterContent = frontmatterContent.substring(3);
+    }
+    if (frontmatterContent.endsWith("---")) {
+      frontmatterContent = frontmatterContent.substring(
+        0,
+        frontmatterContent.length - 3
+      );
+    }
+    frontmatterContent = frontmatterContent.trim();
+
+    frontmatterContent = this.applyTemplateVariables(
+      frontmatterContent,
+      variables
+    );
+
+    if (tagsYaml) {
+      if (frontmatterContent.length > 0) {
+        frontmatterContent += "\n";
+      }
+      frontmatterContent += tagsYaml;
+    }
+
+    const frontmatter = `---\n${frontmatterContent}\n---`;
+
+    const content = this.applyTemplateVariables(
+      this.settings.noteTemplate,
+      variables
+    );
 
     return frontmatter + "\n" + content;
   }
