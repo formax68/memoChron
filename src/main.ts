@@ -1,4 +1,4 @@
-import { Plugin, Platform } from "obsidian";
+import { Plugin, Platform, Notice } from "obsidian";
 import { CalendarService } from "./services/CalendarService";
 import { NoteService } from "./services/NoteService";
 import { CalendarView } from "./views/CalendarView";
@@ -28,6 +28,17 @@ export default class MemoChron extends Plugin {
 
     // Add settings tab
     this.addSettingTab(new SettingsTab(this.app, this));
+    
+    // Register commands
+    this.addCommand({
+      id: 'force-refresh-calendars',
+      name: 'Force refresh calendars',
+      callback: async () => {
+        await this.refreshCalendarView();
+        // Show a notification that calendars have been refreshed
+        new Notice('MemoChron calendars refreshed');
+      }
+    });
 
     // Add calendar view to right sidebar
     this.app.workspace.onLayoutReady(() => {
