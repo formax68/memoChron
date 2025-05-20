@@ -57,9 +57,10 @@ export class NoteService {
         await this.ensureFolderExists(normalizedPath);
       }
 
-      // If file exists, just return it without modifications
+      // If file exists, update its contents keeping user's notes section
       const existingFile = vault.getAbstractFileByPath(filePath);
       if (existingFile instanceof TFile) {
+        await this.updateExistingNote(existingFile, event);
         return existingFile;
       }
 
