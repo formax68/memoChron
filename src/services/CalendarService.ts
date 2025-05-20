@@ -23,6 +23,37 @@ export class CalendarService {
   private plugin: MemoChron;
   private isLoadingCache: boolean = false;
   private isFetchingCalendars: boolean = false;
+  
+  // Map Microsoft Exchange timezone IDs to IANA timezone names
+  // These are common Exchange timezone IDs that might appear in calendars
+  private static readonly timezoneMap: Record<string, string> = {
+    "Pacific Standard Time": "America/Los_Angeles",
+    "Mountain Standard Time": "America/Denver",
+    "Central Standard Time": "America/Chicago",
+    "Eastern Standard Time": "America/New_York",
+    "US Eastern Standard Time": "America/Indianapolis",
+    "US Mountain Standard Time": "America/Phoenix",
+    "Hawaii-Aleutian Standard Time": "Pacific/Honolulu",
+    "Alaskan Standard Time": "America/Anchorage",
+    "Atlantic Standard Time": "America/Halifax",
+
+    "GMT Standard Time": "Europe/London",
+    "W. Europe Standard Time": "Europe/Berlin",
+    "Romance Standard Time": "Europe/Paris",
+    "Central European Standard Time": "Europe/Budapest",
+    "E. Europe Standard Time": "Europe/Bucharest",
+    "GTB Standard Time": "Europe/Athens",
+    "Russian Standard Time": "Europe/Moscow",
+
+    "Singapore Standard Time": "Asia/Singapore",
+    "China Standard Time": "Asia/Shanghai",
+    "Tokyo Standard Time": "Asia/Tokyo",
+    "Korea Standard Time": "Asia/Seoul",
+    "India Standard Time": "Asia/Kolkata",
+
+    UTC: "UTC",
+    "Coordinated Universal Time": "UTC",
+  };
 
   constructor(plugin: MemoChron, refreshMinutes: number) {
     this.plugin = plugin;
@@ -477,39 +508,8 @@ export class CalendarService {
         return DateTime.fromJSDate(date, { zone: "UTC" }).toLocal().toJSDate();
       }
 
-      // Map Microsoft Exchange timezone IDs to IANA timezone names
-      // These are common Exchange timezone IDs that might appear in calendars
-      const timezoneMap: Record<string, string> = {
-        "Pacific Standard Time": "America/Los_Angeles",
-        "Mountain Standard Time": "America/Denver",
-        "Central Standard Time": "America/Chicago",
-        "Eastern Standard Time": "America/New_York",
-        "US Eastern Standard Time": "America/Indianapolis",
-        "US Mountain Standard Time": "America/Phoenix",
-        "Hawaii-Aleutian Standard Time": "Pacific/Honolulu",
-        "Alaskan Standard Time": "America/Anchorage",
-        "Atlantic Standard Time": "America/Halifax",
-
-        "GMT Standard Time": "Europe/London",
-        "W. Europe Standard Time": "Europe/Berlin",
-        "Romance Standard Time": "Europe/Paris",
-        "Central European Standard Time": "Europe/Budapest",
-        "E. Europe Standard Time": "Europe/Bucharest",
-        "GTB Standard Time": "Europe/Athens",
-        "Russian Standard Time": "Europe/Moscow",
-
-        "Singapore Standard Time": "Asia/Singapore",
-        "China Standard Time": "Asia/Shanghai",
-        "Tokyo Standard Time": "Asia/Tokyo",
-        "Korea Standard Time": "Asia/Seoul",
-        "India Standard Time": "Asia/Kolkata",
-
-        UTC: "UTC",
-        "Coordinated Universal Time": "UTC",
-      };
-
       // Map the Microsoft timezone to IANA timezone
-      const ianaZone = timezoneMap[tzid] || tzid;
+      const ianaZone = CalendarService.timezoneMap[tzid] || tzid;
 
       // Create a DateTime in the source timezone
       let dt = DateTime.fromJSDate(date);
