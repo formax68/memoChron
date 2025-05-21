@@ -1,5 +1,16 @@
 // src/settings/types.ts
 
+import {
+  DEFAULT_CALENDAR_URLS,
+  DEFAULT_REFRESH_INTERVAL,
+  DEFAULT_NOTE_LOCATION,
+  DEFAULT_NOTE_TITLE_FORMAT,
+  DEFAULT_NOTE_DATE_FORMAT,
+  DEFAULT_FRONTMATTER,
+  DEFAULT_TAGS,
+  DEFAULT_FIRST_DAY_OF_WEEK
+} from "../utils/constants";
+
 export interface CalendarSource {
   url: string;
   name: string;
@@ -21,12 +32,12 @@ export interface MemoChronSettings {
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
   calendarUrls: [],
-  noteLocation: "/",
-  noteTitleFormat: "{{date}} - {{event_title}}",
-  refreshInterval: 30,
-  noteDateFormat: "ISO",
-  defaultFrontmatter: "---\ntype: event\ndate: {{date}}\n---",
-  defaultTags: ["event", "meeting"],
+  noteLocation: DEFAULT_NOTE_LOCATION,
+  noteTitleFormat: DEFAULT_NOTE_TITLE_FORMAT,
+  refreshInterval: DEFAULT_REFRESH_INTERVAL,
+  noteDateFormat: DEFAULT_NOTE_DATE_FORMAT,
+  defaultFrontmatter: DEFAULT_FRONTMATTER,
+  defaultTags: DEFAULT_TAGS,
   noteTemplate: `# {{event_title}}
 
 ## 📝 Event Details
@@ -40,5 +51,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
 
 ## 📝 Notes
 `,
-  firstDayOfWeek: 1, // Monday
+  firstDayOfWeek: DEFAULT_FIRST_DAY_OF_WEEK,
 };

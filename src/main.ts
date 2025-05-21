@@ -4,6 +4,7 @@ import { NoteService } from "./services/NoteService";
 import { CalendarView } from "./views/CalendarView";
 import { SettingsTab } from "./settings/SettingsTab";
 import { MemoChronSettings, DEFAULT_SETTINGS } from "./settings/types";
+import { MEMOCHRON_VIEW_TYPE } from "./utils/constants";
 
 export default class MemoChron extends Plugin {
   settings: MemoChronSettings;
@@ -25,7 +26,7 @@ export default class MemoChron extends Plugin {
 
     // Register calendar view
     this.registerView(
-      "memochron-calendar",
+      MEMOCHRON_VIEW_TYPE,
       (leaf) => (this.calendarView = new CalendarView(leaf, this))
     );
 
@@ -74,7 +75,7 @@ export default class MemoChron extends Plugin {
   }
 
   private async activateView() {
-    const leaves = this.app.workspace.getLeavesOfType("memochron-calendar");
+    const leaves = this.app.workspace.getLeavesOfType(MEMOCHRON_VIEW_TYPE);
 
     if (leaves.length === 0) {
       // Always try to create the view in the right sidebar, even on mobile
@@ -87,7 +88,7 @@ export default class MemoChron extends Plugin {
 
       if (leaf) {
         await leaf.setViewState({
-          type: "memochron-calendar",
+          type: MEMOCHRON_VIEW_TYPE,
           active: true,
         });
       }

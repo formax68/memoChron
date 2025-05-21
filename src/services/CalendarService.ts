@@ -5,6 +5,7 @@ import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
+import { DEFAULT_REFRESH_INTERVAL } from "../utils/constants";
 
 export interface CalendarEvent {
   id: string;
