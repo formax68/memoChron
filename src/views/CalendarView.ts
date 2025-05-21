@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, Notice } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
+import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
 
 export class CalendarView extends ItemView {
   private plugin: MemoChron;
@@ -38,7 +39,7 @@ export class CalendarView extends ItemView {
   }
 
   getViewType(): string {
-    return "memochron-calendar";
+    return MEMOCHRON_VIEW_TYPE;
   }
 
   getDisplayText(): string {
