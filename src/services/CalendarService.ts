@@ -512,15 +512,12 @@ export class CalendarService {
       // Map the Microsoft timezone to IANA timezone
       const ianaZone = CalendarService.timezoneMap[tzid] || tzid;
 
-      // Create a DateTime in the source timezone
-      let dt = DateTime.fromJSDate(date);
+      // Create DateTime from the date assuming it's in the source timezone
+      let dt = DateTime.fromJSDate(date, { zone: ianaZone });
 
-      // Try to set the source timezone
-      try {
-        dt = dt.setZone(ianaZone, { keepLocalTime: true });
-      } catch (e) {
-        // If the timezone is invalid, use UTC as a fallback
-        dt = dt.setZone("UTC", { keepLocalTime: true });
+      // If invalid timezone, fallback to UTC
+      if (!dt.isValid) {
+        dt = DateTime.fromJSDate(date, { zone: "UTC" });
       }
 
       // Convert to local timezone
