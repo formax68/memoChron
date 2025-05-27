@@ -81,9 +81,16 @@ export class CalendarView extends ItemView {
     todayText.onclick = () => this.goToday();
     nextText.onclick = () => this.navigate(1);
 
-    // Create calendar and agenda containers
-    this.calendar = container.createEl("div", { cls: "memochron-calendar" });
-    this.agenda = container.createEl("div", { cls: "memochron-agenda" });
+    // Create main layout container with separate calendar and agenda sections
+    const mainLayout = container.createEl("div", { cls: "memochron-main-layout" });
+    
+    // Create calendar container
+    const calendarSection = mainLayout.createEl("div", { cls: "memochron-calendar-section" });
+    this.calendar = calendarSection.createEl("div", { cls: "memochron-calendar" });
+    
+    // Create agenda container with its own scrollable area
+    const agendaSection = mainLayout.createEl("div", { cls: "memochron-agenda-section" });
+    this.agenda = agendaSection.createEl("div", { cls: "memochron-agenda" });
 
     // Register for layout change events to detect when view becomes visible again
     this.registerViewEvents();

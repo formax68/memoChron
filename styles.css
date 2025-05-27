@@ -63,6 +63,44 @@
   margin: 0 var(--memochron-padding-sm);
 }
 
+/* Main Layout - Separate Calendar and Agenda */
+.memochron-main-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px); /* Adjust based on controls height */
+  gap: var(--memochron-gap);
+}
+
+.memochron-calendar-section {
+  flex: 0 0 auto; /* Fixed size, don't grow or shrink */
+  min-height: 300px; /* Minimum height for calendar visibility */
+  overflow: hidden; /* Prevent calendar from scrolling */
+}
+
+.memochron-agenda-section {
+  flex: 1 1 auto; /* Take remaining space and allow growth */
+  min-height: 0; /* Allow shrinking below content size */
+  overflow: hidden; /* Container doesn't scroll, content inside will */
+  border-top: 1px solid var(--background-modifier-border);
+  position: relative; /* For potential scroll indicators */
+}
+
+/* Optional: Add a subtle shadow to indicate scrollable content */
+.memochron-agenda-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(to bottom, 
+    var(--background-modifier-border-hover) 0%, 
+    transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+}
+
 /* Month View */
 .memochron-calendar-grid {
   display: grid;
@@ -200,9 +238,33 @@
 
 /* Agenda View */
 .memochron-agenda {
-  margin-top: var(--memochron-padding-lg);
+  height: 100%; /* Fill the agenda section */
+  overflow-y: auto; /* Enable vertical scrolling for agenda content */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: var(--memochron-padding-sm);
-  border-top: 1px solid var(--background-modifier-border);
+  margin-top: 0; /* Remove top margin since we have a border on the section */
+  border-top: none; /* Remove border since section has it */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-bg); /* Firefox */
+  scroll-behavior: smooth; /* Smooth scrolling */
+}
+
+/* Webkit scrollbar styling */
+.memochron-agenda::-webkit-scrollbar {
+  width: 6px;
+}
+
+.memochron-agenda::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+}
+
+.memochron-agenda::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-bg);
+  border-radius: 3px;
+}
+
+.memochron-agenda::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-bg-hover);
 }
 
 .memochron-agenda h3 {
@@ -307,6 +369,14 @@
 
 /* Mobile Specific Styles */
 @media screen and (max-width: 768px) {
+  .memochron-main-layout {
+    height: calc(100vh - 100px); /* Adjust for mobile */
+  }
+
+  .memochron-calendar-section {
+    min-height: 250px; /* Smaller minimum on mobile */
+  }
+
   .memochron-calendar-grid {
     font-size: 0.9em;
   }
@@ -347,6 +417,14 @@
 
 /* Additional mobile optimizations for very small screens */
 @media screen and (max-width: 480px) {
+  .memochron-main-layout {
+    height: calc(100vh - 80px); /* Even more compact on small screens */
+  }
+
+  .memochron-calendar-section {
+    min-height: 200px; /* Further reduce calendar height on very small screens */
+  }
+
   .memochron-weekday {
     font-size: 0.8em;
     padding: var(--memochron-padding-xs);
