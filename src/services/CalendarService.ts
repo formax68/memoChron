@@ -553,4 +553,28 @@ export class CalendarService {
       })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }
+
+  /**
+   * Get all upcoming events starting from now
+   */
+  getUpcomingEvents(limit?: number): CalendarEvent[] {
+    const now = new Date();
+    
+    return this.events
+      .filter((event) => event.end >= now) // Include events that haven't ended yet
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .slice(0, limit); // Apply limit if provided
+  }
+
+  /**
+   * Get all events within a date range
+   */
+  getEventsInRange(startDate: Date, endDate: Date): CalendarEvent[] {
+    return this.events
+      .filter((event) => {
+        // Event starts before range ends and ends after range starts
+        return event.start <= endDate && event.end >= startDate;
+      })
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
 }

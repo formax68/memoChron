@@ -311,6 +311,54 @@
   color: var(--text-muted);
 }
 
+/* Day separator for agenda view */
+.memochron-day-separator {
+  font-weight: 600;
+  color: var(--text-accent);
+  padding: var(--memochron-padding-md) var(--memochron-padding-sm);
+  margin: var(--memochron-padding-md) 0 var(--memochron-padding-sm) 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  position: sticky;
+  top: 0;
+  background: var(--background-primary);
+  z-index: 1;
+}
+
+.memochron-day-separator:first-child {
+  margin-top: 0;
+}
+
+/* Highlight today's events */
+.memochron-agenda-event.today-event {
+  border-left: 3px solid var(--text-accent);
+  background: var(--background-modifier-hover);
+}
+
+/* Loading indicator for infinite scroll */
+.memochron-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--memochron-padding-lg);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.memochron-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--background-modifier-border);
+  border-top: 2px solid var(--text-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: var(--memochron-padding-sm);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Settings */
 .memochron-calendar-list {
   border: 1px solid var(--background-modifier-border);

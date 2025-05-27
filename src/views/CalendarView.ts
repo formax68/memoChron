@@ -10,6 +10,13 @@ export class CalendarView extends ItemView {
   private currentDate: Date;
   private selectedDate: Date | null = null;
   private currentMonthDays: Map<string, HTMLElement> = new Map();
+  
+  // Infinite scroll properties
+  private eventsLoaded: number = 0;
+  private readonly eventsPerPage: number = 50;
+  private isLoadingMoreEvents: boolean = false;
+  private allEventsLoaded: boolean = false;
+  private scrollListenerAdded: boolean = false;
 
   // Register for view visibility changes
   private registerViewEvents() {
@@ -136,7 +143,8 @@ export class CalendarView extends ItemView {
       newEl.addClass("selected");
     }
 
-    await this.showDayAgenda(date);
+    // Always show upcoming events instead of just day events
+    await this.showUpcomingEventsAgenda();
   }
 
   async refreshEvents(forceRefresh = false) {
@@ -146,9 +154,8 @@ export class CalendarView extends ItemView {
       forceRefresh
     );
     this.renderMonth();
-    if (this.selectedDate) {
-      this.showDayAgenda(this.selectedDate);
-    }
+    // Always show upcoming events
+    await this.showUpcomingEventsAgenda();
   }
 
   private renderMonth() {
@@ -260,33 +267,104 @@ export class CalendarView extends ItemView {
     }
   }
 
-  private async showDayAgenda(date: Date) {
-    this.agenda.empty();
+  private async showUpcomingEventsAgenda(append: boolean = false) {
+    if (!append) {
+      this.agenda.empty();
+      this.eventsLoaded = 0;
+      this.allEventsLoaded = false;
+      
+      // Create header
+      const header = this.agenda.createEl("h3", {
+        text: "Upcoming Events",
+      });
+    }
 
-    const header = this.agenda.createEl("h3", {
-      text: date.toLocaleDateString("default", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      }),
-    });
-
-    const events = this.plugin.calendarService.getEventsForDate(date);
-
-    if (events.length === 0) {
-      this.agenda.createEl("p", { text: "No events scheduled" });
+    if (this.isLoadingMoreEvents || this.allEventsLoaded) {
       return;
     }
 
-    const list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
-    const now = new Date();
+    this.isLoadingMoreEvents = true;
 
-    events.forEach((event) => {
+    // Show loading indicator when appending more events
+    let loadingEl: HTMLElement | null = null;
+    if (append) {
+      loadingEl = this.agenda.createEl("div", { cls: "memochron-loading" });
+      const spinner = loadingEl.createEl("div", { cls: "memochron-loading-spinner" });
+      loadingEl.createEl("span", { text: "Loading more events..." });
+    }
+
+    // Get the next batch of events
+    const allEvents = this.plugin.calendarService.getUpcomingEvents();
+    const startIndex = this.eventsLoaded;
+    const endIndex = Math.min(startIndex + this.eventsPerPage, allEvents.length);
+    const eventsToShow = allEvents.slice(startIndex, endIndex);
+
+    // Remove loading indicator
+    if (loadingEl) {
+      loadingEl.remove();
+    }
+
+    if (eventsToShow.length === 0) {
+      this.allEventsLoaded = true;
+      this.isLoadingMoreEvents = false;
+      
+      if (this.eventsLoaded === 0) {
+        this.agenda.createEl("p", { text: "No upcoming events" });
+      }
+      return;
+    }
+
+    let list = this.agenda.querySelector(".memochron-agenda-list") as HTMLElement;
+    if (!list) {
+      list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
+      
+      // Add scroll listener for infinite scroll only once
+      if (!this.scrollListenerAdded) {
+        this.agenda.addEventListener("scroll", this.handleScroll.bind(this));
+        this.scrollListenerAdded = true;
+      }
+    }
+
+    const now = new Date();
+    let currentDay = "";
+    
+    // Get the last day shown to avoid duplicate day separators
+    if (append && this.eventsLoaded > 0) {
+      const lastEvent = allEvents[this.eventsLoaded - 1];
+      if (lastEvent) {
+        currentDay = lastEvent.start.toDateString();
+      }
+    }
+
+    eventsToShow.forEach((event) => {
+      const eventDateStr = event.start.toDateString();
+      
+      // Add day separator if this is a new day
+      if (eventDateStr !== currentDay) {
+        currentDay = eventDateStr;
+        
+        // Add day header
+        const dayHeader = list.createEl("div", { 
+          cls: "memochron-day-separator",
+          text: event.start.toLocaleDateString("default", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: event.start.getFullYear() !== now.getFullYear() ? "numeric" : undefined
+          })
+        });
+      }
+
       const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
 
       // Add past-event class if the event has ended
       if (event.end < now) {
         eventEl.addClass("past-event");
+      }
+
+      // Add today class if the event is today
+      if (event.start.toDateString() === now.toDateString()) {
+        eventEl.addClass("today-event");
       }
 
       eventEl.createEl("div", {
@@ -346,6 +424,34 @@ export class CalendarView extends ItemView {
         }
       });
     });
+
+    this.eventsLoaded = endIndex;
+    
+    // Check if we've loaded all events
+    if (endIndex >= allEvents.length) {
+      this.allEventsLoaded = true;
+    }
+
+    this.isLoadingMoreEvents = false;
+  }
+
+  private handleScroll() {
+    if (this.isLoadingMoreEvents || this.allEventsLoaded) {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = this.agenda;
+    
+    // Load more when user scrolls to within 200px of the bottom
+    if (scrollTop + clientHeight >= scrollHeight - 200) {
+      this.showUpcomingEventsAgenda(true);
+    }
+  }
+
+  async onClose() {
+    // Note: We can't easily remove the specific scroll listener since we bound it inline
+    // This is acceptable since the view is being destroyed anyway
+    this.scrollListenerAdded = false;
   }
 
   private async showEventDetails(event: CalendarEvent) {
