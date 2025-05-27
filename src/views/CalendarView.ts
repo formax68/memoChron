@@ -11,11 +11,12 @@ export class CalendarView extends ItemView {
   private selectedDate: Date | null = null;
   private currentMonthDays: Map<string, HTMLElement> = new Map();
   
-  // Infinite scroll properties
-  private eventsLoaded: number = 0;
-  private readonly eventsPerPage: number = 50;
+  // Window-based scrolling properties
+  private currentWindowEvents: CalendarEvent[] = [];
+  private todayIndex: number = 0; // Index of today's first event in the current window
+  private windowStart: Date = new Date();
+  private windowEnd: Date = new Date();
   private isLoadingMoreEvents: boolean = false;
-  private allEventsLoaded: boolean = false;
   private scrollListenerAdded: boolean = false;
 
   // Register for view visibility changes
@@ -89,14 +90,22 @@ export class CalendarView extends ItemView {
     nextText.onclick = () => this.navigate(1);
 
     // Create main layout container with separate calendar and agenda sections
-    const mainLayout = container.createEl("div", { cls: "memochron-main-layout" });
-    
+    const mainLayout = container.createEl("div", {
+      cls: "memochron-main-layout",
+    });
+
     // Create calendar container
-    const calendarSection = mainLayout.createEl("div", { cls: "memochron-calendar-section" });
-    this.calendar = calendarSection.createEl("div", { cls: "memochron-calendar" });
-    
+    const calendarSection = mainLayout.createEl("div", {
+      cls: "memochron-calendar-section",
+    });
+    this.calendar = calendarSection.createEl("div", {
+      cls: "memochron-calendar",
+    });
+
     // Create agenda container with its own scrollable area
-    const agendaSection = mainLayout.createEl("div", { cls: "memochron-agenda-section" });
+    const agendaSection = mainLayout.createEl("div", {
+      cls: "memochron-agenda-section",
+    });
     this.agenda = agendaSection.createEl("div", { cls: "memochron-agenda" });
 
     // Register for layout change events to detect when view becomes visible again
@@ -143,8 +152,8 @@ export class CalendarView extends ItemView {
       newEl.addClass("selected");
     }
 
-    // Always show upcoming events instead of just day events
-    await this.showUpcomingEventsAgenda();
+    // Always show all events instead of just day events
+    await this.showAllEventsAgenda();
   }
 
   async refreshEvents(forceRefresh = false) {
@@ -154,8 +163,8 @@ export class CalendarView extends ItemView {
       forceRefresh
     );
     this.renderMonth();
-    // Always show upcoming events
-    await this.showUpcomingEventsAgenda();
+    // Always show all events
+    await this.showAllEventsAgenda();
   }
 
   private renderMonth() {
@@ -267,50 +276,84 @@ export class CalendarView extends ItemView {
     }
   }
 
-  private async showUpcomingEventsAgenda(append: boolean = false) {
+  private async showAllEventsAgenda(append: boolean = false) {
     if (!append) {
       this.agenda.empty();
-      this.eventsLoaded = 0;
-      this.allEventsLoaded = false;
+      this.currentWindowEvents = [];
       
       // Create header
       const header = this.agenda.createEl("h3", {
-        text: "Upcoming Events",
+        text: "All Events",
       });
-    }
-
-    if (this.isLoadingMoreEvents || this.allEventsLoaded) {
-      return;
-    }
-
-    this.isLoadingMoreEvents = true;
-
-    // Show loading indicator when appending more events
-    let loadingEl: HTMLElement | null = null;
-    if (append) {
-      loadingEl = this.agenda.createEl("div", { cls: "memochron-loading" });
-      const spinner = loadingEl.createEl("div", { cls: "memochron-loading-spinner" });
-      loadingEl.createEl("span", { text: "Loading more events..." });
-    }
-
-    // Get the next batch of events
-    const allEvents = this.plugin.calendarService.getUpcomingEvents();
-    const startIndex = this.eventsLoaded;
-    const endIndex = Math.min(startIndex + this.eventsPerPage, allEvents.length);
-    const eventsToShow = allEvents.slice(startIndex, endIndex);
-
-    // Remove loading indicator
-    if (loadingEl) {
-      loadingEl.remove();
-    }
-
-    if (eventsToShow.length === 0) {
-      this.allEventsLoaded = true;
-      this.isLoadingMoreEvents = false;
       
-      if (this.eventsLoaded === 0) {
-        this.agenda.createEl("p", { text: "No upcoming events" });
+      // Load initial window of events around today
+      await this.loadInitialWindow();
+    }
+
+    await this.renderEventsWindow();
+  }
+
+  async onClose() {
+    // Note: We can't easily remove the specific scroll listener since we bound it inline
+    // This is acceptable since the view is being destroyed anyway
+    this.scrollListenerAdded = false;
+  }
+
+  private async showEventDetails(event: CalendarEvent) {
+    try {
+      // First ensure we have a note location set
+      if (!this.plugin.settings.noteLocation) {
+        new Notice("Please set a note location in settings first");
+        return;
       }
+
+      const file = await this.plugin.noteService.createEventNote(event);
+      if (!file) {
+        throw new Error("Failed to create or update note");
+      }
+
+      const leaf = this.app.workspace.getLeaf("tab");
+      if (leaf) {
+        await leaf.openFile(file);
+      } else {
+        new Notice("Could not open the note in a new tab");
+      }
+    } catch (error) {
+      console.error("Error showing event details:", error);
+      throw error; // Re-throw to be handled by the caller
+    }
+  }
+
+  private async loadInitialWindow() {
+    const today = new Date();
+    this.currentWindowEvents = this.plugin.calendarService.getEventsWindow(today, 30, 60);
+    
+    // Find today's position in the window for initial scroll positioning
+    this.todayIndex = this.findTodayIndexInWindow(today);
+    
+    // Set window boundaries
+    this.windowStart = new Date(today);
+    this.windowStart.setDate(this.windowStart.getDate() - 30);
+    this.windowEnd = new Date(today);
+    this.windowEnd.setDate(this.windowEnd.getDate() + 60);
+  }
+
+  private findTodayIndexInWindow(today: Date): number {
+    const startOfToday = new Date(today);
+    startOfToday.setHours(0, 0, 0, 0);
+    
+    for (let i = 0; i < this.currentWindowEvents.length; i++) {
+      if (this.currentWindowEvents[i].start >= startOfToday) {
+        return i;
+      }
+    }
+    
+    return this.currentWindowEvents.length;
+  }
+
+  private async renderEventsWindow() {
+    if (this.currentWindowEvents.length === 0) {
+      this.agenda.createEl("p", { text: "No events" });
       return;
     }
 
@@ -318,25 +361,20 @@ export class CalendarView extends ItemView {
     if (!list) {
       list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
       
-      // Add scroll listener for infinite scroll only once
+      // Add scroll listener for bidirectional infinite scroll only once
       if (!this.scrollListenerAdded) {
-        this.agenda.addEventListener("scroll", this.handleScroll.bind(this));
+        this.agenda.addEventListener("scroll", this.handleBidirectionalScroll.bind(this));
         this.scrollListenerAdded = true;
       }
+    } else {
+      list.empty(); // Clear existing events for full re-render
     }
 
     const now = new Date();
     let currentDay = "";
     
-    // Get the last day shown to avoid duplicate day separators
-    if (append && this.eventsLoaded > 0) {
-      const lastEvent = allEvents[this.eventsLoaded - 1];
-      if (lastEvent) {
-        currentDay = lastEvent.start.toDateString();
-      }
-    }
-
-    eventsToShow.forEach((event) => {
+    // Render all events in the current window
+    this.currentWindowEvents.forEach((event, index) => {
       const eventDateStr = event.start.toDateString();
       
       // Add day separator if this is a new day
@@ -353,6 +391,11 @@ export class CalendarView extends ItemView {
             year: event.start.getFullYear() !== now.getFullYear() ? "numeric" : undefined
           })
         });
+        
+        // Mark today's header for scroll positioning
+        if (index === this.todayIndex) {
+          dayHeader.id = "memochron-today-marker";
+        }
       }
 
       const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
@@ -424,58 +467,70 @@ export class CalendarView extends ItemView {
         }
       });
     });
-
-    this.eventsLoaded = endIndex;
     
-    // Check if we've loaded all events
-    if (endIndex >= allEvents.length) {
-      this.allEventsLoaded = true;
-    }
-
-    this.isLoadingMoreEvents = false;
+    // Scroll to today's events after rendering
+    setTimeout(() => {
+      const todayMarker = this.agenda.querySelector("#memochron-today-marker");
+      if (todayMarker) {
+        todayMarker.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   }
 
-  private handleScroll() {
-    if (this.isLoadingMoreEvents || this.allEventsLoaded) {
+  private async handleBidirectionalScroll() {
+    if (this.isLoadingMoreEvents) {
       return;
     }
 
     const { scrollTop, scrollHeight, clientHeight } = this.agenda;
-    
-    // Load more when user scrolls to within 200px of the bottom
+
+    // Load more past events when scrolling near the bottom
     if (scrollTop + clientHeight >= scrollHeight - 200) {
-      this.showUpcomingEventsAgenda(true);
+      await this.loadMorePastEvents();
+    }
+    
+    // Load more future events when scrolling near the top
+    if (scrollTop <= 200) {
+      await this.loadMoreFutureEvents();
     }
   }
 
-  async onClose() {
-    // Note: We can't easily remove the specific scroll listener since we bound it inline
-    // This is acceptable since the view is being destroyed anyway
-    this.scrollListenerAdded = false;
+  private async loadMorePastEvents() {
+    this.isLoadingMoreEvents = true;
+    
+    // Extend window backwards by 30 days
+    const newWindowStart = new Date(this.windowStart);
+    newWindowStart.setDate(newWindowStart.getDate() - 30);
+    
+    const moreEvents = this.plugin.calendarService.getEventsInRange(newWindowStart, this.windowStart);
+    
+    if (moreEvents.length > 0) {
+      this.currentWindowEvents = [...moreEvents, ...this.currentWindowEvents];
+      this.todayIndex += moreEvents.length; // Adjust today's index
+      this.windowStart = newWindowStart;
+      
+      await this.renderEventsWindow();
+    }
+    
+    this.isLoadingMoreEvents = false;
   }
 
-  private async showEventDetails(event: CalendarEvent) {
-    try {
-      // First ensure we have a note location set
-      if (!this.plugin.settings.noteLocation) {
-        new Notice("Please set a note location in settings first");
-        return;
-      }
-
-      const file = await this.plugin.noteService.createEventNote(event);
-      if (!file) {
-        throw new Error("Failed to create or update note");
-      }
-
-      const leaf = this.app.workspace.getLeaf("tab");
-      if (leaf) {
-        await leaf.openFile(file);
-      } else {
-        new Notice("Could not open the note in a new tab");
-      }
-    } catch (error) {
-      console.error("Error showing event details:", error);
-      throw error; // Re-throw to be handled by the caller
+  private async loadMoreFutureEvents() {
+    this.isLoadingMoreEvents = true;
+    
+    // Extend window forwards by 30 days
+    const newWindowEnd = new Date(this.windowEnd);
+    newWindowEnd.setDate(newWindowEnd.getDate() + 30);
+    
+    const moreEvents = this.plugin.calendarService.getEventsInRange(this.windowEnd, newWindowEnd);
+    
+    if (moreEvents.length > 0) {
+      this.currentWindowEvents = [...this.currentWindowEvents, ...moreEvents];
+      this.windowEnd = newWindowEnd;
+      
+      await this.renderEventsWindow();
     }
+    
+    this.isLoadingMoreEvents = false;
   }
 }

@@ -24,7 +24,7 @@ export class CalendarService {
   private plugin: MemoChron;
   private isLoadingCache: boolean = false;
   private isFetchingCalendars: boolean = false;
-  
+
   // Map Microsoft Exchange timezone IDs to IANA timezone names
   // These are common Exchange timezone IDs that might appear in calendars
   private static readonly timezoneMap: Record<string, string> = {
@@ -559,11 +559,56 @@ export class CalendarService {
    */
   getUpcomingEvents(limit?: number): CalendarEvent[] {
     const now = new Date();
-    
+
     return this.events
       .filter((event) => event.end >= now) // Include events that haven't ended yet
       .sort((a, b) => a.start.getTime() - b.start.getTime())
       .slice(0, limit); // Apply limit if provided
+  }
+
+  /**
+   * Get all events in chronological order
+   */
+  getAllEvents(limit?: number): CalendarEvent[] {
+    return this.events
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .slice(0, limit);
+  }
+
+  /**
+   * Get events in a window around a center date (typically today)
+   * @param centerDate The date to center the window around
+   * @param daysBefore Number of days before centerDate to include
+   * @param daysAfter Number of days after centerDate to include
+   */
+  getEventsWindow(centerDate: Date, daysBefore: number = 30, daysAfter: number = 60): CalendarEvent[] {
+    const startDate = new Date(centerDate);
+    startDate.setDate(startDate.getDate() - daysBefore);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(centerDate);
+    endDate.setDate(endDate.getDate() + daysAfter);
+    endDate.setHours(23, 59, 59, 999);
+    
+    return this.getEventsInRange(startDate, endDate);
+  }
+
+  /**
+   * Find the index of the first event that starts on or after a given date
+   */
+  findTodayIndex(targetDate: Date): number {
+    const startOfTargetDate = new Date(targetDate);
+    startOfTargetDate.setHours(0, 0, 0, 0);
+    
+    const sortedEvents = this.events.sort((a, b) => a.start.getTime() - b.start.getTime());
+    
+    for (let i = 0; i < sortedEvents.length; i++) {
+      if (sortedEvents[i].start >= startOfTargetDate) {
+        return i;
+      }
+    }
+    
+    return sortedEvents.length; // If no future events, return end of array
   }
 
   /**
