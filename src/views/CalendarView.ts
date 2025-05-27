@@ -116,6 +116,9 @@ export class CalendarView extends ItemView {
   }
 
   private async navigate(delta: number) {
+    // Reset to the first of the month before changing the month to avoid
+    // JavaScript date overflow issues (e.g. Jan 31 -> Mar 2)
+    this.currentDate.setDate(1);
     this.currentDate.setMonth(this.currentDate.getMonth() + delta);
     await this.refreshEvents();
   }
