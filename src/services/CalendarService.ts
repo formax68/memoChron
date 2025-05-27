@@ -581,15 +581,19 @@ export class CalendarService {
    * @param daysBefore Number of days before centerDate to include
    * @param daysAfter Number of days after centerDate to include
    */
-  getEventsWindow(centerDate: Date, daysBefore: number = 30, daysAfter: number = 60): CalendarEvent[] {
+  getEventsWindow(
+    centerDate: Date,
+    daysBefore: number = 30,
+    daysAfter: number = 60
+  ): CalendarEvent[] {
     const startDate = new Date(centerDate);
     startDate.setDate(startDate.getDate() - daysBefore);
     startDate.setHours(0, 0, 0, 0);
-    
+
     const endDate = new Date(centerDate);
     endDate.setDate(endDate.getDate() + daysAfter);
     endDate.setHours(23, 59, 59, 999);
-    
+
     return this.getEventsInRange(startDate, endDate);
   }
 
@@ -599,15 +603,17 @@ export class CalendarService {
   findTodayIndex(targetDate: Date): number {
     const startOfTargetDate = new Date(targetDate);
     startOfTargetDate.setHours(0, 0, 0, 0);
-    
-    const sortedEvents = this.events.sort((a, b) => a.start.getTime() - b.start.getTime());
-    
+
+    const sortedEvents = this.events.sort(
+      (a, b) => a.start.getTime() - b.start.getTime()
+    );
+
     for (let i = 0; i < sortedEvents.length; i++) {
       if (sortedEvents[i].start >= startOfTargetDate) {
         return i;
       }
     }
-    
+
     return sortedEvents.length; // If no future events, return end of array
   }
 
