@@ -505,16 +505,7 @@ export class CalendarView extends ItemView {
           );
           if (todayMarker) {
             const targetPosition = (todayMarker as HTMLElement).offsetTop;
-            const currentScroll = this.agenda.scrollTop;
-            const scrollDiff = targetPosition - currentScroll;
-
-            const agendaList = this.agenda.querySelector(
-              ".memochron-agenda-list"
-            ) as HTMLElement;
-            if (agendaList) {
-              agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
-              agendaList.style.transform = `translateY(${-scrollDiff}px)`;
-            }
+            this.agenda.scrollTo({ top: targetPosition, behavior: "auto" });
           }
         }
       }, SCROLL_DEBOUNCE_DELAY);
@@ -650,24 +641,8 @@ export class CalendarView extends ItemView {
       `[data-date="${targetDateStr}"]`
     );
     if (targetElement) {
-      // Use CSS transform to position the target date at the top of the visible area
       const targetPosition = (targetElement as HTMLElement).offsetTop;
-      const currentScroll = this.agenda.scrollTop;
-      const scrollDiff = targetPosition - currentScroll;
-
-      // Get the scrollable content container
-      const agendaList = this.agenda.querySelector(
-        ".memochron-agenda-list"
-      ) as HTMLElement;
-      if (agendaList) {
-        // Apply smooth transform to move content to desired position
-        agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
-        agendaList.style.transform = `translateY(${-scrollDiff}px)`;
-
-        // Update the intersection observer's understanding of scroll position
-        // by temporarily adjusting the root margin to account for the transform
-        this.updateIntersectionObserverForTransform(scrollDiff);
-      }
+      this.agenda.scrollTo({ top: targetPosition, behavior: "smooth" });
 
       setTimeout(() => {
         this.isScrollingToDate = false;
@@ -684,19 +659,8 @@ export class CalendarView extends ItemView {
         `[data-date="${targetDateStr}"]`
       );
       if (targetElement) {
-        // Use CSS transform to position the target date
         const targetPosition = (targetElement as HTMLElement).offsetTop;
-        const currentScroll = this.agenda.scrollTop;
-        const scrollDiff = targetPosition - currentScroll;
-
-        const agendaList = this.agenda.querySelector(
-          ".memochron-agenda-list"
-        ) as HTMLElement;
-        if (agendaList) {
-          agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
-          agendaList.style.transform = `translateY(${-scrollDiff}px)`;
-          this.updateIntersectionObserverForTransform(scrollDiff);
-        }
+        this.agenda.scrollTo({ top: targetPosition, behavior: "smooth" });
       } else {
         // If still no element found, scroll to the closest date
         this.scrollToClosestDate(targetDate);
@@ -724,17 +688,7 @@ export class CalendarView extends ItemView {
 
     if (closestElement) {
       const targetPosition = closestElement.offsetTop;
-      const currentScroll = this.agenda.scrollTop;
-      const scrollDiff = targetPosition - currentScroll;
-
-      const agendaList = this.agenda.querySelector(
-        ".memochron-agenda-list"
-      ) as HTMLElement;
-      if (agendaList) {
-        agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
-        agendaList.style.transform = `translateY(${-scrollDiff}px)`;
-        this.updateIntersectionObserverForTransform(scrollDiff);
-      }
+      this.agenda.scrollTo({ top: targetPosition, behavior: "smooth" });
     }
   }
 
@@ -937,18 +891,5 @@ export class CalendarView extends ItemView {
     return null;
   }
 
-  /**
-   * Update intersection observer to account for CSS transform
-   */
-  private updateIntersectionObserverForTransform(scrollDiff: number): void {
-    // Temporarily disable intersection observer during transform
-    if (this.intersectionObserver) {
-      this.intersectionObserver.disconnect();
-    }
-
-    // Re-setup after transform completes
-    setTimeout(() => {
-      this.setupIntersectionObserver();
-    }, TRANSITION_DURATION + 100);
-  }
+  // No longer needed since scrolling uses native scroll positioning
 }
