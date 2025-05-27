@@ -577,4 +577,35 @@ export class CalendarService {
       })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }
+
+  /**
+   * Get all events around a specific date (both past and future)
+   * Useful for showing a comprehensive timeline when a user selects a date
+   */
+  getAllEventsAroundDate(centerDate: Date, daysBefore: number = 30, daysAfter: number = 90): CalendarEvent[] {
+    const startDate = new Date(centerDate);
+    startDate.setDate(startDate.getDate() - daysBefore);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(centerDate);
+    endDate.setDate(endDate.getDate() + daysAfter);
+    endDate.setHours(23, 59, 59, 999);
+    
+    return this.events
+      .filter((event) => {
+        return event.start >= startDate && event.start <= endDate;
+      })
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
+
+  /**
+   * Get all events (both past and future) sorted chronologically
+   * Starting from a specific number of days ago
+   */
+  getAllEventsFromDate(startDate: Date, limit?: number): CalendarEvent[] {
+    return this.events
+      .filter((event) => event.start >= startDate)
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .slice(0, limit);
+  }
 }

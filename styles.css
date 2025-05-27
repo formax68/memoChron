@@ -157,6 +157,28 @@
   color: var(--text-on-accent);
 }
 
+.memochron-day.scroll-highlighted {
+  background-color: var(--background-modifier-hover);
+  border: 1px solid var(--interactive-accent-hover);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.memochron-day.scroll-highlighted .memochron-day-header {
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+/* When a day is both selected and scroll-highlighted, selection takes priority */
+.memochron-day.selected.scroll-highlighted {
+  background-color: var(--interactive-accent);
+  border: 1px solid var(--interactive-accent);
+}
+
+.memochron-day.selected.scroll-highlighted .memochron-day-header {
+  color: var(--text-on-accent) !important;
+  font-weight: 600;
+}
+
 .memochron-day.today {
   border: 1px solid var(--interactive-accent);
 }
@@ -311,7 +333,7 @@
   color: var(--text-muted);
 }
 
-/* Day separator for agenda view */
+/* Date separator for agenda view */
 .memochron-day-separator {
   font-weight: 600;
   color: var(--text-accent);
@@ -326,6 +348,22 @@
 
 .memochron-day-separator:first-child {
   margin-top: 0;
+}
+
+/* Visual indicators for past, today, and future dates */
+.memochron-day-separator.past-date {
+  opacity: 0.7;
+  color: var(--text-muted);
+}
+
+.memochron-day-separator.today-date {
+  background: var(--background-modifier-hover);
+  color: var(--text-accent);
+  border-left: 3px solid var(--text-accent);
+}
+
+.memochron-day-separator.future-date {
+  /* Keep default styling for future dates */
 }
 
 /* Highlight today's events */
@@ -494,4 +532,94 @@
     font-size: 0.9em;
     margin: 0 0.35rem;
   }
+}
+
+/* Date separator visual indicators */
+.memochron-day-separator.past::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-accent-muted);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.memochron-day-separator.today::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
+}
+
+.memochron-day-separator.future::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-text-muted);
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+/* Enhanced styling for today's separator */
+.memochron-day-separator.today {
+  background: linear-gradient(90deg, 
+    rgba(var(--color-accent-rgb), 0.1) 0%, 
+    rgba(var(--color-accent-rgb), 0.05) 100%);
+  border-left: 3px solid var(--color-accent);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+/* Past events styling enhancement */
+.memochron-day-separator.past + .memochron-event {
+  opacity: 0.7;
+  position: relative;
+}
+
+.memochron-day-separator.past + .memochron-event::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(var(--color-text-muted-rgb), 0.1) 0%, 
+    transparent 100%);
+  pointer-events: none;
+}
+
+/* Scrollbar styling for agenda section */
+.memochron-agenda::-webkit-scrollbar {
+  width: 8px;
+}
+
+.memochron-agenda::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: 4px;
+}
+
+.memochron-agenda::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.memochron-agenda::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+  opacity: 0.8;
 }

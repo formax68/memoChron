@@ -17,6 +17,12 @@ export class CalendarView extends ItemView {
   private isLoadingMoreEvents: boolean = false;
   private allEventsLoaded: boolean = false;
   private scrollListenerAdded: boolean = false;
+  
+  // Date synchronization properties
+  private visibleDateFromScroll: Date | null = null;
+  private isScrollingToDate: boolean = false;
+  private dateScrollMap: Map<string, HTMLElement> = new Map();
+  private scrollTimeout: number | null = null;
 
   // Register for view visibility changes
   private registerViewEvents() {
@@ -145,6 +151,16 @@ export class CalendarView extends ItemView {
 
     // Always show upcoming events instead of just day events
     await this.showUpcomingEventsAgenda();
+    
+    // Wait for DOM to be fully rendered and then scroll to the selected date
+    // Use a more robust timing mechanism
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          this.scrollToDateInList(date);
+        }, 100);
+      });
+    });
   }
 
   async refreshEvents(forceRefresh = false) {
@@ -272,10 +288,11 @@ export class CalendarView extends ItemView {
       this.agenda.empty();
       this.eventsLoaded = 0;
       this.allEventsLoaded = false;
+      this.dateScrollMap.clear(); // Clear date scroll map when resetting agenda
       
       // Create header
       const header = this.agenda.createEl("h3", {
-        text: "Upcoming Events",
+        text: "Events Timeline",
       });
     }
 
@@ -293,8 +310,10 @@ export class CalendarView extends ItemView {
       loadingEl.createEl("span", { text: "Loading more events..." });
     }
 
-    // Get the next batch of events
-    const allEvents = this.plugin.calendarService.getUpcomingEvents();
+    // Get all events around today's date (30 days before, 90 days after)
+    // This provides a comprehensive timeline including past events
+    const today = new Date();
+    const allEvents = this.plugin.calendarService.getAllEventsAroundDate(today, 30, 90);
     const startIndex = this.eventsLoaded;
     const endIndex = Math.min(startIndex + this.eventsPerPage, allEvents.length);
     const eventsToShow = allEvents.slice(startIndex, endIndex);
@@ -309,7 +328,7 @@ export class CalendarView extends ItemView {
       this.isLoadingMoreEvents = false;
       
       if (this.eventsLoaded === 0) {
-        this.agenda.createEl("p", { text: "No upcoming events" });
+        this.agenda.createEl("p", { text: "No events found" });
       }
       return;
     }
@@ -353,6 +372,24 @@ export class CalendarView extends ItemView {
             year: event.start.getFullYear() !== now.getFullYear() ? "numeric" : undefined
           })
         });
+        
+        // Add visual indicator for past/future dates
+        const eventDate = new Date(event.start);
+        eventDate.setHours(0, 0, 0, 0);
+        const todayDate = new Date(now);
+        todayDate.setHours(0, 0, 0, 0);
+        
+        if (eventDate.getTime() < todayDate.getTime()) {
+          dayHeader.addClass("past-date");
+        } else if (eventDate.getTime() === todayDate.getTime()) {
+          dayHeader.addClass("today-date");
+        } else {
+          dayHeader.addClass("future-date");
+        }
+        
+        // Store reference to day header for scrolling
+        this.dateScrollMap.set(eventDateStr, dayHeader);
+        console.log(`Added date to scroll map: ${eventDateStr}. Total dates: ${this.dateScrollMap.size}`);
       }
 
       const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
@@ -433,22 +470,41 @@ export class CalendarView extends ItemView {
     }
 
     this.isLoadingMoreEvents = false;
+    console.log(`showEventsAgenda completed. Total events loaded: ${this.eventsLoaded}, Date scroll map size: ${this.dateScrollMap.size}`);
   }
 
   private handleScroll() {
-    if (this.isLoadingMoreEvents || this.allEventsLoaded) {
+    // Skip if we're programmatically scrolling to a date
+    if (this.isScrollingToDate) {
       return;
     }
 
-    const { scrollTop, scrollHeight, clientHeight } = this.agenda;
-    
-    // Load more when user scrolls to within 200px of the bottom
-    if (scrollTop + clientHeight >= scrollHeight - 200) {
-      this.showUpcomingEventsAgenda(true);
+    // Infinite scroll logic
+    if (!this.isLoadingMoreEvents && !this.allEventsLoaded) {
+      const { scrollTop, scrollHeight, clientHeight } = this.agenda;
+      
+      // Load more when user scrolls to within 200px of the bottom
+      if (scrollTop + clientHeight >= scrollHeight - 200) {
+        this.showUpcomingEventsAgenda(true);
+      }
     }
+
+    // Throttle date synchronization for better performance
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    this.scrollTimeout = setTimeout(() => {
+      this.updateCalendarFromScroll();
+    }, 100) as unknown as number;
   }
 
   async onClose() {
+    // Clean up any pending timeouts
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = null;
+    }
+    
     // Note: We can't easily remove the specific scroll listener since we bound it inline
     // This is acceptable since the view is being destroyed anyway
     this.scrollListenerAdded = false;
@@ -477,5 +533,212 @@ export class CalendarView extends ItemView {
       console.error("Error showing event details:", error);
       throw error; // Re-throw to be handled by the caller
     }
+  }
+
+  private scrollToDateInList(date: Date) {
+    const dateStr = date.toDateString();
+    const dayElement = this.dateScrollMap.get(dateStr);
+    
+    console.log(`Attempting to scroll to date: ${dateStr}`);
+    console.log(`Available dates in map:`, Array.from(this.dateScrollMap.keys()));
+    console.log(`Found element for date:`, !!dayElement);
+    
+    if (dayElement) {
+      console.log('Scrolling to exact date match');
+      this.isScrollingToDate = true;
+      dayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // Reset the flag after a brief delay to allow for smooth scrolling
+      setTimeout(() => {
+        this.isScrollingToDate = false;
+      }, 500);
+      return;
+    }
+
+    // If the exact date isn't in the map, find the best date to scroll to
+    const selectedTime = date.getTime();
+    
+    // Get today's date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTime = today.getTime();
+    
+    // Get selected date at midnight for comparison
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+    const selectedDateTime = selectedDate.getTime();
+    
+    console.log(`Date not found in scroll map. Selected date: ${selectedDate.toDateString()}, Today: ${today.toDateString()}`);
+    console.log(`Selected date time: ${selectedDateTime}, Today time: ${todayTime}`);
+    
+    // Get all available dates and sort them
+    const availableDates = Array.from(this.dateScrollMap.keys())
+      .map(dateStr => new Date(dateStr))
+      .sort((a, b) => a.getTime() - b.getTime());
+      
+    console.log('Available dates for closest match:', availableDates.map(d => d.toDateString()));
+
+    if (availableDates.length === 0) {
+      console.log('No dates available in scroll map');
+      return;
+    }
+    
+    let targetDate: Date | null = null;
+    
+    if (selectedDateTime < todayTime) {
+      // For past dates, find the closest past date with events
+      console.log('Looking for closest past date with events');
+      
+      // Find the latest date that is <= the selected date
+      for (let i = availableDates.length - 1; i >= 0; i--) {
+        const availableDate = availableDates[i];
+        const availableDateMidnight = new Date(availableDate);
+        availableDateMidnight.setHours(0, 0, 0, 0);
+        
+        if (availableDateMidnight.getTime() <= selectedDateTime) {
+          targetDate = availableDate;
+          break;
+        }
+      }
+      
+      // If no past date found, scroll to the earliest available date
+      // This handles the case where we're showing "upcoming events" and clicked on a past date
+      if (!targetDate) {
+        targetDate = availableDates[0];
+        console.log('No past date found in upcoming events, scrolling to earliest upcoming event');
+      } else {
+        console.log(`Found closest past date with events: ${targetDate.toDateString()}`);
+      }
+    } else {
+      // For future dates or today, find the closest future date
+      console.log('Looking for closest future date with events');
+      
+      // Look for the first date that is >= the selected date
+      for (const availableDate of availableDates) {
+        const availableDateMidnight = new Date(availableDate);
+        availableDateMidnight.setHours(0, 0, 0, 0);
+        
+        if (availableDateMidnight.getTime() >= selectedDateTime) {
+          targetDate = availableDate;
+          break;
+        }
+      }
+      
+      // If no future date found, use the last (most recent) date
+      if (!targetDate && availableDates.length > 0) {
+        targetDate = availableDates[availableDates.length - 1];
+        console.log('No future date found, using most recent date');
+      }
+    }
+    
+    if (targetDate) {
+      console.log(`Found target date for scrolling: ${targetDate.toDateString()}`);
+      const targetElement = this.dateScrollMap.get(targetDate.toDateString());
+      if (targetElement) {
+        this.isScrollingToDate = true;
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => {
+          this.isScrollingToDate = false;
+        }, 500);
+        return;
+      }
+    }
+    
+    // As a last resort, try to load more events to find the date
+    console.log('No suitable date found, attempting to load more events');
+    this.loadEventsUntilDate(date);
+  }
+
+  private updateCalendarFromScroll() {
+    const agendaRect = this.agenda.getBoundingClientRect();
+    const scrollTop = this.agenda.scrollTop;
+    
+    // Find the first visible day separator
+    let visibleDate: Date | null = null;
+    
+    for (const [dateStr, element] of this.dateScrollMap.entries()) {
+      const elementRect = element.getBoundingClientRect();
+      const relativeTop = elementRect.top - agendaRect.top + scrollTop;
+      
+      // Check if this element is visible (within the agenda's viewport)
+      if (relativeTop <= scrollTop + 100) { // 100px buffer for better UX
+        visibleDate = new Date(dateStr);
+      } else {
+        break; // Elements are in chronological order, so we can break early
+      }
+    }
+
+    if (visibleDate && (!this.visibleDateFromScroll || 
+        visibleDate.toDateString() !== this.visibleDateFromScroll.toDateString())) {
+      this.visibleDateFromScroll = visibleDate;
+      this.highlightDateInCalendar(visibleDate);
+    }
+  }
+
+  private highlightDateInCalendar(date: Date) {
+    // Check if we need to navigate to a different month
+    if (date.getMonth() !== this.currentDate.getMonth() || 
+        date.getFullYear() !== this.currentDate.getFullYear()) {
+      this.currentDate = new Date(date);
+      this.renderMonth();
+    }
+
+    // Clear previous scroll-based highlighting
+    this.currentMonthDays.forEach((dayEl, dateStr) => {
+      dayEl.removeClass("scroll-highlighted");
+    });
+
+    // Add scroll-based highlighting to the visible date
+    const dateStr = date.toDateString();
+    const dayEl = this.currentMonthDays.get(dateStr);
+    if (dayEl) {
+      dayEl.addClass("scroll-highlighted");
+    }
+  }
+
+  private async loadEventsUntilDate(targetDate: Date) {
+    const targetTime = targetDate.getTime();
+    let attempts = 0;
+    const maxAttempts = 10; // Prevent infinite loading
+    
+    while (attempts < maxAttempts && !this.allEventsLoaded) {
+      const today = new Date();
+      const allEvents = this.plugin.calendarService.getAllEventsAroundDate(today, 30, 90);
+      
+      // Check if we have events that go at least to the target date
+      if (allEvents.length > 0) {
+        const lastEventDate = allEvents[allEvents.length - 1].start.getTime();
+        
+        if (lastEventDate >= targetTime) {
+          // We have events up to the target date, refresh the agenda to include them
+          await this.showUpcomingEventsAgenda(true);
+          
+          // Try to find the date again
+          const dateStr = targetDate.toDateString();
+          const dayElement = this.dateScrollMap.get(dateStr);
+          if (dayElement) {
+            this.isScrollingToDate = true;
+            dayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+              this.isScrollingToDate = false;
+            }, 500);
+            return;
+          }
+        }
+      }
+      
+      // Load more events
+      await this.showUpcomingEventsAgenda(true);
+      attempts++;
+      
+      // Small delay to prevent overwhelming the system
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    // If we couldn't find the date, just scroll to the bottom
+    this.agenda.scrollTo({ 
+      top: this.agenda.scrollHeight, 
+      behavior: 'smooth' 
+    });
   }
 }
