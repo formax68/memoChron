@@ -340,10 +340,8 @@
   padding: var(--memochron-padding-md) var(--memochron-padding-sm);
   margin: var(--memochron-padding-md) 0 var(--memochron-padding-sm) 0;
   border-bottom: 1px solid var(--background-modifier-border);
-  position: sticky;
-  top: 0;
   background: var(--background-primary);
-  z-index: 1;
+  /* Remove sticky positioning to avoid stacked headers */
 }
 
 .memochron-day-separator:first-child {
