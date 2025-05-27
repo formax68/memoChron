@@ -310,10 +310,8 @@ export class CalendarView extends ItemView {
       loadingEl.createEl("span", { text: "Loading more events..." });
     }
 
-    // Get all events around today's date (30 days before, 90 days after)
-    // This provides a comprehensive timeline including past events
-    const today = new Date();
-    const allEvents = this.plugin.calendarService.getAllEventsAroundDate(today, 30, 90);
+    // Get all events sorted chronologically
+    const allEvents = this.plugin.calendarService.getAllEventsSorted();
     const startIndex = this.eventsLoaded;
     const endIndex = Math.min(startIndex + this.eventsPerPage, allEvents.length);
     const eventsToShow = allEvents.slice(startIndex, endIndex);
@@ -702,8 +700,7 @@ export class CalendarView extends ItemView {
     const maxAttempts = 10; // Prevent infinite loading
     
     while (attempts < maxAttempts && !this.allEventsLoaded) {
-      const today = new Date();
-      const allEvents = this.plugin.calendarService.getAllEventsAroundDate(today, 30, 90);
+      const allEvents = this.plugin.calendarService.getAllEventsSorted();
       
       // Check if we have events that go at least to the target date
       if (allEvents.length > 0) {

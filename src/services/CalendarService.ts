@@ -608,4 +608,13 @@ export class CalendarService {
       .sort((a, b) => a.start.getTime() - b.start.getTime())
       .slice(0, limit);
   }
+
+  /**
+   * Get all events sorted chronologically regardless of date
+   */
+  getAllEventsSorted(): CalendarEvent[] {
+    return this.events
+      .slice()
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
 }
