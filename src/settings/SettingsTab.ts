@@ -92,7 +92,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // First Day of Week
     new Setting(containerEl)
-      .setName("First Day of Week")
+      .setName("First day of the week")
       .setDesc("Choose which day the week starts on")
       .addDropdown((dropdown) =>
         dropdown
@@ -134,7 +134,7 @@ export class SettingsTab extends PluginSettingTab {
     const locationSetting = new Setting(containerEl)
       .setName("Note location")
       .setDesc("Where to save new event notes");
-    
+
     // Add our container class to the setting item
     locationSetting.settingEl.addClass("memochron-setting-item-container");
 
