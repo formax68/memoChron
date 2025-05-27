@@ -1,6 +1,7 @@
 import { App, TFile, TFolder, normalizePath } from "obsidian";
 import { MemoChronSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
+import { formatLocationText, sanitizeFileName } from "../utils/formatters";
 
 export class NoteService {
   constructor(private app: App, private settings: MemoChronSettings) {}
@@ -94,23 +95,6 @@ export class NoteService {
     return Array.from(folders).sort((a, b) => a.localeCompare(b));
   }
 
-  private formatLocationText(location?: string): string {
-    if (!location) {
-      return "";
-    }
-    const isUrl =
-      location.startsWith("http://") ||
-      location.startsWith("https://") ||
-      location.startsWith("www.");
-    const isVirtual =
-      location.toLowerCase().includes("zoom") ||
-      location.toLowerCase().includes("meet.") ||
-      location.toLowerCase().includes("teams") ||
-      location.toLowerCase().includes("webex");
-    const locationEmoji = isUrl ? "🔗" : isVirtual ? "💻" : "📍";
-    return `${locationEmoji} ${location}`;
-  }
-
   private getEventTemplateVariables(event: CalendarEvent) {
     const dateStr = this.formatDate(event.start);
     const dateIsoStr = event.start.toISOString().split("T")[0];
@@ -123,7 +107,7 @@ export class NoteService {
       minute: "2-digit",
     });
     const location = event.location || "";
-    const locationText = this.formatLocationText(event.location);
+    const locationText = formatLocationText(event.location);
     const cleanedDescription = this.cleanTeamsDescription(
       event.description || ""
     );
@@ -239,7 +223,7 @@ export class NoteService {
       if (typeof value === "string") {
         title = title.replace(
           new RegExp(escapedPlaceholder, "g"),
-          this.sanitizeFileName(value)
+          sanitizeFileName(value)
         );
       }
     }
@@ -307,9 +291,5 @@ export class NoteService {
         }
       }
     }
-  }
-
-  private sanitizeFileName(str: string): string {
-    return str.replace(/[\\/:*?"<>|]/g, "-");
   }
 }

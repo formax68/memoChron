@@ -1,7 +1,18 @@
 import { ItemView, WorkspaceLeaf, Notice } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
-import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
+import { createLocationElement } from "../utils/formatters";
+import {
+  MEMOCHRON_VIEW_TYPE,
+  INITIAL_PAST_DAYS,
+  INITIAL_FUTURE_DAYS,
+  EXTEND_WINDOW_DAYS,
+  SCROLL_THRESHOLD,
+  INTERSECTION_THRESHOLD,
+  TRANSITION_DURATION,
+  SCROLL_DEBOUNCE_DELAY,
+  DATE_BOUNDARY_THRESHOLD_HOURS,
+} from "../utils/constants";
 
 export class CalendarView extends ItemView {
   private plugin: MemoChron;
@@ -275,15 +286,6 @@ export class CalendarView extends ItemView {
         });
       }
 
-      // Improve touch handling
-      dayEl.addEventListener(
-        "touchstart",
-        (e) => {
-          // Prevent double-tap zoom
-        },
-        { passive: false }
-      );
-
       dayEl.addEventListener("click", (e) => {
         this.selectDate(date);
       });
@@ -352,18 +354,16 @@ export class CalendarView extends ItemView {
     const today = new Date();
     this.currentWindowEvents = this.plugin.calendarService.getEventsWindow(
       today,
-      30,
-      60
+      INITIAL_PAST_DAYS,
+      INITIAL_FUTURE_DAYS
     );
 
-    // Find today's position in the window for initial scroll positioning
     this.todayIndex = this.findTodayIndexInWindow(today);
 
-    // Set window boundaries
     this.windowStart = new Date(today);
-    this.windowStart.setDate(this.windowStart.getDate() - 30);
+    this.windowStart.setDate(this.windowStart.getDate() - INITIAL_PAST_DAYS);
     this.windowEnd = new Date(today);
-    this.windowEnd.setDate(this.windowEnd.getDate() + 60);
+    this.windowEnd.setDate(this.windowEnd.getDate() + INITIAL_FUTURE_DAYS);
   }
 
   private findTodayIndexInWindow(today: Date): number {
@@ -377,6 +377,15 @@ export class CalendarView extends ItemView {
     }
 
     return this.currentWindowEvents.length;
+  }
+
+  private formatEventDate(date: Date, currentYear: number): string {
+    return date.toLocaleDateString("default", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: date.getFullYear() !== currentYear ? "numeric" : undefined,
+    });
   }
 
   private async renderEventsWindow() {
@@ -399,7 +408,7 @@ export class CalendarView extends ItemView {
 
         this.scrollListenerAdded = true;
       }
-      
+
       // Set up intersection observer for date visibility tracking
       this.setupIntersectionObserver();
     } else {
@@ -423,15 +432,7 @@ export class CalendarView extends ItemView {
         // Add day header
         const dayHeader = list.createEl("div", {
           cls: "memochron-day-separator",
-          text: event.start.toLocaleDateString("default", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year:
-              event.start.getFullYear() !== now.getFullYear()
-                ? "numeric"
-                : undefined,
-          }),
+          text: this.formatEventDate(event.start, now.getFullYear()),
         });
 
         // Add data attribute for date identification
@@ -439,7 +440,7 @@ export class CalendarView extends ItemView {
 
         // Store reference for scroll tracking
         this.visibleDateElements.set(eventDateStr, dayHeader);
-        
+
         // Observe this date header for intersection
         if (this.intersectionObserver) {
           this.intersectionObserver.observe(dayHeader);
@@ -480,35 +481,9 @@ export class CalendarView extends ItemView {
       });
 
       if (event.location) {
-        // Check if the location field likely contains a URL
-        const isUrl =
-          event.location.startsWith("http://") ||
-          event.location.startsWith("https://") ||
-          event.location.startsWith("www.");
-
-        // Check if it's likely a virtual meeting link
-        const isVirtual =
-          event.location.toLowerCase().includes("zoom") ||
-          event.location.toLowerCase().includes("meet.") ||
-          event.location.toLowerCase().includes("teams") ||
-          event.location.toLowerCase().includes("webex");
-
-        const icon = isUrl ? "🔗" : isVirtual ? "💻" : "📍";
-
-        eventEl.createEl("div", {
-          cls: "memochron-event-location",
-          text: `${icon} ${event.location}`,
-        });
+        const locationEl = createLocationElement(event.location);
+        eventEl.appendChild(locationEl);
       }
-
-      // Improve touch handling for event items
-      eventEl.addEventListener(
-        "touchstart",
-        (e) => {
-          // Prevent double-tap zoom
-        },
-        { passive: false }
-      );
 
       eventEl.addEventListener("click", async (e) => {
         e.stopPropagation();
@@ -524,7 +499,6 @@ export class CalendarView extends ItemView {
     // Scroll to today's events after rendering (if not scrolling to a specific date)
     if (!this.isScrollingToDate) {
       setTimeout(() => {
-        // Double-check isScrollingToDate flag in case it changed during setTimeout delay
         if (!this.isScrollingToDate) {
           const todayMarker = this.agenda.querySelector(
             "#memochron-today-marker"
@@ -533,17 +507,17 @@ export class CalendarView extends ItemView {
             const targetPosition = (todayMarker as HTMLElement).offsetTop;
             const currentScroll = this.agenda.scrollTop;
             const scrollDiff = targetPosition - currentScroll;
-            
-            const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+
+            const agendaList = this.agenda.querySelector(
+              ".memochron-agenda-list"
+            ) as HTMLElement;
             if (agendaList) {
-              agendaList.style.transition = 'transform 0.3s ease-out';
+              agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
               agendaList.style.transform = `translateY(${-scrollDiff}px)`;
             }
           }
-        } else {
-          console.log('SCROLL DEBUG: Skipping today marker scroll - isScrollingToDate is true');
         }
-      }, 100);
+      }, SCROLL_DEBOUNCE_DELAY);
     }
   }
 
@@ -559,26 +533,29 @@ export class CalendarView extends ItemView {
     this.intersectionObserver = new IntersectionObserver(
       (entries) => {
         if (!this.scrollSyncEnabled || this.isScrollingToDate) return;
-        
+
         // Update visible dates set
-        entries.forEach(entry => {
-          const dateStr = entry.target.getAttribute('data-date');
+        entries.forEach((entry) => {
+          const dateStr = entry.target.getAttribute("data-date");
           if (dateStr) {
-            if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+            if (
+              entry.isIntersecting &&
+              entry.intersectionRatio > INTERSECTION_THRESHOLD
+            ) {
               this.currentlyVisibleDates.add(dateStr);
             } else {
               this.currentlyVisibleDates.delete(dateStr);
             }
           }
         });
-        
+
         // Update calendar selection based on visible dates
         this.updateCalendarFromVisibleDates();
       },
       {
         root: this.agenda,
-        rootMargin: '-20% 0px -60% 0px', // Only consider top 40% of container
-        threshold: [0, 0.3, 0.7, 1.0]
+        rootMargin: "-20% 0px -60% 0px", // Only consider top 40% of container
+        threshold: [0, INTERSECTION_THRESHOLD, 0.7, 1.0],
       }
     );
 
@@ -596,12 +573,12 @@ export class CalendarView extends ItemView {
     const { scrollTop, scrollHeight, clientHeight } = this.agenda;
 
     // Load more past events when scrolling near the bottom
-    if (scrollTop + clientHeight >= scrollHeight - 200) {
+    if (scrollTop + clientHeight >= scrollHeight - SCROLL_THRESHOLD) {
       await this.loadMorePastEvents();
     }
 
     // Load more future events when scrolling near the top
-    if (scrollTop <= 200) {
+    if (scrollTop <= SCROLL_THRESHOLD) {
       await this.loadMoreFutureEvents();
     }
   }
@@ -609,12 +586,8 @@ export class CalendarView extends ItemView {
   private async loadMorePastEvents() {
     this.isLoadingMoreEvents = true;
 
-    // Store current scroll position before adding events
-    const currentScrollTop = this.agenda.scrollTop;
-
-    // Extend window backwards by 30 days
     const newWindowStart = new Date(this.windowStart);
-    newWindowStart.setDate(newWindowStart.getDate() - 30);
+    newWindowStart.setDate(newWindowStart.getDate() - EXTEND_WINDOW_DAYS);
 
     const moreEvents = this.plugin.calendarService.getEventsInRange(
       newWindowStart,
@@ -622,26 +595,19 @@ export class CalendarView extends ItemView {
     );
 
     if (moreEvents.length > 0) {
-      // Store the first visible date before adding events
       const firstVisibleDate = this.getFirstVisibleDate();
 
       this.currentWindowEvents = [...moreEvents, ...this.currentWindowEvents];
-
-      // Safely update today's index
-      const today = new Date();
-      this.todayIndex = this.findTodayIndexInWindow(today);
-
+      this.todayIndex = this.findTodayIndexInWindow(new Date());
       this.windowStart = newWindowStart;
 
       await this.renderEventsWindow();
 
-      // Restore scroll position to the previously visible date
       if (firstVisibleDate) {
         const targetElement = this.agenda.querySelector(
           `[data-date="${firstVisibleDate}"]`
         );
         if (targetElement) {
-          console.log('SCROLL DEBUG: Restoring scroll position to:', firstVisibleDate);
           targetElement.scrollIntoView({ behavior: "auto", block: "start" });
         }
       }
@@ -653,9 +619,8 @@ export class CalendarView extends ItemView {
   private async loadMoreFutureEvents() {
     this.isLoadingMoreEvents = true;
 
-    // Extend window forwards by 30 days
     const newWindowEnd = new Date(this.windowEnd);
-    newWindowEnd.setDate(newWindowEnd.getDate() + 30);
+    newWindowEnd.setDate(newWindowEnd.getDate() + EXTEND_WINDOW_DAYS);
 
     const moreEvents = this.plugin.calendarService.getEventsInRange(
       this.windowEnd,
@@ -665,7 +630,6 @@ export class CalendarView extends ItemView {
     if (moreEvents.length > 0) {
       this.currentWindowEvents = [...this.currentWindowEvents, ...moreEvents];
       this.windowEnd = newWindowEnd;
-
       await this.renderEventsWindow();
     }
 
@@ -690,22 +654,24 @@ export class CalendarView extends ItemView {
       const targetPosition = (targetElement as HTMLElement).offsetTop;
       const currentScroll = this.agenda.scrollTop;
       const scrollDiff = targetPosition - currentScroll;
-      
+
       // Get the scrollable content container
-      const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+      const agendaList = this.agenda.querySelector(
+        ".memochron-agenda-list"
+      ) as HTMLElement;
       if (agendaList) {
         // Apply smooth transform to move content to desired position
-        agendaList.style.transition = 'transform 0.3s ease-out';
+        agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
         agendaList.style.transform = `translateY(${-scrollDiff}px)`;
-        
+
         // Update the intersection observer's understanding of scroll position
         // by temporarily adjusting the root margin to account for the transform
         this.updateIntersectionObserverForTransform(scrollDiff);
       }
-      
+
       setTimeout(() => {
         this.isScrollingToDate = false;
-      }, 500);
+      }, TRANSITION_DURATION + 200);
       return;
     }
 
@@ -722,10 +688,12 @@ export class CalendarView extends ItemView {
         const targetPosition = (targetElement as HTMLElement).offsetTop;
         const currentScroll = this.agenda.scrollTop;
         const scrollDiff = targetPosition - currentScroll;
-        
-        const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+
+        const agendaList = this.agenda.querySelector(
+          ".memochron-agenda-list"
+        ) as HTMLElement;
         if (agendaList) {
-          agendaList.style.transition = 'transform 0.3s ease-out';
+          agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
           agendaList.style.transform = `translateY(${-scrollDiff}px)`;
           this.updateIntersectionObserverForTransform(scrollDiff);
         }
@@ -758,10 +726,12 @@ export class CalendarView extends ItemView {
       const targetPosition = closestElement.offsetTop;
       const currentScroll = this.agenda.scrollTop;
       const scrollDiff = targetPosition - currentScroll;
-      
-      const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+
+      const agendaList = this.agenda.querySelector(
+        ".memochron-agenda-list"
+      ) as HTMLElement;
       if (agendaList) {
-        agendaList.style.transition = 'transform 0.3s ease-out';
+        agendaList.style.transition = `transform ${TRANSITION_DURATION}ms ease-out`;
         agendaList.style.transform = `translateY(${-scrollDiff}px)`;
         this.updateIntersectionObserverForTransform(scrollDiff);
       }
@@ -862,13 +832,17 @@ export class CalendarView extends ItemView {
    * Update calendar selection based on visible dates from intersection observer
    */
   private updateCalendarFromVisibleDates(): void {
-    if (!this.scrollSyncEnabled || this.isScrollingToDate || this.isLoadingMoreEvents) {
+    if (
+      !this.scrollSyncEnabled ||
+      this.isScrollingToDate ||
+      this.isLoadingMoreEvents
+    ) {
       return;
     }
 
     // Convert visible dates to Date objects and sort them
     const visibleDates = Array.from(this.currentlyVisibleDates)
-      .map(dateStr => ({ dateStr, date: new Date(dateStr) }))
+      .map((dateStr) => ({ dateStr, date: new Date(dateStr) }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     if (visibleDates.length === 0) return;
@@ -876,18 +850,18 @@ export class CalendarView extends ItemView {
     // Find the "primary" visible date - prefer the first chronologically visible date
     // that represents a significant day boundary crossing
     let targetDate: Date | null = null;
-    
+
     // If we have a previously selected date, check if we've crossed a significant boundary
     if (this.lastSelectedDate) {
       const lastDate = new Date(this.lastSelectedDate);
       const firstVisible = visibleDates[0].date;
-      
+
       // Only change selection if we've moved to a significantly different date
-      // (more than 12 hours difference) to avoid flickering within the same day
+      // to avoid flickering within the same day
       const timeDiff = Math.abs(firstVisible.getTime() - lastDate.getTime());
-      const dayInMs = 24 * 60 * 60 * 1000;
-      
-      if (timeDiff > dayInMs / 2) { // 12 hours threshold
+      const thresholdMs = DATE_BOUNDARY_THRESHOLD_HOURS * 60 * 60 * 1000;
+
+      if (timeDiff > thresholdMs) {
         targetDate = firstVisible;
       }
     } else {
@@ -896,14 +870,18 @@ export class CalendarView extends ItemView {
     }
 
     // Update calendar selection if we have a target date and it's different from current
-    if (targetDate && (!this.selectedDate || 
-        targetDate.toDateString() !== this.selectedDate.toDateString())) {
-      
+    if (
+      targetDate &&
+      (!this.selectedDate ||
+        targetDate.toDateString() !== this.selectedDate.toDateString())
+    ) {
       this.lastSelectedDate = targetDate.toDateString();
-      
+
       // Check if we need to navigate to a different month
-      if (targetDate.getMonth() !== this.currentDate.getMonth() || 
-          targetDate.getFullYear() !== this.currentDate.getFullYear()) {
+      if (
+        targetDate.getMonth() !== this.currentDate.getMonth() ||
+        targetDate.getFullYear() !== this.currentDate.getFullYear()
+      ) {
         this.currentDate = new Date(targetDate);
         this.renderMonth();
       }
@@ -967,24 +945,10 @@ export class CalendarView extends ItemView {
     if (this.intersectionObserver) {
       this.intersectionObserver.disconnect();
     }
-    
+
     // Re-setup after transform completes
     setTimeout(() => {
       this.setupIntersectionObserver();
-    }, 400);
-  }
-
-  /**
-   * Debounce utility function
-   */
-  private debounce<T extends (...args: any[]) => void>(
-    func: T,
-    wait: number
-  ): T {
-    let timeout: NodeJS.Timeout | null = null;
-    return ((...args: any[]) => {
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    }) as T;
+    }, TRANSITION_DURATION + 100);
   }
 }

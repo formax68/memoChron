@@ -7,6 +7,14 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
+import { parseTagsString } from "../utils/formatters";
+import {
+  TEXTAREA_ROWS_SMALL,
+  TEXTAREA_ROWS_LARGE,
+  TEXTAREA_COLS,
+  MAX_SUGGESTIONS,
+  SUGGESTION_HIDE_DELAY,
+} from "../utils/constants";
 
 export class SettingsTab extends PluginSettingTab {
   private plugin: MemoChron;
@@ -42,74 +50,23 @@ export class SettingsTab extends PluginSettingTab {
     });
 
     this.plugin.settings.calendarUrls.forEach((source, index) => {
-      const calendarSetting = new Setting(calendarContainer)
-        .addText((text) =>
-          text
-            .setPlaceholder("Calendar URL")
-            .setValue(source.url)
-            .onChange(async (value) => {
-              this.plugin.settings.calendarUrls[index].url = value;
-              await this.plugin.saveSettings();
-            })
-        )
-        .addText((text) =>
-          text
-            .setPlaceholder("Calendar name")
-            .setValue(source.name)
-            .onChange(async (value) => {
-              this.plugin.settings.calendarUrls[index].name = value;
-              await this.plugin.saveSettings();
-            })
-        )
-        .addText((text) =>
-          text
-            .setPlaceholder("Tags (comma-separated)")
-            .setValue(source.tags?.join(", ") || "")
-            .onChange(async (value) => {
-              this.plugin.settings.calendarUrls[index].tags = value
-                .split(",")
-                .map((tag) => tag.trim())
-                .filter((tag) => tag.length > 0);
-              await this.plugin.saveSettings();
-            })
-        )
-        .addToggle((toggle) =>
-          toggle.setValue(source.enabled).onChange(async (value) => {
-            this.plugin.settings.calendarUrls[index].enabled = value;
-            await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView();
-          })
-        )
-        .addButton((btn) =>
-          btn.setButtonText("Remove").onClick(async () => {
-            this.plugin.settings.calendarUrls.splice(index, 1);
-            await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView();
-            this.display();
-          })
-        );
+      this.createCalendarSourceSetting(calendarContainer, source, index);
     });
 
     // First Day of Week
     new Setting(containerEl)
       .setName("First day of the week")
       .setDesc("Choose which day the week starts on")
-      .addDropdown((dropdown) =>
+      .addDropdown((dropdown) => {
+        this.addWeekdayOptions(dropdown);
         dropdown
-          .addOption("0", "Sunday")
-          .addOption("1", "Monday")
-          .addOption("2", "Tuesday")
-          .addOption("3", "Wednesday")
-          .addOption("4", "Thursday")
-          .addOption("5", "Friday")
-          .addOption("6", "Saturday")
           .setValue(String(this.plugin.settings.firstDayOfWeek))
           .onChange(async (value) => {
             this.plugin.settings.firstDayOfWeek = parseInt(value);
             await this.plugin.saveSettings();
             await this.plugin.refreshCalendarView();
-          })
-      );
+          });
+      });
 
     // Refresh Interval
     new Setting(containerEl)
@@ -203,8 +160,8 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.defaultFrontmatter = value;
             await this.plugin.saveSettings();
           });
-        text.inputEl.rows = 4;
-        text.inputEl.cols = 50;
+        text.inputEl.rows = TEXTAREA_ROWS_SMALL;
+        text.inputEl.cols = TEXTAREA_COLS;
       });
 
     // Note Template
@@ -220,8 +177,8 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.noteTemplate = value;
             await this.plugin.saveSettings();
           });
-        text.inputEl.rows = 10;
-        text.inputEl.cols = 50;
+        text.inputEl.rows = TEXTAREA_ROWS_LARGE;
+        text.inputEl.cols = TEXTAREA_COLS;
       });
 
     // Default Tags
@@ -233,10 +190,7 @@ export class SettingsTab extends PluginSettingTab {
           .setPlaceholder("event, meeting")
           .setValue(this.plugin.settings.defaultTags.join(", "))
           .onChange(async (value) => {
-            this.plugin.settings.defaultTags = value
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter((tag) => tag.length > 0);
+            this.plugin.settings.defaultTags = parseTagsString(value);
             await this.plugin.saveSettings();
           })
       );
@@ -274,7 +228,7 @@ export class SettingsTab extends PluginSettingTab {
       // Small delay to allow clicking on suggestions
       setTimeout(() => {
         suggestionContainer.classList.remove("is-visible");
-      }, 200);
+      }, SUGGESTION_HIDE_DELAY);
     });
   }
 
@@ -299,7 +253,7 @@ export class SettingsTab extends PluginSettingTab {
     container.classList.add("is-visible");
     const ul = container.createEl("ul", { cls: "memochron-suggestion-list" });
 
-    matchingSuggestions.slice(0, 5).forEach((suggestion) => {
+    matchingSuggestions.slice(0, MAX_SUGGESTIONS).forEach((suggestion) => {
       const li = ul.createEl("li", { text: suggestion });
       li.addEventListener("mousedown", async (e) => {
         e.preventDefault();
@@ -308,5 +262,71 @@ export class SettingsTab extends PluginSettingTab {
         container.classList.remove("is-visible");
       });
     });
+  }
+
+  private addWeekdayOptions(dropdown: any): void {
+    const weekdays = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    weekdays.forEach((day, index) => {
+      dropdown.addOption(String(index), day);
+    });
+  }
+
+  private createCalendarSourceSetting(
+    container: HTMLElement,
+    source: CalendarSource,
+    index: number
+  ): void {
+    new Setting(container)
+      .addText((text) =>
+        text
+          .setPlaceholder("Calendar URL")
+          .setValue(source.url)
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].url = value;
+            await this.plugin.saveSettings();
+          })
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("Calendar name")
+          .setValue(source.name)
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].name = value;
+            await this.plugin.saveSettings();
+          })
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("Tags (comma-separated)")
+          .setValue(source.tags?.join(", ") || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].tags =
+              parseTagsString(value);
+            await this.plugin.saveSettings();
+          })
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(source.enabled).onChange(async (value) => {
+          this.plugin.settings.calendarUrls[index].enabled = value;
+          await this.plugin.saveSettings();
+          await this.plugin.refreshCalendarView();
+        })
+      )
+      .addButton((btn) =>
+        btn.setButtonText("Remove").onClick(async () => {
+          this.plugin.settings.calendarUrls.splice(index, 1);
+          await this.plugin.saveSettings();
+          await this.plugin.refreshCalendarView();
+          this.display();
+        })
+      );
   }
 }

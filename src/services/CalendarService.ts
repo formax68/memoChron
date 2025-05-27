@@ -1,11 +1,10 @@
 // src/services/CalendarService.ts
 
-import { requestUrl, Platform, Notice } from "obsidian";
+import { requestUrl, Notice } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
-import { DEFAULT_REFRESH_INTERVAL } from "../utils/constants";
 
 export interface CalendarEvent {
   id: string;
@@ -74,13 +73,7 @@ export class CalendarService {
       );
       const cache = JSON.parse(cacheFile);
 
-      // Check if cache is still valid based on settings
-      if (cache && cache.timestamp) {
-        console.log(
-          "MemoChron: Cache found, timestamp:",
-          new Date(cache.timestamp)
-        );
-
+      if (cache?.timestamp && cache.events && Array.isArray(cache.events)) {
         // Check if cache is for currently enabled calendars
         const enabledSources = this.plugin.settings.calendarUrls.filter(
           (source) => source.enabled
@@ -88,24 +81,19 @@ export class CalendarService {
         const cacheSources = cache.sources || [];
 
         // Convert ISO strings back to Date objects for events
-        if (cache.events && Array.isArray(cache.events)) {
-          cache.events.forEach((event: any) => {
-            event.start = new Date(event.start);
-            event.end = new Date(event.end);
-          });
+        cache.events.forEach((event: any) => {
+          event.start = new Date(event.start);
+          event.end = new Date(event.end);
+        });
 
-          this.events = cache.events as CalendarEvent[];
-          this.lastFetch = cache.timestamp;
+        this.events = cache.events as CalendarEvent[];
+        this.lastFetch = cache.timestamp;
 
-          // Return events if cache is fresh enough, otherwise we'll still load them
-          // but also trigger a background refresh
-          this.isLoadingCache = false;
-          return cache.events;
-        }
+        this.isLoadingCache = false;
+        return cache.events;
       }
     } catch (error) {
-      console.log("MemoChron: No cache found or cache invalid", error);
-      // This is expected if cache doesn't exist or is invalid - we'll just fetch fresh data
+      // Cache doesn't exist or is invalid - we'll fetch fresh data
     }
 
     this.isLoadingCache = false;
@@ -144,10 +132,8 @@ export class CalendarService {
         `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`,
         JSON.stringify(cache)
       );
-
-      console.log("MemoChron: Calendar cache saved");
     } catch (error) {
-      console.error("MemoChron: Failed to save calendar cache:", error);
+      console.error("Failed to save calendar cache:", error);
     }
   }
 
@@ -163,19 +149,9 @@ export class CalendarService {
     const now = Date.now();
     const enabledSources = sources.filter((source) => source.enabled);
 
-    // Log platform info on initial fetch
-    if (this.events.length === 0) {
-      console.debug("MemoChron platform info:", {
-        mobile: Platform.isMobile,
-        electron: Platform.isDesktop,
-        networkAvailable: navigator.onLine,
-      });
-    }
-
-    // First check if we have any enabled sources
+    // Check if we have any enabled sources
     if (enabledSources.length === 0) {
       this.events = [];
-      console.warn("No enabled calendar sources to fetch.");
       return [];
     }
 
@@ -193,16 +169,10 @@ export class CalendarService {
 
     // Determine if we need to refresh based on cache expiration or calendar changes
     const needsRefresh =
-      forceRefresh || // Explicit force refresh
-      this.events.length === 0 || // No events yet
-      now - this.lastFetch >= this.refreshMinutes * 60 * 1000 || // Cache expired
-      this.events.some(
-        (event) =>
-          !enabledSources.find((source) => source.name === event.source)
-      ) || // Has events from now-disabled calendars
-      enabledSources.some(
-        (source) => !this.events.find((event) => event.source === source.name)
-      ); // Has newly enabled calendars
+      forceRefresh ||
+      this.events.length === 0 ||
+      now - this.lastFetch >= this.refreshMinutes * 60 * 1000 ||
+      this.hasSourceChanges(enabledSources);
 
     if (!needsRefresh) {
       return this.events;
@@ -211,10 +181,7 @@ export class CalendarService {
     try {
       this.isFetchingCalendars = true;
 
-      // If this is a background refresh, show a subtle notice
-      if (this.events.length > 0 && !forceRefresh) {
-        console.log("MemoChron: Background refresh started");
-      } else if (forceRefresh) {
+      if (forceRefresh) {
         new Notice("MemoChron: Refreshing calendars...");
       }
 
@@ -225,12 +192,10 @@ export class CalendarService {
       this.events = results.flat();
       this.lastFetch = now;
 
-      // Save to cache
       await this.saveToCache();
 
       this.isFetchingCalendars = false;
 
-      // Show completion notice for forced refreshes
       if (forceRefresh) {
         new Notice(
           `MemoChron: Calendar refresh complete (${this.events.length} events)`
@@ -249,11 +214,22 @@ export class CalendarService {
       }
 
       if (this.events.length > 0) {
-        // Return existing events if available, even on error
         return this.events;
       }
       throw error;
     }
+  }
+
+  private hasSourceChanges(enabledSources: CalendarSource[]): boolean {
+    return (
+      this.events.some(
+        (event) =>
+          !enabledSources.find((source) => source.name === event.source)
+      ) ||
+      enabledSources.some(
+        (source) => !this.events.find((event) => event.source === source.name)
+      )
+    );
   }
 
   private async fetchCalendar(
@@ -490,11 +466,6 @@ export class CalendarService {
       return events;
     } catch (error) {
       console.error(`Error fetching calendar ${source.name}:`, error);
-      console.debug("Platform info:", {
-        mobile: Platform.isMobile,
-        electron: Platform.isDesktop,
-        networkAvailable: navigator.onLine,
-      });
       return [];
     }
   }

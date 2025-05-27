@@ -1,4 +1,4 @@
-import { Plugin, Platform, Notice } from "obsidian";
+import { Plugin, Notice } from "obsidian";
 import { CalendarService } from "./services/CalendarService";
 import { NoteService } from "./services/NoteService";
 import { CalendarView } from "./views/CalendarView";
