@@ -572,14 +572,14 @@ export class CalendarView extends ItemView {
 
     const { scrollTop, scrollHeight, clientHeight } = this.agenda;
 
-    // Load more past events when scrolling near the bottom
+    // Load more future events when scrolling near the bottom
     if (scrollTop + clientHeight >= scrollHeight - SCROLL_THRESHOLD) {
-      await this.loadMorePastEvents();
+      await this.loadMoreFutureEvents();
     }
 
-    // Load more future events when scrolling near the top
+    // Load more past events when scrolling near the top
     if (scrollTop <= SCROLL_THRESHOLD) {
-      await this.loadMoreFutureEvents();
+      await this.loadMorePastEvents();
     }
   }
 
