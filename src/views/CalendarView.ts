@@ -524,11 +524,24 @@ export class CalendarView extends ItemView {
     // Scroll to today's events after rendering (if not scrolling to a specific date)
     if (!this.isScrollingToDate) {
       setTimeout(() => {
-        const todayMarker = this.agenda.querySelector(
-          "#memochron-today-marker"
-        );
-        if (todayMarker) {
-          todayMarker.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Double-check isScrollingToDate flag in case it changed during setTimeout delay
+        if (!this.isScrollingToDate) {
+          const todayMarker = this.agenda.querySelector(
+            "#memochron-today-marker"
+          );
+          if (todayMarker) {
+            const targetPosition = (todayMarker as HTMLElement).offsetTop;
+            const currentScroll = this.agenda.scrollTop;
+            const scrollDiff = targetPosition - currentScroll;
+            
+            const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+            if (agendaList) {
+              agendaList.style.transition = 'transform 0.3s ease-out';
+              agendaList.style.transform = `translateY(${-scrollDiff}px)`;
+            }
+          }
+        } else {
+          console.log('SCROLL DEBUG: Skipping today marker scroll - isScrollingToDate is true');
         }
       }, 100);
     }
@@ -628,6 +641,7 @@ export class CalendarView extends ItemView {
           `[data-date="${firstVisibleDate}"]`
         );
         if (targetElement) {
+          console.log('SCROLL DEBUG: Restoring scroll position to:', firstVisibleDate);
           targetElement.scrollIntoView({ behavior: "auto", block: "start" });
         }
       }
@@ -672,7 +686,23 @@ export class CalendarView extends ItemView {
       `[data-date="${targetDateStr}"]`
     );
     if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Use CSS transform to position the target date at the top of the visible area
+      const targetPosition = (targetElement as HTMLElement).offsetTop;
+      const currentScroll = this.agenda.scrollTop;
+      const scrollDiff = targetPosition - currentScroll;
+      
+      // Get the scrollable content container
+      const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+      if (agendaList) {
+        // Apply smooth transform to move content to desired position
+        agendaList.style.transition = 'transform 0.3s ease-out';
+        agendaList.style.transform = `translateY(${-scrollDiff}px)`;
+        
+        // Update the intersection observer's understanding of scroll position
+        // by temporarily adjusting the root margin to account for the transform
+        this.updateIntersectionObserverForTransform(scrollDiff);
+      }
+      
       setTimeout(() => {
         this.isScrollingToDate = false;
       }, 500);
@@ -688,7 +718,17 @@ export class CalendarView extends ItemView {
         `[data-date="${targetDateStr}"]`
       );
       if (targetElement) {
-        targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Use CSS transform to position the target date
+        const targetPosition = (targetElement as HTMLElement).offsetTop;
+        const currentScroll = this.agenda.scrollTop;
+        const scrollDiff = targetPosition - currentScroll;
+        
+        const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+        if (agendaList) {
+          agendaList.style.transition = 'transform 0.3s ease-out';
+          agendaList.style.transform = `translateY(${-scrollDiff}px)`;
+          this.updateIntersectionObserverForTransform(scrollDiff);
+        }
       } else {
         // If still no element found, scroll to the closest date
         this.scrollToClosestDate(targetDate);
@@ -715,7 +755,16 @@ export class CalendarView extends ItemView {
     }
 
     if (closestElement) {
-      closestElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      const targetPosition = closestElement.offsetTop;
+      const currentScroll = this.agenda.scrollTop;
+      const scrollDiff = targetPosition - currentScroll;
+      
+      const agendaList = this.agenda.querySelector('.memochron-agenda-list') as HTMLElement;
+      if (agendaList) {
+        agendaList.style.transition = 'transform 0.3s ease-out';
+        agendaList.style.transform = `translateY(${-scrollDiff}px)`;
+        this.updateIntersectionObserverForTransform(scrollDiff);
+      }
     }
   }
 
@@ -908,6 +957,21 @@ export class CalendarView extends ItemView {
       }
     }
     return null;
+  }
+
+  /**
+   * Update intersection observer to account for CSS transform
+   */
+  private updateIntersectionObserverForTransform(scrollDiff: number): void {
+    // Temporarily disable intersection observer during transform
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
+    
+    // Re-setup after transform completes
+    setTimeout(() => {
+      this.setupIntersectionObserver();
+    }, 400);
   }
 
   /**
