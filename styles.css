@@ -14,6 +14,14 @@
   --text-on-accent: var(--text-on-accent, #ffffff);
 }
 
+/* Main Container */
+.workspace-leaf-content[data-type="memochron-calendar"] .view-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 /* Controls */
 .memochron-controls {
   display: flex;
@@ -198,9 +206,15 @@
   border: 1px solid var(--background-modifier-border);
 }
 
+/* Calendar Container */
+.memochron-calendar {
+  padding: var(--memochron-padding-sm);
+}
+
 /* Agenda View */
 .memochron-agenda {
-  margin-top: var(--memochron-padding-lg);
+  flex: 1;
+  overflow-y: auto;
   padding: var(--memochron-padding-sm);
   border-top: 1px solid var(--background-modifier-border);
 }
@@ -209,12 +223,18 @@
   margin: 0 0 var(--memochron-padding-lg);
   font-size: 0.9em;
   color: var(--text-muted);
+  position: sticky;
+  top: 0;
+  background: var(--background-primary);
+  padding: var(--memochron-padding-sm) 0;
+  z-index: 1;
 }
 
 .memochron-agenda-list {
   display: flex;
   flex-direction: column;
   gap: var(--memochron-gap);
+  padding-bottom: var(--memochron-padding-lg);
 }
 
 .memochron-agenda-event {
