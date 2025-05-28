@@ -70,6 +70,7 @@ export class CalendarView extends ItemView {
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
     
     this.updateCalendarVisibility();
+    this.setupDragAndDrop();
   }
 
   private createControls(container: HTMLElement): HTMLElement {
@@ -441,6 +442,120 @@ export class CalendarView extends ItemView {
         controls.style.display = "";
       }
       this.agenda.classList.remove("agenda-only");
+    }
+  }
+
+  private setupDragAndDrop() {
+    // Prevent default drag behaviors
+    this.agenda.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Check if dragging a file
+      if (e.dataTransfer && e.dataTransfer.types.includes("Files")) {
+        e.dataTransfer.dropEffect = "copy";
+        this.agenda.addClass("drag-over");
+      }
+    });
+
+    this.agenda.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Only remove class if leaving the agenda area entirely
+      if (!this.agenda.contains(e.relatedTarget as Node)) {
+        this.agenda.removeClass("drag-over");
+      }
+    });
+
+    this.agenda.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.agenda.removeClass("drag-over");
+
+      if (!e.dataTransfer || !e.dataTransfer.files.length) {
+        return;
+      }
+
+      const file = e.dataTransfer.files[0];
+      
+      // Check if it's an ICS file
+      if (!file.name.endsWith(".ics")) {
+        new Notice("Please drop an ICS calendar file");
+        return;
+      }
+
+      try {
+        await this.handleIcsFileDrop(file);
+      } catch (error) {
+        console.error("Error handling ICS file:", error);
+        new Notice(`Error importing ICS file: ${error.message}`);
+      }
+    });
+  }
+
+  private async handleIcsFileDrop(file: File): Promise<void> {
+    // Read file contents
+    const text = await file.text();
+    
+    // Parse ICS file
+    const event = await this.parseIcsFile(text);
+    
+    // Create note from event
+    const noteFile = await this.plugin.noteService.createEventNote(event);
+    
+    // Open the created note
+    await this.app.workspace.getLeaf().openFile(noteFile);
+    
+    new Notice(`Created note for event: ${event.title}`);
+  }
+
+  private async parseIcsFile(icsContent: string): Promise<CalendarEvent> {
+    // Import ical.js parse function
+    const { parse, Component } = await import("ical.js");
+    
+    try {
+      const jcalData = parse(icsContent);
+      const comp = new Component(jcalData);
+      const vevents = comp.getAllSubcomponents("vevent");
+      
+      if (vevents.length === 0) {
+        throw new Error("No events found in ICS file");
+      }
+      
+      if (vevents.length > 1) {
+        throw new Error("Multiple events found in ICS file. Please provide a file with a single event.");
+      }
+      
+      const vevent = vevents[0];
+      
+      // Extract event data
+      const uid = vevent.getFirstPropertyValue("uid") || `imported-${Date.now()}`;
+      const summary = vevent.getFirstPropertyValue("summary") || "Untitled Event";
+      const dtstart = vevent.getFirstPropertyValue("dtstart");
+      const dtend = vevent.getFirstPropertyValue("dtend");
+      const description = vevent.getFirstPropertyValue("description") || "";
+      const location = vevent.getFirstPropertyValue("location") || "";
+      
+      if (!dtstart) {
+        throw new Error("Event has no start date");
+      }
+      
+      // Convert to JavaScript dates
+      const startDate = dtstart.toJSDate();
+      const endDate = dtend ? dtend.toJSDate() : new Date(startDate.getTime() + 60 * 60 * 1000); // Default 1 hour duration
+      
+      return {
+        id: uid,
+        title: summary,
+        start: startDate,
+        end: endDate,
+        description: description,
+        location: location,
+        source: "Imported"
+      };
+    } catch (error) {
+      throw new Error(`Failed to parse ICS file: ${error.message}`);
     }
   }
 }

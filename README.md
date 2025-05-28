@@ -52,6 +52,13 @@ It showcases a list of your calendar events. When you click on an event, it crea
 2. A new note will be created automatically using your template
 3. The note will include event details like title, time, description, and location
 
+### Importing ICS Files
+
+You can import single-event ICS files directly:
+1. Drag and drop an ICS file onto the agenda view
+2. A note will be created for the event with all its details
+3. This is useful for quickly creating notes from meeting invitations or event exports
+
 ### Customizing Templates
 
 In the plugin settings, you can customize:

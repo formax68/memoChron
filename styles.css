@@ -398,3 +398,27 @@
     margin: 0 0.35rem;
   }
 }
+
+/* Drag and drop styles */
+.memochron-agenda.drag-over {
+  background-color: var(--background-modifier-hover);
+  border: 2px dashed var(--interactive-accent);
+  position: relative;
+}
+
+.memochron-agenda.drag-over::before {
+  content: "Drop ICS file here to create a note";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-muted);
+  font-size: 1.2em;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 10;
+  background-color: var(--background-primary);
+  padding: 1em 2em;
+  border-radius: var(--radius-m);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
