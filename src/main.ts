@@ -1,4 +1,4 @@
-import { Plugin, Platform, Notice } from "obsidian";
+import { Plugin } from "obsidian";
 import { CalendarService } from "./services/CalendarService";
 import { NoteService } from "./services/NoteService";
 import { CalendarView } from "./views/CalendarView";
@@ -11,52 +11,47 @@ export default class MemoChron extends Plugin {
   calendarService: CalendarService;
   noteService: NoteService;
   calendarView: CalendarView;
-  private refreshTimer: number;
+  private refreshTimer: number | null = null;
 
   async onload() {
-    // Load settings
     await this.loadSettings();
+    this.initializeServices();
+    this.registerViews();
+    this.registerCommands();
+    this.addSettingTab(new SettingsTab(this.app, this));
 
-    // Initialize services
+    this.app.workspace.onLayoutReady(() => {
+      this.activateView();
+    });
+
+    this.setupAutoRefresh();
+  }
+
+  private initializeServices() {
     this.calendarService = new CalendarService(
       this,
       this.settings.refreshInterval
     );
     this.noteService = new NoteService(this.app, this.settings);
+  }
 
-    // Register calendar view
+  private registerViews() {
     this.registerView(
       MEMOCHRON_VIEW_TYPE,
       (leaf) => (this.calendarView = new CalendarView(leaf, this))
     );
+  }
 
-    // Add settings tab
-    this.addSettingTab(new SettingsTab(this.app, this));
-
-    // Register commands
+  private registerCommands() {
     this.addCommand({
       id: "force-refresh-calendars",
       name: "Force refresh calendars",
-      callback: async () => {
-        await this.refreshCalendarView(true);
-        // Notice is now handled by the CalendarService
-      },
+      callback: () => this.refreshCalendarView(true),
     });
-
-    // Add calendar view to right sidebar
-    this.app.workspace.onLayoutReady(() => {
-      this.activateView();
-    });
-
-    // Set up auto-refresh
-    this.setupAutoRefresh();
   }
 
   onunload() {
-    // Clear refresh timer
-    if (this.refreshTimer) {
-      window.clearInterval(this.refreshTimer);
-    }
+    this.clearRefreshTimer();
   }
 
   async loadSettings() {
@@ -66,36 +61,37 @@ export default class MemoChron extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
 
-    // Update refresh interval if it changed
     if (this.calendarService) {
       this.setupAutoRefresh();
     }
-    // Refresh calendar view after settings change (e.g., calendar added)
+    
     await this.refreshCalendarView();
   }
 
   private async activateView() {
-    const leaves = this.app.workspace.getLeavesOfType(MEMOCHRON_VIEW_TYPE);
+    const existingLeaves = this.app.workspace.getLeavesOfType(MEMOCHRON_VIEW_TYPE);
 
-    if (leaves.length === 0) {
-      // Always try to create the view in the right sidebar, even on mobile
-      let leaf = this.app.workspace.getRightLeaf(false);
-
-      if (!leaf) {
-        // If right sidebar isn't available, create it
-        leaf = this.app.workspace.getLeaf("split", "vertical");
-      }
-
-      if (leaf) {
-        await leaf.setViewState({
-          type: MEMOCHRON_VIEW_TYPE,
-          active: true,
-        });
-      }
+    if (existingLeaves.length === 0) {
+      await this.createCalendarView();
     }
 
-    // Initial calendar data fetch
     await this.refreshCalendarView();
+  }
+
+  private async createCalendarView() {
+    const leaf = this.getOrCreateLeaf();
+    
+    if (leaf) {
+      await leaf.setViewState({
+        type: MEMOCHRON_VIEW_TYPE,
+        active: true,
+      });
+    }
+  }
+
+  private getOrCreateLeaf() {
+    const rightLeaf = this.app.workspace.getRightLeaf(false);
+    return rightLeaf || this.app.workspace.getLeaf("split", "vertical");
   }
 
   async refreshCalendarView(forceRefresh = false) {
@@ -105,15 +101,19 @@ export default class MemoChron extends Plugin {
   }
 
   private setupAutoRefresh() {
-    // Clear existing timer if any
-    if (this.refreshTimer) {
-      window.clearInterval(this.refreshTimer);
-    }
-
-    // Set up new refresh timer
+    this.clearRefreshTimer();
+    
+    const intervalMs = this.settings.refreshInterval * 60 * 1000;
     this.refreshTimer = window.setInterval(
       () => this.refreshCalendarView(),
-      this.settings.refreshInterval * 60 * 1000 // Convert minutes to milliseconds
+      intervalMs
     );
+  }
+
+  private clearRefreshTimer() {
+    if (this.refreshTimer !== null) {
+      window.clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
   }
 }

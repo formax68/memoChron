@@ -2,71 +2,48 @@ import { App, TFile, TFolder, normalizePath } from "obsidian";
 import { MemoChronSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
 
+interface EventTemplateVariables {
+  event_title: string;
+  date: string;
+  "date-iso": string;
+  start_time: string;
+  end_time: string;
+  source: string;
+  location: string;
+  locationText: string;
+  description: string;
+}
+
 export class NoteService {
-  constructor(private app: App, private settings: MemoChronSettings) {}
+  private static readonly NOTES_SECTION_MARKER = "## 📝 Notes";
+  private static readonly FRONTMATTER_DELIMITER = "---";
+  private static readonly TEAMS_SEPARATOR = "________________";
+  
+  private static readonly LOCATION_EMOJIS = {
+    URL: "🔗",
+    VIRTUAL: "💻",
+    PHYSICAL: "📍",
+  };
 
-  private async updateExistingNote(
-    file: TFile,
-    event: CalendarEvent
-  ): Promise<void> {
-    const existingContent = await this.app.vault.read(file);
-    const notesSection = existingContent.indexOf("## 📝 Notes");
-
-    if (notesSection === -1) {
-      // If we can't find the Notes section, just update the whole file
-      await this.app.vault.modify(file, this.generateNoteContent(event));
-      return;
-    }
-
-    // Get the notes content after the Notes section
-    const notesContent = existingContent
-      .slice(notesSection + "## 📝 Notes".length)
-      .trim();
-
-    // Generate new content but preserve the notes
-    const newContent = this.generateNoteContent(event);
-    const newNotesSection = newContent.indexOf("## 📝 Notes");
-
-    if (newNotesSection === -1) {
-      // Shouldn't happen as our template always includes Notes section
-      await this.app.vault.modify(file, newContent);
-      return;
-    }
-
-    // Combine new content with existing notes
-    const updatedContent =
-      newContent.slice(0, newNotesSection + "## 📝 Notes".length) +
-      "\n" +
-      (notesContent ? "\n" + notesContent : "");
-
-    await this.app.vault.modify(file, updatedContent);
-  }
+  constructor(
+    private app: App, 
+    private settings: MemoChronSettings
+  ) {}
 
   async createEventNote(event: CalendarEvent): Promise<TFile> {
-    const { vault } = this.app;
-    const { noteLocation, noteTitleFormat } = this.settings;
-
-    // Format the path
-    const normalizedPath = normalizePath(noteLocation);
-    const title = this.formatTitle(noteTitleFormat, event);
-    const filePath = normalizePath(`${normalizedPath}/${title}.md`);
+    const filePath = this.buildFilePath(event);
 
     try {
-      // Create folder if needed
-      if (normalizedPath !== "/") {
-        await this.ensureFolderExists(normalizedPath);
-      }
-
-      // If file exists, update its contents keeping user's notes section
-      const existingFile = vault.getAbstractFileByPath(filePath);
+      await this.ensureParentFolder(filePath);
+      
+      const existingFile = this.app.vault.getAbstractFileByPath(filePath);
       if (existingFile instanceof TFile) {
         await this.updateExistingNote(existingFile, event);
         return existingFile;
       }
 
-      // If file doesn't exist, create it with the template content
       const content = this.generateNoteContent(event);
-      return await vault.create(filePath, content);
+      return await this.app.vault.create(filePath, content);
     } catch (error) {
       console.error("Error creating note:", error);
       throw error;
@@ -76,232 +53,244 @@ export class NoteService {
   async getAllFolders(): Promise<string[]> {
     const folders = new Set<string>(["/"]);
 
-    const processFolder = (folder: TFolder) => {
-      folders.add(folder.path);
-      folder.children.forEach((child) => {
-        if (child instanceof TFolder) {
-          processFolder(child);
-        }
-      });
-    };
-
     this.app.vault.getAllLoadedFiles().forEach((file) => {
       if (file instanceof TFolder) {
-        processFolder(file);
+        this.collectFolderPaths(file, folders);
       }
     });
 
     return Array.from(folders).sort((a, b) => a.localeCompare(b));
   }
 
-  private formatLocationText(location?: string): string {
-    if (!location) {
-      return "";
-    }
-    const isUrl =
-      location.startsWith("http://") ||
-      location.startsWith("https://") ||
-      location.startsWith("www.");
-    const isVirtual =
-      location.toLowerCase().includes("zoom") ||
-      location.toLowerCase().includes("meet.") ||
-      location.toLowerCase().includes("teams") ||
-      location.toLowerCase().includes("webex");
-    const locationEmoji = isUrl ? "🔗" : isVirtual ? "💻" : "📍";
-    return `${locationEmoji} ${location}`;
+  private buildFilePath(event: CalendarEvent): string {
+    const { noteLocation, noteTitleFormat } = this.settings;
+    const normalizedPath = normalizePath(noteLocation);
+    const title = this.formatTitle(noteTitleFormat, event);
+    return normalizePath(`${normalizedPath}/${title}.md`);
   }
 
-  private getEventTemplateVariables(event: CalendarEvent) {
+  private async ensureParentFolder(filePath: string): Promise<void> {
+    const parentPath = filePath.substring(0, filePath.lastIndexOf("/"));
+    if (parentPath && parentPath !== "/") {
+      await this.ensureFolderExists(parentPath);
+    }
+  }
+
+  private collectFolderPaths(folder: TFolder, folders: Set<string>): void {
+    folders.add(folder.path);
+    folder.children.forEach((child) => {
+      if (child instanceof TFolder) {
+        this.collectFolderPaths(child, folders);
+      }
+    });
+  }
+
+  private async updateExistingNote(
+    file: TFile,
+    event: CalendarEvent
+  ): Promise<void> {
+    const existingContent = await this.app.vault.read(file);
+    const preservedNotes = this.extractNotesSection(existingContent);
+    const newContent = this.generateNoteContent(event);
+    const updatedContent = this.mergeContentWithNotes(newContent, preservedNotes);
+    
+    await this.app.vault.modify(file, updatedContent);
+  }
+
+  private extractNotesSection(content: string): string {
+    const notesIndex = content.indexOf(NoteService.NOTES_SECTION_MARKER);
+    if (notesIndex === -1) return "";
+    
+    return content
+      .slice(notesIndex + NoteService.NOTES_SECTION_MARKER.length)
+      .trim();
+  }
+
+  private mergeContentWithNotes(newContent: string, preservedNotes: string): string {
+    const notesIndex = newContent.indexOf(NoteService.NOTES_SECTION_MARKER);
+    if (notesIndex === -1) return newContent;
+    
+    const baseContent = newContent.slice(0, notesIndex + NoteService.NOTES_SECTION_MARKER.length);
+    return baseContent + "\n" + (preservedNotes ? "\n" + preservedNotes : "");
+  }
+
+  private generateNoteContent(event: CalendarEvent): string {
+    const variables = this.getEventTemplateVariables(event);
+    const frontmatter = this.generateFrontmatter(event, variables);
+    const content = this.applyTemplateVariables(this.settings.noteTemplate, variables);
+    
+    return `${frontmatter}\n${content}`;
+  }
+
+  private generateFrontmatter(event: CalendarEvent, variables: EventTemplateVariables): string {
+    let frontmatterContent = this.cleanFrontmatter(this.settings.defaultFrontmatter);
+    frontmatterContent = this.applyTemplateVariables(frontmatterContent, variables);
+    
+    const tags = this.getTagsForEvent(event);
+    if (tags.length > 0) {
+      const tagsYaml = this.formatTagsYaml(tags);
+      if (frontmatterContent) {
+        frontmatterContent += "\n";
+      }
+      frontmatterContent += tagsYaml;
+    }
+    
+    return `${NoteService.FRONTMATTER_DELIMITER}\n${frontmatterContent}\n${NoteService.FRONTMATTER_DELIMITER}`;
+  }
+
+  private cleanFrontmatter(frontmatter: string): string {
+    let cleaned = frontmatter.trim();
+    
+    if (cleaned.startsWith(NoteService.FRONTMATTER_DELIMITER)) {
+      cleaned = cleaned.substring(3);
+    }
+    if (cleaned.endsWith(NoteService.FRONTMATTER_DELIMITER)) {
+      cleaned = cleaned.substring(0, cleaned.length - 3);
+    }
+    
+    return cleaned.trim();
+  }
+
+  private formatTagsYaml(tags: string[]): string {
+    return "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n");
+  }
+
+  private getEventTemplateVariables(event: CalendarEvent): EventTemplateVariables {
     const dateStr = this.formatDate(event.start);
     const dateIsoStr = event.start.toISOString().split("T")[0];
-    const startTime = event.start.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const endTime = event.end.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const location = event.location || "";
-    const locationText = this.formatLocationText(event.location);
-    const cleanedDescription = this.cleanTeamsDescription(
-      event.description || ""
-    );
-
+    const timeOptions = { hour: "2-digit", minute: "2-digit" } as const;
+    
     return {
       event_title: event.title,
       date: dateStr,
       "date-iso": dateIsoStr,
-      start_time: startTime,
-      end_time: endTime,
+      start_time: event.start.toLocaleTimeString([], timeOptions),
+      end_time: event.end.toLocaleTimeString([], timeOptions),
       source: event.source,
-      location: location, // Raw location for title
-      locationText: locationText, // Formatted location for content
-      description: cleanedDescription,
+      location: event.location || "",
+      locationText: this.formatLocationText(event.location),
+      description: this.cleanDescription(event.description || ""),
     };
   }
 
   private applyTemplateVariables(
     template: string,
-    variables: Record<string, string>
+    variables: EventTemplateVariables
   ): string {
-    return template
-      .replace(/{{event_title}}/g, variables.event_title)
-      .replace(/{{date}}/g, variables.date)
-      .replace(/{{date-iso}}/g, variables["date-iso"])
-      .replace(/{{start_time}}/g, variables.start_time)
-      .replace(/{{end_time}}/g, variables.end_time)
-      .replace(/{{source}}/g, variables.source)
-      .replace(/{{location}}/g, variables.locationText)
-      .replace(/{{description}}/g, variables.description);
-  }
-
-  private generateNoteContent(event: CalendarEvent): string {
-    const variables = this.getEventTemplateVariables(event);
-    const tags = this.getTagsForEvent(event);
-
-    // Prepare tags YAML
-    const tagsYaml =
-      tags.length > 0
-        ? "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n")
-        : "";
-
-    // Base frontmatter from settings
-    let frontmatterContent = this.settings.defaultFrontmatter.trim();
-
-    if (frontmatterContent.startsWith("---")) {
-      frontmatterContent = frontmatterContent.substring(3);
-    }
-    if (frontmatterContent.endsWith("---")) {
-      frontmatterContent = frontmatterContent.substring(
-        0,
-        frontmatterContent.length - 3
-      );
-    }
-    frontmatterContent = frontmatterContent.trim();
-
-    frontmatterContent = this.applyTemplateVariables(
-      frontmatterContent,
-      variables
+    return Object.entries(variables).reduce(
+      (result, [key, value]) => 
+        result.replace(new RegExp(`{{${key}}}`, "g"), value),
+      template
     );
-
-    if (tagsYaml) {
-      if (frontmatterContent.length > 0) {
-        frontmatterContent += "\n";
-      }
-      frontmatterContent += tagsYaml;
-    }
-
-    const frontmatter = `---\n${frontmatterContent}\n---`;
-
-    const content = this.applyTemplateVariables(
-      this.settings.noteTemplate,
-      variables
-    );
-
-    return frontmatter + "\n" + content;
-  }
-
-  private getTagsForEvent(event: CalendarEvent): string[] {
-    const tags = [...(this.settings.defaultTags || [])];
-    const source = this.settings.calendarUrls.find(
-      (s) => s.name === event.source
-    );
-    if (source?.tags) {
-      tags.push(...source.tags);
-    }
-    return [...new Set(tags)];
   }
 
   private formatTitle(format: string, event: CalendarEvent): string {
     const variables = this.getEventTemplateVariables(event);
-    let title = format;
-
-    // Define which variables can be used in the title
-    const allowedTitleVariables: (keyof typeof variables)[] = [
+    const allowedKeys: (keyof EventTemplateVariables)[] = [
       "event_title",
       "date",
-      "source",
       "date-iso",
       "start_time",
       "end_time",
-      "location", // Uses the raw 'location' variable
+      "source",
+      "location",
     ];
 
-    for (const key of allowedTitleVariables) {
+    return allowedKeys.reduce((title, key) => {
       const placeholder = `{{${key}}}`;
-      // Escape special characters in placeholder for regex
-      const escapedPlaceholder = placeholder.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
       const value = variables[key];
-      if (typeof value === "string") {
-        title = title.replace(
-          new RegExp(escapedPlaceholder, "g"),
-          this.sanitizeFileName(value)
-        );
-      }
+      return title.replace(
+        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+        this.sanitizeFileName(value)
+      );
+    }, format);
+  }
+
+  private formatLocationText(location?: string): string {
+    if (!location) return "";
+    
+    const emoji = this.getLocationEmoji(location);
+    return `${emoji} ${location}`;
+  }
+
+  private getLocationEmoji(location: string): string {
+    if (this.isUrl(location)) {
+      return NoteService.LOCATION_EMOJIS.URL;
     }
-    return title;
+    if (this.isVirtualMeeting(location)) {
+      return NoteService.LOCATION_EMOJIS.VIRTUAL;
+    }
+    return NoteService.LOCATION_EMOJIS.PHYSICAL;
+  }
+
+  private isUrl(location: string): boolean {
+    return /^(https?:\/\/|www\.)/.test(location);
+  }
+
+  private isVirtualMeeting(location: string): boolean {
+    const virtualKeywords = ["zoom", "meet.", "teams", "webex"];
+    const lowerLocation = location.toLowerCase();
+    return virtualKeywords.some(keyword => lowerLocation.includes(keyword));
   }
 
   private formatDate(date: Date): string {
-    switch (this.settings.noteDateFormat) {
-      case "ISO":
-        return date.toISOString().split("T")[0];
-      case "US":
-        return date.toLocaleDateString("en-US", {
-          month: "2-digit",
-          day: "2-digit",
-          year: "numeric",
-        });
-      case "UK":
-        return date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-      case "Long":
-        return date.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-      default:
-        return date.toISOString().split("T")[0];
-    }
+    const formatters: Record<string, () => string> = {
+      ISO: () => date.toISOString().split("T")[0],
+      US: () => date.toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
+      }),
+      UK: () => date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      Long: () => date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+    };
+
+    const formatter = formatters[this.settings.noteDateFormat];
+    return formatter ? formatter() : formatters.ISO();
   }
 
-  private cleanTeamsDescription(description: string): string {
-    // Remove Microsoft Teams meeting join info if present
-    const teamsJoinIndex = description.indexOf("________________");
-    if (teamsJoinIndex !== -1) {
-      return description.substring(0, teamsJoinIndex).trim();
-    }
-    return description.trim();
+  private cleanDescription(description: string): string {
+    const teamsIndex = description.indexOf(NoteService.TEAMS_SEPARATOR);
+    return teamsIndex !== -1 
+      ? description.substring(0, teamsIndex).trim()
+      : description.trim();
+  }
+
+  private getTagsForEvent(event: CalendarEvent): string[] {
+    const defaultTags = this.settings.defaultTags || [];
+    const source = this.settings.calendarUrls.find(s => s.name === event.source);
+    const sourceTags = source?.tags || [];
+    
+    return [...new Set([...defaultTags, ...sourceTags])];
   }
 
   private async ensureFolderExists(path: string): Promise<void> {
-    const { vault } = this.app;
-    const folders = path.split("/").filter((p) => p.length);
+    const folders = path.split("/").filter(Boolean);
     let currentPath = "";
 
     for (const folder of folders) {
       currentPath = currentPath ? `${currentPath}/${folder}` : folder;
-      const exists = vault.getAbstractFileByPath(currentPath);
+      const existing = this.app.vault.getAbstractFileByPath(currentPath);
 
-      if (exists) {
-        if (!(exists instanceof TFolder)) {
-          throw new Error(
-            `Cannot create folder '${currentPath}' because a file with that name already exists`
-          );
-        }
-      } else {
+      if (existing && !(existing instanceof TFolder)) {
+        throw new Error(
+          `Cannot create folder '${currentPath}' because a file with that name already exists`
+        );
+      }
+
+      if (!existing) {
         try {
-          await vault.createFolder(currentPath);
-        } catch (error) {
-          if (!error.message.includes("already exists")) {
+          await this.app.vault.createFolder(currentPath);
+        } catch (error: any) {
+          if (!error.message?.includes("already exists")) {
             throw error;
           }
         }

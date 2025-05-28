@@ -1,11 +1,8 @@
-// src/services/CalendarService.ts
-
 import { requestUrl, Platform, Notice } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
-import { DEFAULT_REFRESH_INTERVAL } from "../utils/constants";
 
 export interface CalendarEvent {
   id: string;
@@ -17,17 +14,14 @@ export interface CalendarEvent {
   source: string;
 }
 
+interface CacheData {
+  timestamp: number;
+  sources: Array<{ url: string; name: string }>;
+  events: CalendarEvent[];
+}
+
 export class CalendarService {
-  private events: CalendarEvent[] = [];
-  private refreshMinutes: number;
-  private lastFetch: number = 0;
-  private plugin: MemoChron;
-  private isLoadingCache: boolean = false;
-  private isFetchingCalendars: boolean = false;
-  
-  // Map Microsoft Exchange timezone IDs to IANA timezone names
-  // These are common Exchange timezone IDs that might appear in calendars
-  private static readonly timezoneMap: Record<string, string> = {
+  private static readonly TIMEZONE_MAP: Record<string, string> = {
     "Pacific Standard Time": "America/Los_Angeles",
     "Mountain Standard Time": "America/Denver",
     "Central Standard Time": "America/Chicago",
@@ -37,7 +31,6 @@ export class CalendarService {
     "Hawaii-Aleutian Standard Time": "Pacific/Honolulu",
     "Alaskan Standard Time": "America/Anchorage",
     "Atlantic Standard Time": "America/Halifax",
-
     "GMT Standard Time": "Europe/London",
     "W. Europe Standard Time": "Europe/Berlin",
     "Romance Standard Time": "Europe/Paris",
@@ -45,491 +38,57 @@ export class CalendarService {
     "E. Europe Standard Time": "Europe/Bucharest",
     "GTB Standard Time": "Europe/Athens",
     "Russian Standard Time": "Europe/Moscow",
-
     "Singapore Standard Time": "Asia/Singapore",
     "China Standard Time": "Asia/Shanghai",
     "Tokyo Standard Time": "Asia/Tokyo",
     "Korea Standard Time": "Asia/Seoul",
     "India Standard Time": "Asia/Kolkata",
-
     UTC: "UTC",
     "Coordinated Universal Time": "UTC",
   };
 
-  constructor(plugin: MemoChron, refreshMinutes: number) {
-    this.plugin = plugin;
-    this.refreshMinutes = refreshMinutes;
-  }
+  private events: CalendarEvent[] = [];
+  private lastFetch = 0;
+  private isLoadingCache = false;
+  private isFetchingCalendars = false;
 
-  /**
-   * Load calendar events from local cache file
-   */
-  async loadFromCache(): Promise<CalendarEvent[]> {
-    if (this.isLoadingCache) return [];
-
-    this.isLoadingCache = true;
-    try {
-      const cacheFile = await this.plugin.app.vault.adapter.read(
-        `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`
-      );
-      const cache = JSON.parse(cacheFile);
-
-      // Check if cache is still valid based on settings
-      if (cache && cache.timestamp) {
-        console.log(
-          "MemoChron: Cache found, timestamp:",
-          new Date(cache.timestamp)
-        );
-
-        // Check if cache is for currently enabled calendars
-        const enabledSources = this.plugin.settings.calendarUrls.filter(
-          (source) => source.enabled
-        );
-        const cacheSources = cache.sources || [];
-
-        // Convert ISO strings back to Date objects for events
-        if (cache.events && Array.isArray(cache.events)) {
-          cache.events.forEach((event: any) => {
-            event.start = new Date(event.start);
-            event.end = new Date(event.end);
-          });
-
-          this.events = cache.events as CalendarEvent[];
-          this.lastFetch = cache.timestamp;
-
-          // Return events if cache is fresh enough, otherwise we'll still load them
-          // but also trigger a background refresh
-          this.isLoadingCache = false;
-          return cache.events;
-        }
-      }
-    } catch (error) {
-      console.log("MemoChron: No cache found or cache invalid", error);
-      // This is expected if cache doesn't exist or is invalid - we'll just fetch fresh data
-    }
-
-    this.isLoadingCache = false;
-    return [];
-  }
-
-  /**
-   * Save calendar events to local cache file
-   */
-  async saveToCache(): Promise<void> {
-    try {
-      // Create directory if it doesn't exist
-      const dirPath = `${this.plugin.app.vault.configDir}/plugins/memochron`;
-      try {
-        await this.plugin.app.vault.adapter.mkdir(dirPath);
-      } catch (e) {
-        // Directory likely already exists
-      }
-
-      // Get list of enabled calendar sources for cache invalidation
-      const enabledSources = this.plugin.settings.calendarUrls
-        .filter((source) => source.enabled)
-        .map((source) => ({
-          url: source.url,
-          name: source.name,
-        }));
-
-      // Create a cache object with a timestamp
-      const cache = {
-        timestamp: this.lastFetch,
-        sources: enabledSources,
-        events: this.events,
-      };
-
-      await this.plugin.app.vault.adapter.write(
-        `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`,
-        JSON.stringify(cache)
-      );
-
-      console.log("MemoChron: Calendar cache saved");
-    } catch (error) {
-      console.error("MemoChron: Failed to save calendar cache:", error);
-    }
-  }
+  constructor(
+    private plugin: MemoChron,
+    private refreshMinutes: number
+  ) {}
 
   async fetchCalendars(
     sources: CalendarSource[],
     forceRefresh = false
   ): Promise<CalendarEvent[]> {
-    // Prevent concurrent fetches
     if (this.isFetchingCalendars) {
       return this.events;
     }
 
-    const now = Date.now();
     const enabledSources = sources.filter((source) => source.enabled);
-
-    // Log platform info on initial fetch
-    if (this.events.length === 0) {
-      console.debug("MemoChron platform info:", {
-        mobile: Platform.isMobile,
-        electron: Platform.isDesktop,
-        networkAvailable: navigator.onLine,
-      });
-    }
-
-    // First check if we have any enabled sources
+    
     if (enabledSources.length === 0) {
       this.events = [];
       console.warn("No enabled calendar sources to fetch.");
       return [];
     }
 
-    // If events array is empty, try to load from cache first
-    if (this.events.length === 0 && !forceRefresh) {
+    if (this.shouldLoadFromCache(forceRefresh)) {
       const cachedEvents = await this.loadFromCache();
       if (cachedEvents.length > 0) {
-        // If we have cached events, schedule a background refresh and return the cached events
-        setTimeout(() => {
-          this.fetchCalendars(sources, true);
-        }, 100);
+        this.scheduleBackgroundRefresh(sources);
         return this.events;
       }
     }
 
-    // Determine if we need to refresh based on cache expiration or calendar changes
-    const needsRefresh =
-      forceRefresh || // Explicit force refresh
-      this.events.length === 0 || // No events yet
-      now - this.lastFetch >= this.refreshMinutes * 60 * 1000 || // Cache expired
-      this.events.some(
-        (event) =>
-          !enabledSources.find((source) => source.name === event.source)
-      ) || // Has events from now-disabled calendars
-      enabledSources.some(
-        (source) => !this.events.find((event) => event.source === source.name)
-      ); // Has newly enabled calendars
-
-    if (!needsRefresh) {
+    if (!this.needsRefresh(enabledSources, forceRefresh)) {
       return this.events;
     }
 
-    try {
-      this.isFetchingCalendars = true;
-
-      // If this is a background refresh, show a subtle notice
-      if (this.events.length > 0 && !forceRefresh) {
-        console.log("MemoChron: Background refresh started");
-      } else if (forceRefresh) {
-        new Notice("MemoChron: Refreshing calendars...");
-      }
-
-      const fetchPromises = enabledSources.map((source) =>
-        this.fetchCalendar(source)
-      );
-      const results = await Promise.all(fetchPromises);
-      this.events = results.flat();
-      this.lastFetch = now;
-
-      // Save to cache
-      await this.saveToCache();
-
-      this.isFetchingCalendars = false;
-
-      // Show completion notice for forced refreshes
-      if (forceRefresh) {
-        new Notice(
-          `MemoChron: Calendar refresh complete (${this.events.length} events)`
-        );
-      }
-
-      return this.events;
-    } catch (error) {
-      this.isFetchingCalendars = false;
-      console.error("Error fetching calendars:", error);
-
-      if (forceRefresh) {
-        new Notice(
-          "MemoChron: Failed to refresh calendars. Check the console for details."
-        );
-      }
-
-      if (this.events.length > 0) {
-        // Return existing events if available, even on error
-        return this.events;
-      }
-      throw error;
-    }
-  }
-
-  private async fetchCalendar(
-    source: CalendarSource
-  ): Promise<CalendarEvent[]> {
-    try {
-      const response = await requestUrl({
-        url: source.url,
-        method: "GET",
-        headers: {
-          Accept: "text/calendar",
-          "User-Agent": "MemoChron-ObsidianPlugin",
-        },
-        throw: false, // Don't throw on non-200 responses
-      });
-
-      if (response.status !== 200) {
-        console.error(
-          `Failed to fetch calendar ${source.name}: ${response.status} ${response.text}`
-        );
-        return [];
-      }
-
-      const jcalData = parse(response.text);
-      const comp = new Component(jcalData);
-      const vevents = comp.getAllSubcomponents("vevent");
-
-      const events: CalendarEvent[] = [];
-
-      // Optimize recurring event iteration
-      const periodStart = new Date();
-      periodStart.setMonth(periodStart.getMonth() - 1);
-      periodStart.setHours(0, 0, 0, 0);
-
-      const periodEnd = new Date();
-      periodEnd.setMonth(periodEnd.getMonth() + 2);
-      periodEnd.setHours(23, 59, 59, 999);
-
-      // First, collect all recurrence exceptions (for handling rescheduled events)
-      const recurrenceExceptions = new Map<string, ICalEvent>();
-
-      // Find all events with RECURRENCE-ID (these are modified instances)
-      for (const vevent of vevents) {
-        if (vevent.hasProperty("recurrence-id")) {
-          const event = new ICalEvent(vevent);
-          const uid = event.uid;
-          const recurrenceId = vevent
-            .getFirstProperty("recurrence-id")
-            .getFirstValue();
-
-          // Skip if cancelled
-          if (
-            vevent.hasProperty("status") &&
-            vevent.getFirstPropertyValue("status") === "CANCELLED"
-          ) {
-            continue;
-          }
-
-          // Create a unique key combining the UID and the recurrence date
-          const recKey = `${uid}-${recurrenceId
-            .toJSDate()
-            .toISOString()
-            .substring(0, 10)}`;
-          recurrenceExceptions.set(recKey, event);
-        }
-      }
-
-      // Now process all events
-      for (const vevent of vevents) {
-        // Skip if this event has a recurrence-id (we'll process these separately)
-        if (vevent.hasProperty("recurrence-id")) {
-          continue;
-        }
-
-        // Skip cancelled events
-        if (vevent.hasProperty("status")) {
-          const status = vevent.getFirstPropertyValue("status");
-          if (status === "CANCELLED") {
-            continue; // Skip this event
-          }
-        }
-
-        const event = new ICalEvent(vevent);
-        let startDate, endDate;
-
-        // Extract timezone info if available
-        let tzid = null;
-        if (vevent.hasProperty("dtstart")) {
-          const dtstart = vevent.getFirstProperty("dtstart");
-          if (dtstart) {
-            tzid = dtstart.getParameter("tzid");
-          }
-        }
-
-        // Fix timezone issues using specific handling
-        if (vevent.hasProperty("rrule")) {
-          const iterator = event.iterator();
-          let next: Time | null;
-
-          // Get excluded dates (EXDATE) if any
-          const excludedDates: Date[] = [];
-          if (vevent.hasProperty("exdate")) {
-            // Handle multiple EXDATE properties if they exist
-            const exdateProps = vevent.getAllProperties("exdate");
-            for (const exdateProp of exdateProps) {
-              // Get the excluded dates
-              const values = exdateProp.getValues();
-              values.forEach((value: any) => {
-                if (value && value.toJSDate) {
-                  excludedDates.push(value.toJSDate());
-                }
-              });
-            }
-          }
-
-          while ((next = iterator.next())) {
-            const occurEnd = next.clone();
-            const duration = event.duration;
-            occurEnd.addDuration(duration);
-
-            // Get the date of this occurrence
-            const rawDate = next.toJSDate();
-
-            // Convert to local timezone
-            startDate = this.convertTimezone(rawDate, tzid);
-            endDate = this.convertTimezone(occurEnd.toJSDate(), tzid);
-
-            // Skip this occurrence if it's in the excluded dates list
-            const isExcluded = excludedDates.some((exDate) => {
-              // Compare year, month, and day to check if this date is excluded
-              return (
-                exDate.getFullYear() === rawDate.getFullYear() &&
-                exDate.getMonth() === rawDate.getMonth() &&
-                exDate.getDate() === rawDate.getDate()
-              );
-            });
-
-            // Check if this occurrence has a rescheduled exception
-            const dateStr = rawDate.toISOString().substring(0, 10);
-            const recKey = `${event.uid}-${dateStr}`;
-            const hasException = recurrenceExceptions.has(recKey);
-
-            if (isExcluded || hasException) {
-              // If there's an exception, we'll add it separately - skip the original
-              if (hasException) {
-                // Get the exception event
-                const exceptionEvent = recurrenceExceptions.get(recKey);
-
-                // Get timezone for the exception
-                let exTzid = tzid; // Default to parent event timezone
-                if (
-                  exceptionEvent &&
-                  exceptionEvent.component.hasProperty("dtstart")
-                ) {
-                  const exDtstart =
-                    exceptionEvent.component.getFirstProperty("dtstart");
-                  if (exDtstart) {
-                    const paramTzid = exDtstart.getParameter("tzid");
-                    if (paramTzid) {
-                      exTzid = paramTzid;
-                    }
-                  }
-                }
-
-                // Get start and end dates from the exception and convert to local timezone
-                if (exceptionEvent) {
-                  const exStartDate = this.convertTimezone(
-                    exceptionEvent.startDate.toJSDate(),
-                    exTzid
-                  );
-                  const exEndDate = this.convertTimezone(
-                    exceptionEvent.endDate.toJSDate(),
-                    exTzid
-                  );
-
-                  // Add the exception to events if it's in our date range
-                  if (exStartDate <= periodEnd && exEndDate >= periodStart) {
-                    events.push({
-                      id: `${event.uid}-${next.toUnixTime()}`,
-                      title: exceptionEvent.summary,
-                      start: exStartDate,
-                      end: exEndDate,
-                      description: exceptionEvent.description,
-                      location: exceptionEvent.location,
-                      source: source.name,
-                    });
-                  }
-                }
-              }
-
-              continue; // Skip this original occurrence
-            }
-
-            if (startDate <= periodEnd && endDate >= periodStart) {
-              events.push({
-                id: `${event.uid}-${next.toUnixTime()}`,
-                title: event.summary,
-                start: startDate,
-                end: endDate,
-                description: event.description,
-                location: event.location,
-                source: source.name,
-              });
-            }
-
-            if (startDate > periodEnd) {
-              break;
-            }
-          }
-        } else {
-          // Get original dates from event
-          const eventStartDate = event.startDate.toJSDate();
-          const eventEndDate = event.endDate.toJSDate();
-
-          // Convert to local dates with specific timezone handling
-          startDate = this.convertTimezone(eventStartDate, tzid);
-          endDate = this.convertTimezone(eventEndDate, tzid);
-
-          // Create ID for the event
-          const eventId = event.uid;
-
-          events.push({
-            id: eventId,
-            title: event.summary,
-            start: startDate,
-            end: endDate,
-            description: event.description,
-            location: event.location,
-            source: source.name,
-          });
-        }
-      }
-
-      return events;
-    } catch (error) {
-      console.error(`Error fetching calendar ${source.name}:`, error);
-      console.debug("Platform info:", {
-        mobile: Platform.isMobile,
-        electron: Platform.isDesktop,
-        networkAvailable: navigator.onLine,
-      });
-      return [];
-    }
-  }
-
-  /**
-   * Convert a date from a source timezone to local timezone using Luxon
-   */
-  private convertTimezone(date: Date, tzid: string | null): Date {
-    try {
-      if (!tzid) {
-        // If no timezone provided, assume UTC
-        return DateTime.fromJSDate(date, { zone: "UTC" }).toLocal().toJSDate();
-      }
-
-      // Map the Microsoft timezone to IANA timezone
-      const ianaZone = CalendarService.timezoneMap[tzid] || tzid;
-
-      // Create DateTime from the date assuming it's in the source timezone
-      let dt = DateTime.fromJSDate(date, { zone: ianaZone });
-
-      // If invalid timezone, fallback to UTC
-      if (!dt.isValid) {
-        dt = DateTime.fromJSDate(date, { zone: "UTC" });
-      }
-
-      // Convert to local timezone
-      return dt.toLocal().toJSDate();
-    } catch (error) {
-      console.error("Failed to convert timezone:", error);
-      return date; // Fall back to original date
-    }
+    return this.performFetch(enabledSources, forceRefresh);
   }
 
   getEventsForDate(date: Date): CalendarEvent[] {
-    // Create start and end of the target date for comparison
     const targetStartOfDay = new Date(date);
     targetStartOfDay.setHours(0, 0, 0, 0);
 
@@ -537,20 +96,501 @@ export class CalendarService {
     targetEndOfDay.setHours(23, 59, 59, 999);
 
     return this.events
-      .filter((event) => {
-        // Check if event starts on this day
-        const startsOnThisDay =
-          event.start.toDateString() === date.toDateString();
-
-        // Check if event ends on this day
-        const endsOnThisDay = event.end.toDateString() === date.toDateString();
-
-        // Check if event spans this day (starts before and ends after)
-        const spansThisDay =
-          event.start < targetEndOfDay && event.end > targetStartOfDay;
-
-        return startsOnThisDay || endsOnThisDay || spansThisDay;
-      })
+      .filter((event) => this.eventOccursOnDate(event, targetStartOfDay, targetEndOfDay))
       .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
+
+  private shouldLoadFromCache(forceRefresh: boolean): boolean {
+    return this.events.length === 0 && !forceRefresh;
+  }
+
+  private scheduleBackgroundRefresh(sources: CalendarSource[]) {
+    setTimeout(() => this.fetchCalendars(sources, true), 100);
+  }
+
+  private needsRefresh(enabledSources: CalendarSource[], forceRefresh: boolean): boolean {
+    const now = Date.now();
+    const cacheExpired = now - this.lastFetch >= this.refreshMinutes * 60 * 1000;
+    
+    return (
+      forceRefresh ||
+      this.events.length === 0 ||
+      cacheExpired ||
+      this.hasSourceMismatch(enabledSources)
+    );
+  }
+
+  private hasSourceMismatch(enabledSources: CalendarSource[]): boolean {
+    const hasDisabledEvents = this.events.some(
+      (event) => !enabledSources.find((source) => source.name === event.source)
+    );
+    
+    const hasNewSources = enabledSources.some(
+      (source) => !this.events.find((event) => event.source === source.name)
+    );
+    
+    return hasDisabledEvents || hasNewSources;
+  }
+
+  private async performFetch(
+    enabledSources: CalendarSource[],
+    forceRefresh: boolean
+  ): Promise<CalendarEvent[]> {
+    try {
+      this.isFetchingCalendars = true;
+      this.showFetchNotification(forceRefresh);
+
+      const fetchPromises = enabledSources.map((source) =>
+        this.fetchCalendar(source)
+      );
+      const results = await Promise.all(fetchPromises);
+      
+      this.events = results.flat();
+      this.lastFetch = Date.now();
+
+      await this.saveToCache();
+      this.showCompletionNotification(forceRefresh);
+
+      return this.events;
+    } catch (error) {
+      console.error("Error fetching calendars:", error);
+      this.showErrorNotification(forceRefresh);
+      
+      return this.events;
+    } finally {
+      this.isFetchingCalendars = false;
+    }
+  }
+
+  private showFetchNotification(forceRefresh: boolean) {
+    if (this.events.length > 0 && !forceRefresh) {
+      console.log("MemoChron: Background refresh started");
+    } else if (forceRefresh) {
+      new Notice("MemoChron: Refreshing calendars...");
+    }
+  }
+
+  private showCompletionNotification(forceRefresh: boolean) {
+    if (forceRefresh) {
+      new Notice(`MemoChron: Calendar refresh complete (${this.events.length} events)`);
+    }
+  }
+
+  private showErrorNotification(forceRefresh: boolean) {
+    if (forceRefresh) {
+      new Notice("MemoChron: Failed to refresh calendars. Check the console for details.");
+    }
+  }
+
+  private async loadFromCache(): Promise<CalendarEvent[]> {
+    if (this.isLoadingCache) return [];
+
+    this.isLoadingCache = true;
+    try {
+      const cacheData = await this.readCacheFile();
+      if (this.isValidCache(cacheData)) {
+        this.restoreFromCache(cacheData);
+        return cacheData.events;
+      }
+    } catch (error) {
+      console.log("MemoChron: No cache found or cache invalid", error);
+    } finally {
+      this.isLoadingCache = false;
+    }
+
+    return [];
+  }
+
+  private async readCacheFile(): Promise<CacheData> {
+    const cacheFile = await this.plugin.app.vault.adapter.read(
+      `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`
+    );
+    return JSON.parse(cacheFile);
+  }
+
+  private isValidCache(cache: any): cache is CacheData {
+    return (
+      cache &&
+      cache.timestamp &&
+      cache.events &&
+      Array.isArray(cache.events)
+    );
+  }
+
+  private restoreFromCache(cache: CacheData) {
+    cache.events.forEach((event) => {
+      event.start = new Date(event.start);
+      event.end = new Date(event.end);
+    });
+
+    this.events = cache.events;
+    this.lastFetch = cache.timestamp;
+  }
+
+  private async saveToCache(): Promise<void> {
+    try {
+      await this.ensureCacheDirectory();
+      
+      const cacheData: CacheData = {
+        timestamp: this.lastFetch,
+        sources: this.getEnabledSourcesForCache(),
+        events: this.events,
+      };
+
+      await this.writeCacheFile(cacheData);
+      console.log("MemoChron: Calendar cache saved");
+    } catch (error) {
+      console.error("MemoChron: Failed to save calendar cache:", error);
+    }
+  }
+
+  private async ensureCacheDirectory() {
+    const dirPath = `${this.plugin.app.vault.configDir}/plugins/memochron`;
+    try {
+      await this.plugin.app.vault.adapter.mkdir(dirPath);
+    } catch {
+      // Directory likely already exists
+    }
+  }
+
+  private getEnabledSourcesForCache() {
+    return this.plugin.settings.calendarUrls
+      .filter((source) => source.enabled)
+      .map((source) => ({ url: source.url, name: source.name }));
+  }
+
+  private async writeCacheFile(cacheData: CacheData) {
+    await this.plugin.app.vault.adapter.write(
+      `${this.plugin.app.vault.configDir}/plugins/memochron/calendar-cache.json`,
+      JSON.stringify(cacheData)
+    );
+  }
+
+  private async fetchCalendar(source: CalendarSource): Promise<CalendarEvent[]> {
+    try {
+      const response = await this.fetchCalendarData(source);
+      
+      if (response.status !== 200) {
+        console.error(
+          `Failed to fetch calendar ${source.name}: ${response.status} ${response.text}`
+        );
+        return [];
+      }
+
+      return this.parseCalendarData(response.text, source);
+    } catch (error) {
+      console.error(`Error fetching calendar ${source.name}:`, error);
+      this.logPlatformInfo();
+      return [];
+    }
+  }
+
+  private async fetchCalendarData(source: CalendarSource) {
+    return requestUrl({
+      url: source.url,
+      method: "GET",
+      headers: {
+        Accept: "text/calendar",
+        "User-Agent": "MemoChron-ObsidianPlugin",
+      },
+      throw: false,
+    });
+  }
+
+  private parseCalendarData(data: string, source: CalendarSource): CalendarEvent[] {
+    const jcalData = parse(data);
+    const comp = new Component(jcalData);
+    const vevents = comp.getAllSubcomponents("vevent");
+
+    const events: CalendarEvent[] = [];
+    const { periodStart, periodEnd } = this.getEventPeriod();
+    const recurrenceExceptions = this.collectRecurrenceExceptions(vevents);
+
+    for (const vevent of vevents) {
+      if (this.shouldSkipEvent(vevent)) continue;
+
+      const eventData = this.processEvent(
+        vevent,
+        source,
+        recurrenceExceptions,
+        periodStart,
+        periodEnd
+      );
+      
+      events.push(...eventData);
+    }
+
+    return events;
+  }
+
+  private getEventPeriod() {
+    const periodStart = new Date();
+    periodStart.setMonth(periodStart.getMonth() - 1);
+    periodStart.setHours(0, 0, 0, 0);
+
+    const periodEnd = new Date();
+    periodEnd.setMonth(periodEnd.getMonth() + 2);
+    periodEnd.setHours(23, 59, 59, 999);
+
+    return { periodStart, periodEnd };
+  }
+
+  private collectRecurrenceExceptions(vevents: Component[]): Map<string, ICalEvent> {
+    const exceptions = new Map<string, ICalEvent>();
+
+    for (const vevent of vevents) {
+      if (!vevent.hasProperty("recurrence-id")) continue;
+      
+      if (this.isCancelledEvent(vevent)) continue;
+
+      const event = new ICalEvent(vevent);
+      const uid = event.uid;
+      const recurrenceId = vevent.getFirstProperty("recurrence-id").getFirstValue();
+      const recKey = `${uid}-${recurrenceId.toJSDate().toISOString().substring(0, 10)}`;
+      
+      exceptions.set(recKey, event);
+    }
+
+    return exceptions;
+  }
+
+  private shouldSkipEvent(vevent: Component): boolean {
+    return (
+      vevent.hasProperty("recurrence-id") ||
+      this.isCancelledEvent(vevent)
+    );
+  }
+
+  private isCancelledEvent(vevent: Component): boolean {
+    return (
+      vevent.hasProperty("status") &&
+      vevent.getFirstPropertyValue("status") === "CANCELLED"
+    );
+  }
+
+  private processEvent(
+    vevent: Component,
+    source: CalendarSource,
+    recurrenceExceptions: Map<string, ICalEvent>,
+    periodStart: Date,
+    periodEnd: Date
+  ): CalendarEvent[] {
+    const event = new ICalEvent(vevent);
+    const tzid = this.extractTimezone(vevent);
+
+    if (vevent.hasProperty("rrule")) {
+      return this.processRecurringEvent(
+        event,
+        vevent,
+        source,
+        tzid,
+        recurrenceExceptions,
+        periodStart,
+        periodEnd
+      );
+    }
+
+    return this.processSingleEvent(event, source, tzid);
+  }
+
+  private extractTimezone(vevent: Component): string | null {
+    if (!vevent.hasProperty("dtstart")) return null;
+    
+    const dtstart = vevent.getFirstProperty("dtstart");
+    return dtstart ? dtstart.getParameter("tzid") : null;
+  }
+
+  private processRecurringEvent(
+    event: ICalEvent,
+    vevent: Component,
+    source: CalendarSource,
+    tzid: string | null,
+    recurrenceExceptions: Map<string, ICalEvent>,
+    periodStart: Date,
+    periodEnd: Date
+  ): CalendarEvent[] {
+    const events: CalendarEvent[] = [];
+    const excludedDates = this.getExcludedDates(vevent);
+    const iterator = event.iterator();
+    let next: Time | null;
+
+    while ((next = iterator.next())) {
+      const occurStart = next.toJSDate();
+      const occurEnd = this.calculateEndDate(next, event.duration);
+
+      const startDate = this.convertTimezone(occurStart, tzid);
+      const endDate = this.convertTimezone(occurEnd, tzid);
+
+      if (startDate > periodEnd) break;
+
+      const dateStr = occurStart.toISOString().substring(0, 10);
+      const recKey = `${event.uid}-${dateStr}`;
+
+      if (this.shouldSkipOccurrence(occurStart, excludedDates, recurrenceExceptions, recKey)) {
+        const exception = this.processException(
+          recurrenceExceptions.get(recKey),
+          source,
+          tzid,
+          periodStart,
+          periodEnd
+        );
+        if (exception) events.push(exception);
+        continue;
+      }
+
+      if (startDate <= periodEnd && endDate >= periodStart) {
+        events.push({
+          id: `${event.uid}-${next.toUnixTime()}`,
+          title: event.summary,
+          start: startDate,
+          end: endDate,
+          description: event.description,
+          location: event.location,
+          source: source.name,
+        });
+      }
+    }
+
+    return events;
+  }
+
+  private processSingleEvent(
+    event: ICalEvent,
+    source: CalendarSource,
+    tzid: string | null
+  ): CalendarEvent[] {
+    const startDate = this.convertTimezone(event.startDate.toJSDate(), tzid);
+    const endDate = this.convertTimezone(event.endDate.toJSDate(), tzid);
+
+    return [{
+      id: event.uid,
+      title: event.summary,
+      start: startDate,
+      end: endDate,
+      description: event.description,
+      location: event.location,
+      source: source.name,
+    }];
+  }
+
+  private getExcludedDates(vevent: Component): Date[] {
+    const excludedDates: Date[] = [];
+    
+    if (!vevent.hasProperty("exdate")) return excludedDates;
+
+    const exdateProps = vevent.getAllProperties("exdate");
+    for (const exdateProp of exdateProps) {
+      const values = exdateProp.getValues();
+      values.forEach((value: any) => {
+        if (value?.toJSDate) {
+          excludedDates.push(value.toJSDate());
+        }
+      });
+    }
+
+    return excludedDates;
+  }
+
+  private calculateEndDate(start: Time, duration: any): Date {
+    const end = start.clone();
+    end.addDuration(duration);
+    return end.toJSDate();
+  }
+
+  private shouldSkipOccurrence(
+    date: Date,
+    excludedDates: Date[],
+    recurrenceExceptions: Map<string, ICalEvent>,
+    recKey: string
+  ): boolean {
+    const isExcluded = excludedDates.some((exDate) => 
+      this.isSameDate(exDate, date)
+    );
+
+    return isExcluded || recurrenceExceptions.has(recKey);
+  }
+
+  private isSameDate(date1: Date, date2: Date): boolean {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
+
+  private processException(
+    exception: ICalEvent | undefined,
+    source: CalendarSource,
+    tzid: string | null,
+    periodStart: Date,
+    periodEnd: Date
+  ): CalendarEvent | null {
+    if (!exception) return null;
+
+    const exTzid = this.extractExceptionTimezone(exception, tzid);
+    const startDate = this.convertTimezone(exception.startDate.toJSDate(), exTzid);
+    const endDate = this.convertTimezone(exception.endDate.toJSDate(), exTzid);
+
+    if (startDate <= periodEnd && endDate >= periodStart) {
+      return {
+        id: `${exception.uid}-${exception.startDate.toUnixTime()}`,
+        title: exception.summary,
+        start: startDate,
+        end: endDate,
+        description: exception.description,
+        location: exception.location,
+        source: source.name,
+      };
+    }
+
+    return null;
+  }
+
+  private extractExceptionTimezone(exception: ICalEvent, defaultTzid: string | null): string | null {
+    if (!exception.component.hasProperty("dtstart")) return defaultTzid;
+    
+    const dtstart = exception.component.getFirstProperty("dtstart");
+    const paramTzid = dtstart?.getParameter("tzid");
+    
+    return paramTzid || defaultTzid;
+  }
+
+  private convertTimezone(date: Date, tzid: string | null): Date {
+    try {
+      const zone = tzid 
+        ? (CalendarService.TIMEZONE_MAP[tzid] || tzid)
+        : "UTC";
+
+      let dt = DateTime.fromJSDate(date, { zone });
+
+      if (!dt.isValid) {
+        dt = DateTime.fromJSDate(date, { zone: "UTC" });
+      }
+
+      return dt.toLocal().toJSDate();
+    } catch (error) {
+      console.error("Failed to convert timezone:", error);
+      return date;
+    }
+  }
+
+  private eventOccursOnDate(
+    event: CalendarEvent,
+    targetStartOfDay: Date,
+    targetEndOfDay: Date
+  ): boolean {
+    const startsOnThisDay = this.isSameDate(event.start, targetStartOfDay);
+    const endsOnThisDay = this.isSameDate(event.end, targetStartOfDay);
+    const spansThisDay = event.start < targetEndOfDay && event.end > targetStartOfDay;
+
+    return startsOnThisDay || endsOnThisDay || spansThisDay;
+  }
+
+  private logPlatformInfo() {
+    console.debug("Platform info:", {
+      mobile: Platform.isMobile,
+      electron: Platform.isDesktop,
+      networkAvailable: navigator.onLine,
+    });
   }
 }
