@@ -219,6 +219,15 @@
   border-top: 1px solid var(--background-modifier-border);
 }
 
+/* When calendar is hidden */
+.memochron-agenda.agenda-only {
+  border-top: none;
+}
+
+.memochron-controls.calendar-hidden {
+  display: none;
+}
+
 .memochron-agenda h3 {
   margin: 0 0 var(--memochron-padding-lg);
   font-size: 0.9em;

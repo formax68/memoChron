@@ -39,7 +39,14 @@ export class CalendarView extends ItemView {
     this.createUI();
     this.registerViewEvents();
     await this.refreshEvents();
-    await this.goToToday();
+    
+    // If calendar is hidden, show today's agenda
+    if (this.plugin.settings.hideCalendar) {
+      this.selectedDate = new Date();
+      await this.showDayAgenda(this.selectedDate);
+    } else {
+      await this.goToToday();
+    }
   }
 
   async refreshEvents(forceRefresh = false) {
@@ -48,9 +55,10 @@ export class CalendarView extends ItemView {
       forceRefresh
     );
     this.renderMonth();
-    if (this.selectedDate) {
-      this.showDayAgenda(this.selectedDate);
-    }
+    
+    // Always show agenda for selected date or today
+    const dateToShow = this.selectedDate || new Date();
+    this.showDayAgenda(dateToShow);
   }
 
   private createUI() {
@@ -60,6 +68,8 @@ export class CalendarView extends ItemView {
     const controls = this.createControls(container);
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
+    
+    this.updateCalendarVisibility();
   }
 
   private createControls(container: HTMLElement): HTMLElement {
@@ -142,6 +152,10 @@ export class CalendarView extends ItemView {
   }
 
   private renderMonth() {
+    if (this.plugin.settings.hideCalendar) {
+      return;
+    }
+    
     this.calendar.empty();
     this.currentMonthDays.clear();
 
@@ -405,6 +419,28 @@ export class CalendarView extends ItemView {
       await leaf.openFile(file);
     } else {
       new Notice("Could not open the note in a new tab");
+    }
+  }
+
+  toggleCalendarVisibility() {
+    this.updateCalendarVisibility();
+  }
+
+  private updateCalendarVisibility() {
+    const controls = this.containerEl.querySelector(".memochron-controls") as HTMLElement;
+    
+    if (this.plugin.settings.hideCalendar) {
+      this.calendar.style.display = "none";
+      if (controls) {
+        controls.style.display = "none";
+      }
+      this.agenda.classList.add("agenda-only");
+    } else {
+      this.calendar.style.display = "";
+      if (controls) {
+        controls.style.display = "";
+      }
+      this.agenda.classList.remove("agenda-only");
     }
   }
 }

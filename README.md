@@ -44,6 +44,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 
 - **Force refresh calendars**: Manually refresh all calendar data
 - **Go to today**: Navigate to the current month and select today's date
+- **Toggle calendar visibility**: Show/hide the month calendar grid (agenda-only mode)
 
 ### Creating Notes from Events
 
@@ -72,9 +73,11 @@ In the plugin settings, you can customize:
 ### Settings
 
 - **Calendar Sources**: Add, remove, or toggle calendars
+- **First Day of the Week**: Choose which day the calendar week starts on
+- **Hide Calendar**: Show only the agenda view without the month calendar grid
+- **Refresh Interval**: Set how often calendar data updates
 - **Note Location**: Set the default folder for event notes
 - **Note Title Format**: Customize how note titles are generated
-- **Refresh Interval**: Set how often calendar data updates
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes
 

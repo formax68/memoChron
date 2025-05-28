@@ -54,6 +54,12 @@ export default class MemoChron extends Plugin {
       name: "Go to today",
       callback: () => this.goToToday(),
     });
+
+    this.addCommand({
+      id: "toggle-calendar",
+      name: "Toggle calendar visibility",
+      callback: () => this.toggleCalendar(),
+    });
   }
 
   onunload() {
@@ -109,6 +115,14 @@ export default class MemoChron extends Plugin {
   private async goToToday() {
     if (this.calendarView) {
       await this.calendarView.goToToday();
+    }
+  }
+
+  private async toggleCalendar() {
+    this.settings.hideCalendar = !this.settings.hideCalendar;
+    await this.saveSettings();
+    if (this.calendarView) {
+      this.calendarView.toggleCalendarVisibility();
     }
   }
 

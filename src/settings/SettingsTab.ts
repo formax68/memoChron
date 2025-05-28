@@ -44,6 +44,7 @@ export class SettingsTab extends PluginSettingTab {
 
   private renderGeneralSection(): void {
     this.renderFirstDayOfWeek();
+    this.renderHideCalendar();
     this.renderRefreshInterval();
   }
 
@@ -178,6 +179,21 @@ export class SettingsTab extends PluginSettingTab {
             await this.plugin.refreshCalendarView();
           });
       });
+  }
+
+  private renderHideCalendar(): void {
+    new Setting(this.containerEl)
+      .setName("Hide calendar")
+      .setDesc("Show only the agenda view without the month calendar grid")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.hideCalendar)
+          .onChange(async (value) => {
+            this.plugin.settings.hideCalendar = value;
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          })
+      );
   }
 
   private renderRefreshInterval(): void {
