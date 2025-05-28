@@ -70,6 +70,7 @@ export class CalendarView extends ItemView {
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
     
     this.updateCalendarVisibility();
+    this.setupDragAndDrop();
   }
 
   private createControls(container: HTMLElement): HTMLElement {
@@ -441,6 +442,86 @@ export class CalendarView extends ItemView {
         controls.style.display = "";
       }
       this.agenda.classList.remove("agenda-only");
+    }
+  }
+
+  private setupDragAndDrop() {
+    // Prevent default drag behaviors
+    this.agenda.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Check if dragging a file
+      if (e.dataTransfer && e.dataTransfer.types.includes("Files")) {
+        e.dataTransfer.dropEffect = "copy";
+        this.agenda.addClass("drag-over");
+      }
+    });
+
+    this.agenda.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Only remove class if leaving the agenda area entirely
+      if (!this.agenda.contains(e.relatedTarget as Node)) {
+        this.agenda.removeClass("drag-over");
+      }
+    });
+
+    this.agenda.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.agenda.removeClass("drag-over");
+
+      if (!e.dataTransfer || !e.dataTransfer.files.length) {
+        return;
+      }
+
+      const file = e.dataTransfer.files[0];
+      
+      // Check if it's an ICS file
+      if (!file.name.endsWith(".ics")) {
+        new Notice("Please drop an ICS calendar file");
+        return;
+      }
+
+      try {
+        await this.handleIcsFileDrop(file);
+      } catch (error) {
+        console.error("Error handling ICS file:", error);
+        new Notice(`Error importing ICS file: ${error.message}`);
+      }
+    });
+  }
+
+  private async handleIcsFileDrop(file: File): Promise<void> {
+    new Notice("Importing ICS file...");
+    
+    // Read file contents
+    const text = await file.text();
+    
+    // Parse ICS file to get events
+    const events = this.plugin.calendarService.parseIcsContent(text, "Imported Calendar");
+    
+    if (events.length === 0) {
+      new Notice("No events found in ICS file");
+      return;
+    }
+    
+    // Add events to local calendar
+    await this.plugin.calendarService.addEventsToLocalCalendar(events, "Imported Calendar");
+    
+    // If single event, create a note for it
+    if (events.length === 1) {
+      const event = events[0];
+      const noteFile = await this.plugin.noteService.createEventNote(event);
+      
+      // Open the created note
+      await this.app.workspace.getLeaf().openFile(noteFile);
+      
+      new Notice(`Created note for event: ${event.title}`);
+    } else {
+      new Notice(`Imported ${events.length} events to local calendar`);
     }
   }
 }

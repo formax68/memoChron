@@ -268,6 +268,17 @@ export class CalendarService {
 
   private async fetchCalendar(source: CalendarSource): Promise<CalendarEvent[]> {
     try {
+      // Handle local calendars
+      if (source.type === 'local' && source.localEvents) {
+        return source.localEvents.map(event => ({
+          ...event,
+          source: source.name,
+          start: new Date(event.start),
+          end: new Date(event.end)
+        }));
+      }
+
+      // Handle URL-based calendars
       const response = await this.fetchCalendarData(source);
       
       if (response.status !== 200) {
@@ -592,5 +603,91 @@ export class CalendarService {
       electron: Platform.isDesktop,
       networkAvailable: navigator.onLine,
     });
+  }
+
+  public parseIcsContent(icsContent: string, sourceName: string): CalendarEvent[] {
+    try {
+      const jcalData = parse(icsContent);
+      const comp = new Component(jcalData);
+      const vevents = comp.getAllSubcomponents("vevent");
+      
+      const events: CalendarEvent[] = [];
+      const { periodStart, periodEnd } = this.getEventPeriod();
+      const recurrenceExceptions = this.collectRecurrenceExceptions(vevents);
+      
+      for (const vevent of vevents) {
+        if (this.shouldSkipEvent(vevent)) continue;
+        
+        const source: CalendarSource = {
+          url: '',
+          name: sourceName,
+          enabled: true,
+          tags: [],
+          type: 'local'
+        };
+        
+        const eventData = this.processEvent(
+          vevent,
+          source,
+          recurrenceExceptions,
+          periodStart,
+          periodEnd
+        );
+        
+        if (eventData) {
+          events.push(...eventData);
+        }
+      }
+      
+      return events;
+    } catch (error) {
+      console.error("Error parsing ICS content:", error);
+      throw error;
+    }
+  }
+
+  public async addEventsToLocalCalendar(events: CalendarEvent[], calendarName: string = 'Imported Calendar'): Promise<void> {
+    const settings = this.plugin.settings;
+    
+    // Find or create local calendar
+    let localCalendar = settings.calendarUrls.find(
+      cal => cal.type === 'local' && cal.name === calendarName
+    );
+    
+    if (!localCalendar) {
+      // Create new local calendar
+      localCalendar = {
+        url: '',
+        name: calendarName,
+        enabled: true,
+        tags: [],
+        type: 'local',
+        localEvents: []
+      };
+      settings.calendarUrls.push(localCalendar);
+    }
+    
+    // Add events to local calendar
+    if (!localCalendar.localEvents) {
+      localCalendar.localEvents = [];
+    }
+    
+    // Add new events, avoiding duplicates based on ID
+    for (const event of events) {
+      const existingIndex = localCalendar.localEvents.findIndex(e => e.id === event.id);
+      if (existingIndex >= 0) {
+        // Update existing event
+        localCalendar.localEvents[existingIndex] = event;
+      } else {
+        // Add new event
+        localCalendar.localEvents.push(event);
+      }
+    }
+    
+    // Save settings
+    await this.plugin.saveSettings();
+    
+    // Refresh calendar view
+    await this.fetchCalendars(settings.calendarUrls, true);
   }
 }

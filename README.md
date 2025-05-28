@@ -52,6 +52,21 @@ It showcases a list of your calendar events. When you click on an event, it crea
 2. A new note will be created automatically using your template
 3. The note will include event details like title, time, description, and location
 
+### Importing ICS Files
+
+You can import ICS files by dragging and dropping them onto the agenda view:
+
+1. Drag an ICS file onto the agenda area
+2. A local calendar called "Imported Calendar" will be created automatically
+3. For single-event ICS files:
+   - The event is added to the local calendar
+   - A note is automatically created for the event
+4. For multi-event ICS files:
+   - All events are added to the local calendar
+   - Notes can be created by clicking individual events
+
+Local calendars appear in your calendar list and can be toggled on/off like regular calendars.
+
 ### Customizing Templates
 
 In the plugin settings, you can customize:

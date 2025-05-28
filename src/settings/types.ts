@@ -16,6 +16,8 @@ export interface CalendarSource {
   name: string;
   enabled: boolean;
   tags: string[];
+  type?: 'url' | 'local'; // Default to 'url' for backward compatibility
+  localEvents?: any[]; // Store events directly for local calendars
 }
 
 export interface MemoChronSettings {

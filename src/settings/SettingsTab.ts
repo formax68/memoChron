@@ -94,12 +94,16 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource, 
     index: number
   ): TextComponent {
+    const isLocal = source.type === 'local';
     return text
-      .setPlaceholder("Calendar URL")
-      .setValue(source.url)
+      .setPlaceholder(isLocal ? "Local calendar (imported)" : "Calendar URL")
+      .setValue(isLocal ? `Local: ${source.localEvents?.length || 0} events` : source.url)
+      .setDisabled(isLocal)
       .onChange(async (value) => {
-        this.plugin.settings.calendarUrls[index].url = value;
-        await this.plugin.saveSettings();
+        if (!isLocal) {
+          this.plugin.settings.calendarUrls[index].url = value;
+          await this.plugin.saveSettings();
+        }
       });
   }
 
