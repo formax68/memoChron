@@ -40,6 +40,11 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - Click on any day to see the agenda for that day
 - Hover over events to see more details
 
+### Available Commands
+
+- **Force refresh calendars**: Manually refresh all calendar data
+- **Go to today**: Navigate to the current month and select today's date
+
 ### Creating Notes from Events
 
 1. Click on any event in the calendar or agenda view

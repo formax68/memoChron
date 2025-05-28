@@ -39,7 +39,7 @@ export class CalendarView extends ItemView {
     this.createUI();
     this.registerViewEvents();
     await this.refreshEvents();
-    await this.goToday();
+    await this.goToToday();
   }
 
   async refreshEvents(forceRefresh = false) {
@@ -70,7 +70,7 @@ export class CalendarView extends ItemView {
 
     const navButtons = nav.createEl("div", { cls: "memochron-nav-buttons" });
     this.createNavButton(navButtons, "<", () => this.navigate(-1));
-    this.createNavButton(navButtons, "Today", () => this.goToday());
+    this.createNavButton(navButtons, "Today", () => this.goToToday());
     this.createNavButton(navButtons, ">", () => this.navigate(1));
 
     return controls;
@@ -107,7 +107,7 @@ export class CalendarView extends ItemView {
     await this.refreshEvents();
   }
 
-  private async goToday() {
+  async goToToday() {
     const today = new Date();
     
     if (!this.isSameMonth(this.currentDate, today)) {

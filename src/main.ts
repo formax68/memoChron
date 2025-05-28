@@ -48,6 +48,12 @@ export default class MemoChron extends Plugin {
       name: "Force refresh calendars",
       callback: () => this.refreshCalendarView(true),
     });
+
+    this.addCommand({
+      id: "go-to-today",
+      name: "Go to today",
+      callback: () => this.goToToday(),
+    });
   }
 
   onunload() {
@@ -97,6 +103,12 @@ export default class MemoChron extends Plugin {
   async refreshCalendarView(forceRefresh = false) {
     if (this.calendarView) {
       await this.calendarView.refreshEvents(forceRefresh);
+    }
+  }
+
+  private async goToToday() {
+    if (this.calendarView) {
+      await this.calendarView.goToToday();
     }
   }
 
