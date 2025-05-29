@@ -42,7 +42,13 @@ You can also use ICS files stored in your Obsidian vault or local file system:
 1. Go to Settings > MemoChron
 2. Click "Add Calendar"
 3. Use one of these methods to specify your local file:
-   - **File Picker**: Click the folder icon (📁) to browse and select ICS files from your vault
+   - **File Picker (Recommended)**: 
+     - Click the folder icon (📁) button next to the URL field
+     - A search dialog will open showing all ICS files in your vault
+     - Type to search/filter files by name
+     - Click on the desired file to select it
+     - The file path will be automatically filled in the URL field
+     - Note: If no ICS files are found, you'll see a notification. Make sure to add ICS files to your vault first
    - **Vault Path**: Type a relative path like `calendars/work.ics`
    - **Absolute Path**: Use full paths like `/Users/username/calendar.ics` or `C:\Users\username\calendar.ics`
    - **File URL**: Use `file:///` URLs like `file:///Users/username/calendar.ics`
