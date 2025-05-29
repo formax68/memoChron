@@ -415,18 +415,18 @@ export class CalendarService {
     let next: Time | null;
 
     while ((next = iterator.next())) {
-      const occurStart = next.toJSDate();
-      const occurEnd = this.calculateEndDate(next, event.duration);
-
-      const startDate = this.convertTimezone(occurStart, tzid);
-      const endDate = this.convertTimezone(occurEnd, tzid);
+      // Use the ICAL Time object directly for proper timezone handling
+      const startDate = this.convertIcalTimeToDate(next, tzid);
+      const endTime = next.clone();
+      endTime.addDuration(event.duration);
+      const endDate = this.convertIcalTimeToDate(endTime, tzid);
 
       if (startDate > periodEnd) break;
 
-      const dateStr = occurStart.toISOString().substring(0, 10);
+      const dateStr = next.toJSDate().toISOString().substring(0, 10);
       const recKey = `${event.uid}-${dateStr}`;
 
-      if (this.shouldSkipOccurrence(occurStart, excludedDates, recurrenceExceptions, recKey)) {
+      if (this.shouldSkipOccurrence(next.toJSDate(), excludedDates, recurrenceExceptions, recKey)) {
         const exception = this.processException(
           recurrenceExceptions.get(recKey),
           source,
@@ -459,8 +459,8 @@ export class CalendarService {
     source: CalendarSource,
     tzid: string | null
   ): CalendarEvent[] {
-    const startDate = this.convertTimezone(event.startDate.toJSDate(), tzid);
-    const endDate = this.convertTimezone(event.endDate.toJSDate(), tzid);
+    const startDate = this.convertIcalTimeToDate(event.startDate, tzid);
+    const endDate = this.convertIcalTimeToDate(event.endDate, tzid);
 
     return [{
       id: event.uid,
@@ -555,21 +555,80 @@ export class CalendarService {
     return paramTzid || defaultTzid;
   }
 
-  private convertTimezone(date: Date, tzid: string | null): Date {
+  private convertIcalTimeToDate(icalTime: Time, tzid: string | null): Date {
     try {
-      const zone = tzid 
-        ? (CalendarService.TIMEZONE_MAP[tzid] || tzid)
-        : "UTC";
+      // Get the time components from the ICAL Time object
+      const year = icalTime.year;
+      const month = icalTime.month;
+      const day = icalTime.day;
+      const hour = icalTime.hour;
+      const minute = icalTime.minute;
+      const second = icalTime.second;
 
-      let dt = DateTime.fromJSDate(date, { zone });
-
-      if (!dt.isValid) {
-        dt = DateTime.fromJSDate(date, { zone: "UTC" });
+      // If no timezone specified, create date in local timezone
+      if (!tzid) {
+        return new Date(year, month - 1, day, hour, minute, second);
       }
 
+      // Map Windows timezone names to IANA timezone identifiers
+      const zone = CalendarService.TIMEZONE_MAP[tzid] || tzid;
+
+      // Create a DateTime object in the specified timezone
+      let dt = DateTime.fromObject(
+        { year, month, day, hour, minute, second },
+        { zone }
+      );
+
+      if (!dt.isValid) {
+        console.warn(`Invalid timezone conversion for zone: ${zone}, falling back to local time`);
+        return new Date(year, month - 1, day, hour, minute, second);
+      }
+
+      // Convert to local timezone
       return dt.toLocal().toJSDate();
     } catch (error) {
-      console.error("Failed to convert timezone:", error);
+      console.error("Failed to convert ICAL time:", error, { icalTime, tzid });
+      // Fallback to simple date creation
+      return new Date(icalTime.year, icalTime.month - 1, icalTime.day, 
+                      icalTime.hour, icalTime.minute, icalTime.second);
+    }
+  }
+
+  private convertTimezone(date: Date, tzid: string | null): Date {
+    try {
+      // If no timezone specified, assume the date is already in local time
+      if (!tzid) {
+        return date;
+      }
+
+      // Map Windows timezone names to IANA timezone identifiers
+      const zone = CalendarService.TIMEZONE_MAP[tzid] || tzid;
+
+      // The date from ical.js is parsed as if it were in UTC, but it's actually
+      // in the timezone specified by tzid. We need to interpret it correctly.
+      // First, get the date components as if they were in the target timezone
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth() + 1;
+      const day = date.getUTCDate();
+      const hour = date.getUTCHours();
+      const minute = date.getUTCMinutes();
+      const second = date.getUTCSeconds();
+
+      // Create a DateTime object in the specified timezone
+      let dt = DateTime.fromObject(
+        { year, month, day, hour, minute, second },
+        { zone }
+      );
+
+      if (!dt.isValid) {
+        console.warn(`Invalid timezone conversion for zone: ${zone}, using original date`);
+        return date;
+      }
+
+      // Convert to local timezone
+      return dt.toLocal().toJSDate();
+    } catch (error) {
+      console.error("Failed to convert timezone:", error, { date, tzid });
       return date;
     }
   }
