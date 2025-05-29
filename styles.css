@@ -286,6 +286,47 @@
   margin: var(--memochron-padding-lg) 0;
 }
 
+/* Path type indicators */
+.memochron-path-type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-4-1);
+  padding: var(--size-4-1) var(--size-4-2);
+  border-radius: var(--radius-s);
+  font-size: var(--font-smaller);
+  margin-left: var(--size-4-2);
+}
+
+.memochron-path-type-remote {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.memochron-path-type-local,
+.memochron-path-type-vault {
+  background-color: var(--interactive-success);
+  color: var(--text-on-accent);
+}
+
+.memochron-path-type .icon::before {
+  content: '📁 ';
+  font-size: var(--font-smaller);
+}
+
+.memochron-path-type-remote .icon::before {
+  content: '🌐 ';
+}
+
+.memochron-path-type-vault .icon::before {
+  content: '🗂️ ';
+}
+
+.memochron-file-picker-date {
+  color: var(--text-muted);
+  display: block;
+  margin-top: var(--size-4-1);
+}
+
 .memochron-calendar-list .setting-item {
   border-bottom: 1px solid var(--background-modifier-border);
   padding: var(--memochron-padding-sm);

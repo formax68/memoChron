@@ -1,8 +1,9 @@
-import { requestUrl, Platform, Notice } from "obsidian";
+import { requestUrl, Platform, Notice, TFile } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
+import { getPathInfo, isLocalPath, isRemoteUrl, PathType } from "../utils/pathUtils";
 
 export interface CalendarEvent {
   id: string;
@@ -286,8 +287,20 @@ export class CalendarService {
   }
 
   private async fetchCalendarData(source: CalendarSource) {
+    const pathInfo = getPathInfo(source.url);
+
+    if (isRemoteUrl(pathInfo)) {
+      return this.fetchRemoteCalendar(source.url);
+    } else if (isLocalPath(pathInfo)) {
+      return this.fetchLocalCalendar(pathInfo);
+    }
+
+    throw new Error(`Unsupported calendar path type: ${source.url}`);
+  }
+
+  private async fetchRemoteCalendar(url: string) {
     return requestUrl({
-      url: source.url,
+      url,
       method: "GET",
       headers: {
         Accept: "text/calendar",
@@ -295,6 +308,45 @@ export class CalendarService {
       },
       throw: false,
     });
+  }
+
+  private async fetchLocalCalendar(pathInfo: any) {
+    try {
+      let content: string;
+
+      if (pathInfo.type === PathType.VAULT_RELATIVE) {
+        // Read from vault
+        const file = this.plugin.app.vault.getAbstractFileByPath(pathInfo.normalizedPath);
+        if (!file || !(file instanceof TFile)) {
+          return {
+            status: 404,
+            text: `File not found: ${pathInfo.normalizedPath}`,
+          };
+        }
+        content = await this.plugin.app.vault.read(file);
+      } else {
+        // Read from absolute path or file URL
+        try {
+          content = await this.plugin.app.vault.adapter.read(pathInfo.normalizedPath);
+        } catch (error) {
+          return {
+            status: 404,
+            text: `Cannot read file: ${pathInfo.normalizedPath}`,
+          };
+        }
+      }
+
+      return {
+        status: 200,
+        text: content,
+      };
+    } catch (error) {
+      console.error("Error reading local calendar file:", error);
+      return {
+        status: 500,
+        text: `Error reading file: ${error.message}`,
+      };
+    }
   }
 
   private parseCalendarData(data: string, source: CalendarSource): CalendarEvent[] {

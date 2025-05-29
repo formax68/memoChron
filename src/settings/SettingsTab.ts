@@ -5,9 +5,15 @@ import {
   TextComponent,
   TextAreaComponent,
   DropdownComponent,
+  ButtonComponent,
+  TFile,
+  Notice,
+  Modal,
+  SuggestModal,
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
+import { getPathInfo, PathType } from "../utils/pathUtils";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(
@@ -81,12 +87,16 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource, 
     index: number
   ): void {
-    new Setting(container)
+    const setting = new Setting(container)
       .addText((text) => this.setupUrlInput(text, source, index))
+      .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
       .addText((text) => this.setupTagsInput(text, source, index))
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
+    
+    // Add visual indicator for path type
+    this.addPathTypeIndicator(setting, source.url);
   }
 
   private setupUrlInput(
@@ -95,12 +105,88 @@ export class SettingsTab extends PluginSettingTab {
     index: number
   ): TextComponent {
     return text
-      .setPlaceholder("Calendar URL")
+      .setPlaceholder("Calendar URL or file path")
       .setValue(source.url)
       .onChange(async (value) => {
         this.plugin.settings.calendarUrls[index].url = value;
         await this.plugin.saveSettings();
+        // Update path type indicator
+        const setting = text.inputEl.closest(".setting-item");
+        if (setting) {
+          this.updatePathTypeIndicator(setting as HTMLElement, value);
+        }
       });
+  }
+
+  private setupFilePickerButton(
+    btn: ButtonComponent,
+    index: number
+  ): ButtonComponent {
+    return btn
+      .setIcon("folder-open")
+      .setTooltip("Choose ICS file from vault")
+      .onClick(async () => {
+        const files = this.app.vault.getFiles().filter(f => f.extension === "ics");
+        
+        if (files.length === 0) {
+          new Notice("No ICS files found in vault");
+          return;
+        }
+
+        // Create a simple file picker modal
+        const modal = new FilePickerModal(this.app, files, async (file) => {
+          this.plugin.settings.calendarUrls[index].url = file.path;
+          await this.plugin.saveSettings();
+          this.display();
+        });
+        modal.open();
+      });
+  }
+
+  private addPathTypeIndicator(setting: Setting, url: string): void {
+    const indicator = setting.settingEl.createDiv({ cls: "memochron-path-type" });
+    this.updatePathTypeIndicator(setting.settingEl, url);
+  }
+
+  private updatePathTypeIndicator(settingEl: HTMLElement, url: string): void {
+    const indicator = settingEl.querySelector(".memochron-path-type") as HTMLElement;
+    if (!indicator) return;
+
+    const pathInfo = getPathInfo(url);
+    indicator.empty();
+
+    let icon = "";
+    let text = "";
+    let className = "";
+
+    switch (pathInfo.type) {
+      case PathType.HTTP_URL:
+        icon = "globe";
+        text = "Remote URL";
+        className = "remote";
+        break;
+      case PathType.FILE_URL:
+        icon = "file";
+        text = "File URL";
+        className = "local";
+        break;
+      case PathType.VAULT_RELATIVE:
+        icon = "vault";
+        text = "Vault file";
+        className = "vault";
+        break;
+      case PathType.ABSOLUTE_PATH:
+        icon = "hard-drive";
+        text = "Local file";
+        className = "local";
+        break;
+    }
+
+    if (icon) {
+      indicator.addClass(`memochron-path-type-${className}`);
+      indicator.createSpan({ cls: "icon", text: icon });
+      indicator.createSpan({ text });
+    }
   }
 
   private setupNameInput(
@@ -397,5 +483,34 @@ export class SettingsTab extends PluginSettingTab {
         container.classList.remove("is-visible");
       });
     });
+  }
+}
+
+// Simple file picker modal for ICS files
+class FilePickerModal extends SuggestModal<TFile> {
+  constructor(
+    app: App,
+    private files: TFile[],
+    private onChoose: (file: TFile) => void
+  ) {
+    super(app);
+  }
+
+  getSuggestions(query: string): TFile[] {
+    return this.files.filter(file =>
+      file.path.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  renderSuggestion(file: TFile, el: HTMLElement) {
+    el.createEl("div", { text: file.path });
+    el.createEl("small", { 
+      text: `Modified: ${new Date(file.stat.mtime).toLocaleDateString()}`,
+      cls: "memochron-file-picker-date"
+    });
+  }
+
+  onChooseSuggestion(file: TFile) {
+    this.onChoose(file);
   }
 }
