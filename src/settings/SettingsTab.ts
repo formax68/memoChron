@@ -13,7 +13,6 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
-import { getPathInfo, PathType } from "../utils/pathUtils";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(
@@ -87,16 +86,13 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource, 
     index: number
   ): void {
-    const setting = new Setting(container)
+    new Setting(container)
       .addText((text) => this.setupUrlInput(text, source, index))
       .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
       .addText((text) => this.setupTagsInput(text, source, index))
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
-    
-    // Add visual indicator for path type
-    this.addPathTypeIndicator(setting, source.url);
   }
 
   private setupUrlInput(
@@ -110,11 +106,6 @@ export class SettingsTab extends PluginSettingTab {
       .onChange(async (value) => {
         this.plugin.settings.calendarUrls[index].url = value;
         await this.plugin.saveSettings();
-        // Update path type indicator
-        const setting = text.inputEl.closest(".setting-item");
-        if (setting) {
-          this.updatePathTypeIndicator(setting as HTMLElement, value);
-        }
       });
   }
 
@@ -141,52 +132,6 @@ export class SettingsTab extends PluginSettingTab {
         });
         modal.open();
       });
-  }
-
-  private addPathTypeIndicator(setting: Setting, url: string): void {
-    const indicator = setting.settingEl.createDiv({ cls: "memochron-path-type" });
-    this.updatePathTypeIndicator(setting.settingEl, url);
-  }
-
-  private updatePathTypeIndicator(settingEl: HTMLElement, url: string): void {
-    const indicator = settingEl.querySelector(".memochron-path-type") as HTMLElement;
-    if (!indicator) return;
-
-    const pathInfo = getPathInfo(url);
-    indicator.empty();
-
-    let icon = "";
-    let text = "";
-    let className = "";
-
-    switch (pathInfo.type) {
-      case PathType.HTTP_URL:
-        icon = "globe";
-        text = "Remote URL";
-        className = "remote";
-        break;
-      case PathType.FILE_URL:
-        icon = "file";
-        text = "File URL";
-        className = "local";
-        break;
-      case PathType.VAULT_RELATIVE:
-        icon = "vault";
-        text = "Vault file";
-        className = "vault";
-        break;
-      case PathType.ABSOLUTE_PATH:
-        icon = "hard-drive";
-        text = "Local file";
-        className = "local";
-        break;
-    }
-
-    if (icon) {
-      indicator.addClass(`memochron-path-type-${className}`);
-      indicator.createSpan({ cls: "icon", text: icon });
-      indicator.createSpan({ text });
-    }
   }
 
   private setupNameInput(
