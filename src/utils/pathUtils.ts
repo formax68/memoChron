@@ -29,10 +29,10 @@ export function detectPathType(path: string): PathType {
   }
 
   // Check for absolute paths
-  // Windows: C:\, D:\, etc.
+  // Windows: C:\, D:\, C:/, D:/, etc.
   // Unix: /
   if (
-    (path.length >= 3 && path[1] === ":" && path[2] === "\\") ||
+    (path.length >= 3 && path[1] === ":" && (path[2] === "\\" || path[2] === "/")) ||
     path.startsWith("/")
   ) {
     return PathType.ABSOLUTE_PATH;
@@ -45,8 +45,15 @@ export function detectPathType(path: string): PathType {
 export function normalizeFilePath(path: string, type: PathType): string {
   switch (type) {
     case PathType.FILE_URL:
-      // Remove file:// prefix and decode URI components
-      return decodeURIComponent(path.replace(/^file:\/\//, ""));
+      // Remove file:// or file:/// prefix and decode URI components
+      // Windows often uses file:///C:/path, Unix uses file:///path
+      let normalized = decodeURIComponent(path.replace(/^file:\/\/\/?/, ""));
+      // On Windows, if path starts with a drive letter without slash, it's already correct
+      // On Unix, we need to ensure the leading slash is preserved
+      if (!normalized.startsWith("/") && !normalized.match(/^[A-Za-z]:/)) {
+        normalized = "/" + normalized;
+      }
+      return normalized;
     
     case PathType.VAULT_RELATIVE:
       // Normalize path for Obsidian

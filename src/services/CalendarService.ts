@@ -3,7 +3,7 @@ import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { DateTime } from "luxon";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
-import { getPathInfo, isLocalPath, isRemoteUrl, PathType } from "../utils/pathUtils";
+import { getPathInfo, isLocalPath, isRemoteUrl, PathType, PathInfo } from "../utils/pathUtils";
 
 export interface CalendarEvent {
   id: string;
@@ -273,7 +273,7 @@ export class CalendarService {
       
       if (response.status !== 200) {
         console.error(
-          `Failed to fetch calendar ${source.name}: ${response.status} ${response.text}`
+          `Failed to fetch calendar ${source.name}: ${response.status} ${response.text || 'Unknown error'}`
         );
         return [];
       }
@@ -310,7 +310,7 @@ export class CalendarService {
     });
   }
 
-  private async fetchLocalCalendar(pathInfo: any) {
+  private async fetchLocalCalendar(pathInfo: PathInfo) {
     try {
       let content: string;
 
@@ -580,8 +580,8 @@ export class CalendarService {
     if (!exception) return null;
 
     const exTzid = this.extractExceptionTimezone(exception, tzid);
-    const startDate = this.convertTimezone(exception.startDate.toJSDate(), exTzid);
-    const endDate = this.convertTimezone(exception.endDate.toJSDate(), exTzid);
+    const startDate = this.convertIcalTimeToDate(exception.startDate, exTzid);
+    const endDate = this.convertIcalTimeToDate(exception.endDate, exTzid);
 
     if (startDate <= periodEnd && endDate >= periodStart) {
       return {

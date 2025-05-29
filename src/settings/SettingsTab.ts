@@ -448,7 +448,10 @@ export class SettingsTab extends PluginSettingTab {
     
     input.inputEl.addEventListener("blur", () => {
       setTimeout(() => {
-        suggestionContainer.classList.remove("is-visible");
+        // Check if container still exists before manipulating
+        if (suggestionContainer && suggestionContainer.parentNode) {
+          suggestionContainer.classList.remove("is-visible");
+        }
       }, 200);
     });
   }

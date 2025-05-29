@@ -304,7 +304,7 @@
 
 .memochron-path-type-local,
 .memochron-path-type-vault {
-  background-color: var(--interactive-success);
+  background-color: var(--interactive-success, var(--color-green));
   color: var(--text-on-accent);
 }
 
