@@ -27,11 +27,29 @@ It showcases a list of your calendar events. When you click on an event, it crea
 
 ### Adding Calendar Sources
 
+MemoChron supports both remote calendar URLs and local ICS files.
+
+#### Remote Calendars
 1. Go to Settings > MemoChron
 2. Click "Add Calendar"
-3. Enter your public iCalendar (ICS) URL
+3. Enter your public iCalendar (ICS) URL (e.g., `https://calendar.google.com/calendar/ical/...`)
 4. Give your calendar a name and optional tags
 5. Enable/disable calendars as needed
+
+#### Local ICS Files
+You can also use ICS files stored in your Obsidian vault or local file system:
+
+1. Go to Settings > MemoChron
+2. Click "Add Calendar"
+3. Use one of these methods to specify your local file:
+   - **File Picker**: Click the folder icon (📁) to browse and select ICS files from your vault
+   - **Vault Path**: Type a relative path like `calendars/work.ics`
+   - **Absolute Path**: Use full paths like `/Users/username/calendar.ics` or `C:\Users\username\calendar.ics`
+   - **File URL**: Use `file:///` URLs like `file:///Users/username/calendar.ics`
+4. Give your calendar a name and optional tags
+5. Enable/disable calendars as needed
+
+**Note**: Local ICS files are read-only. To update events, you'll need to export a new ICS file from your calendar application and replace the existing file.
 
 ### Viewing Your Calendar
 
@@ -83,9 +101,10 @@ In the plugin settings, you can customize:
 
 ## Current Limitations
 
-- Only supports public iCalendar URLs (no authentication)
+- Remote calendars must be publicly accessible (no authentication support)
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
+- Local ICS files are not automatically watched for changes (use manual refresh)
 
 ## Support
 
