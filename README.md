@@ -3,11 +3,15 @@
 MemoChron is an Obsidian plugin that bridges the gap between personal knowledge management and time management.
 It showcases a list of your calendar events. When you click on an event, it creates a note for this event.
 
+> **🚧 Beta Features**: Features marked with **(Beta)** are available in the latest beta release. See [Beta Testing](#beta-testing) for installation instructions.
+
 ![Note](screenshots/note.png)
 
 ## Features
 
 - 📅 **Calendar Integration**: Import and display events from public iCalendar (.ics) URLs
+- 📁 **Local ICS File Support** **(Beta)**: Use ICS files stored in your vault or local file system
+- 🎯 **Drag & Drop Import** **(Beta)**: Drag single-event ICS files onto the agenda to create notes instantly
 - 👀 **Visual Calendar**: View your schedule in a clean, native-looking calendar interface in Obsidian's sidebar
 - 📋 **Daily Agenda View**: See a detailed list of events for any selected day
 - ✨ **Automatic Note Creation**: Create notes for events with customizable templates
@@ -56,6 +60,27 @@ You can also use ICS files stored in your Obsidian vault or local file system:
 5. Enable/disable calendars as needed
 
 **Note**: Local ICS files are read-only. To update events, you'll need to export a new ICS file from your calendar application and replace the existing file.
+
+### Drag & Drop ICS Files (Beta)
+
+You can quickly create notes from individual meeting invites by dragging ICS files:
+
+1. **Export a single event** from your calendar application as an ICS file
+2. **Drag the ICS file** onto the agenda view (bottom section) of MemoChron
+3. **Drop** when you see the "Drop ICS file here to create a note" message
+4. A note will be created immediately for that event
+
+**Important**:
+- Only **single-event** ICS files are supported
+- Files with multiple events will show an error
+- Drag & drop only works on the **agenda view**, not the calendar grid
+- Events are **not** added to your calendar sources - only notes are created
+- All timezones are properly handled and converted to your local time
+
+**Use Cases**:
+- Quick note creation from meeting invites
+- Importing events from colleagues without calendar access
+- Creating notes for one-off events without cluttering your calendar
 
 ### Viewing Your Calendar
 
@@ -111,6 +136,40 @@ In the plugin settings, you can customize:
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## Beta Testing
+
+### Installing Beta Releases
+
+To test beta features before they're officially released:
+
+1. **Install BRAT** (Beta Reviewer's Auto-update Tool)
+   - Go to Community Plugins in Obsidian
+   - Search for "BRAT" and install it
+   - Enable the BRAT plugin
+
+2. **Add MemoChron Beta**
+   - Open BRAT settings
+   - Click "Add Beta Plugin"
+   - Enter: `https://github.com/formax68/memoChron`
+   - BRAT will automatically install the latest beta release
+
+3. **Updates**
+   - BRAT will automatically check for beta updates
+   - You can manually update via BRAT settings
+
+### Current Beta Features (v1.3.0-beta.1)
+
+- **Local ICS File Support**: Use ICS files from your vault or file system as calendar sources
+- **Drag & Drop Import**: Create notes instantly by dragging ICS files onto the agenda
+- **Improved Timezone Handling**: Better support for various timezone formats
+
+### Providing Feedback
+
+Beta feedback is invaluable! Please report issues or suggestions:
+- Create an issue on [GitHub](https://github.com/formax68/memoChron/issues)
+- Mark it with "beta" in the title
+- Include your Obsidian and plugin versions
 
 ## Support
 
