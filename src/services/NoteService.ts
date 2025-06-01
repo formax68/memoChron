@@ -14,6 +14,22 @@ interface EventTemplateVariables {
   description: string;
 }
 
+interface FolderTemplateVariables {
+  YYYY: string;
+  YY: string;
+  MM: string;
+  M: string;
+  MMM: string;
+  MMMM: string;
+  DD: string;
+  D: string;
+  DDD: string;
+  DDDD: string;
+  Q: string;
+  source: string;
+  event_title: string;
+}
+
 export class NoteService {
   private static readonly NOTES_SECTION_MARKER = "## 📝 Notes";
   private static readonly FRONTMATTER_DELIMITER = "---";
@@ -63,10 +79,18 @@ export class NoteService {
   }
 
   private buildFilePath(event: CalendarEvent): string {
-    const { noteLocation, noteTitleFormat } = this.settings;
+    const { noteLocation, noteTitleFormat, folderPathTemplate } = this.settings;
     const normalizedPath = normalizePath(noteLocation);
     const title = this.formatTitle(noteTitleFormat, event);
-    return normalizePath(`${normalizedPath}/${title}.md`);
+    
+    // If folderPathTemplate is empty, use the old behavior
+    if (!folderPathTemplate.trim()) {
+      return normalizePath(`${normalizedPath}/${title}.md`);
+    }
+    
+    // Apply folder template to create subfolder structure
+    const subfolderPath = this.applyFolderTemplate(folderPathTemplate, event);
+    return normalizePath(`${normalizedPath}/${subfolderPath}/${title}.md`);
   }
 
   private async ensureParentFolder(filePath: string): Promise<void> {
@@ -296,6 +320,56 @@ export class NoteService {
         }
       }
     }
+  }
+
+  private applyFolderTemplate(template: string, event: CalendarEvent): string {
+    const variables = this.getFolderTemplateVariables(event);
+    return this.parseFolderTemplate(template, variables);
+  }
+
+  private getFolderTemplateVariables(event: CalendarEvent): FolderTemplateVariables {
+    const date = event.start;
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const monthAbbreviations = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const dayNames = [
+      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    ];
+    const dayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const dayOfWeek = date.getDay();
+    const quarter = Math.floor(month / 3) + 1;
+
+    return {
+      YYYY: year.toString(),
+      YY: year.toString().slice(-2),
+      MM: (month + 1).toString().padStart(2, "0"),
+      M: (month + 1).toString(),
+      MMM: monthAbbreviations[month],
+      MMMM: monthNames[month],
+      DD: day.toString().padStart(2, "0"),
+      D: day.toString(),
+      DDD: dayAbbreviations[dayOfWeek],
+      DDDD: dayNames[dayOfWeek],
+      Q: quarter.toString(),
+      source: this.sanitizeFileName(event.source),
+      event_title: this.sanitizeFileName(event.title),
+    };
+  }
+
+  private parseFolderTemplate(template: string, variables: FolderTemplateVariables): string {
+    return Object.entries(variables).reduce((result, [key, value]) => {
+      const pattern = new RegExp(`\\{${key}\\}`, "g");
+      return result.replace(pattern, value);
+    }, template);
   }
 
   private sanitizeFileName(str: string): string {

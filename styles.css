@@ -334,6 +334,21 @@
   background: var(--background-modifier-hover);
 }
 
+/* Template Preview */
+.memochron-template-preview {
+  margin-top: var(--memochron-padding-xs);
+}
+
+.memochron-preview-text {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.memochron-preview-error {
+  color: var(--text-error);
+  font-style: italic;
+}
+
 /* Mobile Specific Styles */
 @media screen and (max-width: 768px) {
   .memochron-calendar-grid {

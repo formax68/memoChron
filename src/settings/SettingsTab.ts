@@ -52,6 +52,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(this.containerEl).setName("Notes").setHeading();
     
     this.renderNoteLocation();
+    this.renderFolderPathTemplate();
     this.renderNoteTitleFormat();
     this.renderNoteDateFormat();
     this.renderDefaultFrontmatter();
@@ -316,6 +317,122 @@ export class SettingsTab extends PluginSettingTab {
         text.inputEl.rows = 10;
         text.inputEl.cols = 50;
       });
+  }
+
+  private renderFolderPathTemplate(): void {
+    const templateSetting = new Setting(this.containerEl)
+      .setName("Folder path template")
+      .setDesc("Organize notes in date-based subfolders. Leave empty to save all notes in the same folder.");
+
+    templateSetting.descEl.createEl("br");
+    templateSetting.descEl.createEl("small", {
+      text: "Available variables: {YYYY}, {YY}, {MM}, {M}, {MMM}, {MMMM}, {DD}, {D}, {DDD}, {DDDD}, {Q}, {source}, {event_title}"
+    });
+    templateSetting.descEl.createEl("br");
+    templateSetting.descEl.createEl("small", {
+      text: "Examples: {YYYY}/{MM}, {YYYY}-{MMM}, {source}/{YYYY}/{MMM}"
+    });
+
+    templateSetting.addText((text) =>
+      text
+        .setPlaceholder("{YYYY}/{MMM}")
+        .setValue(this.plugin.settings.folderPathTemplate)
+        .onChange(async (value) => {
+          this.plugin.settings.folderPathTemplate = value;
+          await this.plugin.saveSettings();
+        })
+    );
+
+    // Add preview container
+    const previewContainer = templateSetting.controlEl.createDiv({
+      cls: "memochron-template-preview",
+    });
+    this.updateTemplatePreview(previewContainer, this.plugin.settings.folderPathTemplate);
+
+    // Update preview when input changes
+    const textInput = templateSetting.controlEl.querySelector('input') as HTMLInputElement;
+    if (textInput) {
+      textInput.addEventListener('input', () => {
+        this.updateTemplatePreview(previewContainer, textInput.value);
+      });
+    }
+  }
+
+  private updateTemplatePreview(container: HTMLElement, template: string): void {
+    container.empty();
+    
+    if (!template.trim()) {
+      container.createEl("small", {
+        text: "Preview: Notes will be saved directly in the note location folder",
+        cls: "memochron-preview-text"
+      });
+      return;
+    }
+
+    // Create a sample date for preview
+    const sampleDate = new Date();
+    const sampleEvent = {
+      title: "Sample Meeting",
+      start: sampleDate,
+      end: sampleDate,
+      source: "Work Calendar"
+    };
+
+    try {
+      const previewPath = this.generatePreviewPath(template, sampleEvent);
+      container.createEl("small", {
+        text: `Preview: ${previewPath}/`,
+        cls: "memochron-preview-text"
+      });
+    } catch (error) {
+      container.createEl("small", {
+        text: "Invalid template format",
+        cls: "memochron-preview-error"
+      });
+    }
+  }
+
+  private generatePreviewPath(template: string, event: any): string {
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const monthAbbreviations = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const dayNames = [
+      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    ];
+    const dayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const date = event.start;
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const dayOfWeek = date.getDay();
+    const quarter = Math.floor(month / 3) + 1;
+
+    const variables = {
+      YYYY: year.toString(),
+      YY: year.toString().slice(-2),
+      MM: (month + 1).toString().padStart(2, "0"),
+      M: (month + 1).toString(),
+      MMM: monthAbbreviations[month],
+      MMMM: monthNames[month],
+      DD: day.toString().padStart(2, "0"),
+      D: day.toString(),
+      DDD: dayAbbreviations[dayOfWeek],
+      DDDD: dayNames[dayOfWeek],
+      Q: quarter.toString(),
+      source: event.source.replace(/[\\/:*?"<>|]/g, "-"),
+      event_title: event.title.replace(/[\\/:*?"<>|]/g, "-"),
+    };
+
+    return Object.entries(variables).reduce((result, [key, value]) => {
+      const pattern = new RegExp(`\\{${key}\\}`, "g");
+      return result.replace(pattern, value);
+    }, template);
   }
 
   private renderDefaultTags(): void {
