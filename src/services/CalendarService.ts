@@ -565,9 +565,18 @@ export class CalendarService {
       const minute = icalTime.minute;
       const second = icalTime.second;
 
-      // If no timezone specified, create date in local timezone
+      // If no timezone specified, let ical.js handle the conversion
+      // This preserves the original behavior while fixing UTC times
       if (!tzid) {
-        return new Date(year, month - 1, day, hour, minute, second);
+        // Use ical.js's built-in toJSDate() which handles UTC times correctly
+        // This is safer than manual construction as it respects the original format
+        try {
+          return icalTime.toJSDate();
+        } catch (error) {
+          console.warn("Failed to use ical.js toJSDate(), falling back to manual construction:", error);
+          // Fallback to original behavior for floating times
+          return new Date(year, month - 1, day, hour, minute, second);
+        }
       }
 
       // Map Windows timezone names to IANA timezone identifiers
