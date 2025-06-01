@@ -74,14 +74,15 @@ In the plugin settings, you can customize:
 MemoChron supports flexible folder organization using customizable templates. You can organize your event notes into date-based subfolders automatically.
 
 **Available Template Variables:**
+
 - `{YYYY}` - 4-digit year (2025)
 - `{YY}` - 2-digit year (25)
 - `{MM}` - 2-digit month (06)
 - `{M}` - 1-digit month (6)
 - `{MMM}` - 3-letter month abbreviation (Jun)
 - `{MMMM}` - Full month name (June)
-- `{DD}` - 2-digit day (15)
-- `{D}` - 1-digit day (15)
+- `{DD}` - 2-digit day (06)
+- `{D}` - 1-digit day (6)
 - `{DDD}` - 3-letter day abbreviation (Mon)
 - `{DDDD}` - Full day name (Monday)
 - `{Q}` - Quarter number (2)
@@ -89,6 +90,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - `{event_title}` - Event title (sanitized for file names)
 
 **Example Templates:**
+
 - `{YYYY}/{MMM}` → `2025/Jun/`
 - `{YYYY}-{MM}` → `2025-06/`
 - `{source}/{YYYY}/{MMM}` → `Work Calendar/2025/Jun/`
@@ -96,6 +98,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - `{MMM} {YYYY}` → `Jun 2025/`
 
 **How to Use:**
+
 1. Go to Settings > MemoChron
 2. Find the "Folder path template" setting
 3. Enter your desired template pattern
