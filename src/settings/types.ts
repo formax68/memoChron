@@ -29,6 +29,7 @@ export interface MemoChronSettings {
   noteTemplate: string;
   firstDayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
   hideCalendar: boolean;
+  folderPathTemplate: string; // Template for organizing notes in date-based subfolders
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -54,4 +55,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
 `,
   firstDayOfWeek: DEFAULT_FIRST_DAY_OF_WEEK,
   hideCalendar: false,
+  folderPathTemplate: "", // Empty by default for backwards compatibility
 };

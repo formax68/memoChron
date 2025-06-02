@@ -106,6 +106,7 @@ You can quickly create notes from individual meeting invites by dragging ICS fil
 In the plugin settings, you can customize:
 
 - Note location in your vault
+- **Folder path template** for organizing notes in date-based subfolders
 - Note title format
 - Default template with variables like:
   - {{event_title}}
@@ -117,6 +118,42 @@ In the plugin settings, you can customize:
   - {{location}}
   - {{source}}
 
+### Organizing Notes with Folder Templates
+
+MemoChron supports flexible folder organization using customizable templates. You can organize your event notes into date-based subfolders automatically.
+
+**Available Template Variables:**
+
+- `{YYYY}` - 4-digit year (2025)
+- `{YY}` - 2-digit year (25)
+- `{MM}` - 2-digit month (06)
+- `{M}` - 1-digit month (6)
+- `{MMM}` - 3-letter month abbreviation (Jun)
+- `{MMMM}` - Full month name (June)
+- `{DD}` - 2-digit day (06)
+- `{D}` - 1-digit day (6)
+- `{DDD}` - 3-letter day abbreviation (Mon)
+- `{DDDD}` - Full day name (Monday)
+- `{Q}` - Quarter number (2)
+- `{source}` - Calendar source name
+- `{event_title}` - Event title (sanitized for file names)
+
+**Example Templates:**
+
+- `{YYYY}/{MMM}` → `2025/Jun/`
+- `{YYYY}-{MM}` → `2025-06/`
+- `{source}/{YYYY}/{MMM}` → `Work Calendar/2025/Jun/`
+- `{YYYY}/Q{Q}` → `2025/Q2/`
+- `{MMM} {YYYY}` → `Jun 2025/`
+
+**How to Use:**
+
+1. Go to Settings > MemoChron
+2. Find the "Folder path template" setting
+3. Enter your desired template pattern
+4. Use the live preview to see how your template will look
+5. Leave empty to save all notes in the same folder (default behavior)
+
 ## Configuration
 
 ### Settings
@@ -126,6 +163,7 @@ In the plugin settings, you can customize:
 - **Hide Calendar**: Show only the agenda view without the month calendar grid
 - **Refresh Interval**: Set how often calendar data updates
 - **Note Location**: Set the default folder for event notes
+- **Folder Path Template**: Organize notes in date-based subfolders with customizable patterns
 - **Note Title Format**: Customize how note titles are generated
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes
