@@ -3,15 +3,14 @@
 MemoChron is an Obsidian plugin that bridges the gap between personal knowledge management and time management.
 It showcases a list of your calendar events. When you click on an event, it creates a note for this event.
 
-> **🚧 Beta Features**: Features marked with **(Beta)** are available in the latest beta release. See [Beta Testing](#beta-testing) for installation instructions.
-
 ![Note](screenshots/note.png)
 
 ## Features
 
 - 📅 **Calendar Integration**: Import and display events from public iCalendar (.ics) URLs
-- 📁 **Local ICS File Support** **(Beta)**: Use ICS files stored in your vault or local file system
-- 🎯 **Drag & Drop Import** **(Beta)**: Drag single-event ICS files onto the agenda to create notes instantly
+- 📁 **Local ICS File Support**: Use ICS files stored in your vault or local file system
+- 🎯 **Drag & Drop Import**: Drag single-event ICS files onto the agenda to create notes instantly
+- 📂 **Smart Folder Organization**: Automatically organize notes into date-based subfolders with customizable templates
 - 👀 **Visual Calendar**: View your schedule in a clean, native-looking calendar interface in Obsidian's sidebar
 - 📋 **Daily Agenda View**: See a detailed list of events for any selected day
 - ✨ **Automatic Note Creation**: Create notes for events with customizable templates
@@ -61,7 +60,7 @@ You can also use ICS files stored in your Obsidian vault or local file system:
 
 **Note**: Local ICS files are read-only. To update events, you'll need to export a new ICS file from your calendar application and replace the existing file.
 
-### Drag & Drop ICS Files (Beta)
+### Drag & Drop ICS Files
 
 You can quickly create notes from individual meeting invites by dragging ICS files:
 
@@ -175,39 +174,29 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
 
-## Beta Testing
+## What's New in v1.3.0
 
-### Installing Beta Releases
+### 🎉 New Features
 
-To test beta features before they're officially released:
+- **Local ICS File Support**: Import calendar events from ICS files stored in your vault or local file system
+- **Smart Folder Organization**: Automatically organize event notes into date-based subfolders using customizable templates
+- **Drag & Drop Import**: Create notes instantly by dragging single-event ICS files onto the agenda
+- **Enhanced Timezone Handling**: Improved support for various timezone formats, including better UTC handling
 
-1. **Install BRAT** (Beta Reviewer's Auto-update Tool)
-   - Go to Community Plugins in Obsidian
-   - Search for "BRAT" and install it
-   - Enable the BRAT plugin
+### 📂 Folder Organization Templates
 
-2. **Add MemoChron Beta**
-   - Open BRAT settings
-   - Click "Add Beta Plugin"
-   - Enter: `https://github.com/formax68/memoChron`
-   - BRAT will automatically install the latest beta release
+Organize your event notes automatically with powerful template variables:
+- Date-based organization: `{YYYY}/{MM}`, `{YYYY}/{MMM}`, `{YYYY}/Q{Q}`
+- Source-based organization: `{source}/{YYYY}/{MMM}`
+- Custom combinations: `{MMM} {YYYY}`, `{YYYY}-{MM}`, and more
 
-3. **Updates**
-   - BRAT will automatically check for beta updates
-   - You can manually update via BRAT settings
+### 📁 Local ICS Support
 
-### Current Beta Features (v1.3.0-beta.1)
-
-- **Local ICS File Support**: Use ICS files from your vault or file system as calendar sources
-- **Drag & Drop Import**: Create notes instantly by dragging ICS files onto the agenda
-- **Improved Timezone Handling**: Better support for various timezone formats
-
-### Providing Feedback
-
-Beta feedback is invaluable! Please report issues or suggestions:
-- Create an issue on [GitHub](https://github.com/formax68/memoChron/issues)
-- Mark it with "beta" in the title
-- Include your Obsidian and plugin versions
+Now supports multiple ways to add local calendar sources:
+- Vault-relative paths with file picker
+- Absolute file system paths
+- File:// URLs
+- Automatic file validation and error handling
 
 ## Support
 
