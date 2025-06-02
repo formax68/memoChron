@@ -5,6 +5,11 @@ import {
   TextComponent,
   TextAreaComponent,
   DropdownComponent,
+  ButtonComponent,
+  TFile,
+  Notice,
+  Modal,
+  SuggestModal,
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
@@ -83,6 +88,7 @@ export class SettingsTab extends PluginSettingTab {
   ): void {
     new Setting(container)
       .addText((text) => this.setupUrlInput(text, source, index))
+      .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
       .addText((text) => this.setupTagsInput(text, source, index))
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
@@ -95,11 +101,36 @@ export class SettingsTab extends PluginSettingTab {
     index: number
   ): TextComponent {
     return text
-      .setPlaceholder("Calendar URL")
+      .setPlaceholder("Calendar URL or file path")
       .setValue(source.url)
       .onChange(async (value) => {
         this.plugin.settings.calendarUrls[index].url = value;
         await this.plugin.saveSettings();
+      });
+  }
+
+  private setupFilePickerButton(
+    btn: ButtonComponent,
+    index: number
+  ): ButtonComponent {
+    return btn
+      .setIcon("folder-open")
+      .setTooltip("Choose ICS file from vault")
+      .onClick(async () => {
+        const files = this.app.vault.getFiles().filter(f => f.extension === "ics");
+        
+        if (files.length === 0) {
+          new Notice("No ICS files found in vault");
+          return;
+        }
+
+        // Create a simple file picker modal
+        const modal = new FilePickerModal(this.app, files, async (file) => {
+          this.plugin.settings.calendarUrls[index].url = file.path;
+          await this.plugin.saveSettings();
+          this.display();
+        });
+        modal.open();
       });
   }
 
@@ -362,7 +393,10 @@ export class SettingsTab extends PluginSettingTab {
     
     input.inputEl.addEventListener("blur", () => {
       setTimeout(() => {
-        suggestionContainer.classList.remove("is-visible");
+        // Check if container still exists before manipulating
+        if (suggestionContainer && suggestionContainer.parentNode) {
+          suggestionContainer.classList.remove("is-visible");
+        }
       }, 200);
     });
   }
@@ -397,5 +431,34 @@ export class SettingsTab extends PluginSettingTab {
         container.classList.remove("is-visible");
       });
     });
+  }
+}
+
+// Simple file picker modal for ICS files
+class FilePickerModal extends SuggestModal<TFile> {
+  constructor(
+    app: App,
+    private files: TFile[],
+    private onChoose: (file: TFile) => void
+  ) {
+    super(app);
+  }
+
+  getSuggestions(query: string): TFile[] {
+    return this.files.filter(file =>
+      file.path.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  renderSuggestion(file: TFile, el: HTMLElement) {
+    el.createEl("div", { text: file.path });
+    el.createEl("small", { 
+      text: `Modified: ${new Date(file.stat.mtime).toLocaleDateString()}`,
+      cls: "memochron-file-picker-date"
+    });
+  }
+
+  onChooseSuggestion(file: TFile) {
+    this.onChoose(file);
   }
 }

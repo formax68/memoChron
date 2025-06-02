@@ -217,6 +217,28 @@
   overflow-y: auto;
   padding: var(--memochron-padding-sm);
   border-top: 1px solid var(--background-modifier-border);
+  position: relative;
+}
+
+/* Drag and Drop Styles */
+.memochron-agenda.drag-over {
+  background-color: var(--background-modifier-hover);
+  border: 2px dashed var(--interactive-accent);
+}
+
+.memochron-agenda.drag-over::after {
+  content: "Drop ICS file here to create a note";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2em;
+  color: var(--text-muted);
+  pointer-events: none;
+  background-color: var(--background-primary);
+  padding: var(--memochron-padding-md);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
 }
 
 /* When calendar is hidden */
@@ -284,6 +306,12 @@
   border-radius: var(--radius-s);
   padding: var(--memochron-padding-sm);
   margin: var(--memochron-padding-lg) 0;
+}
+
+.memochron-file-picker-date {
+  color: var(--text-muted);
+  display: block;
+  margin-top: var(--size-4-1);
 }
 
 .memochron-calendar-list .setting-item {

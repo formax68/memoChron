@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf, Notice } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
+import { IcsImportService } from "../services/IcsImportService";
 
 interface DateElements {
   [key: string]: HTMLElement;
@@ -70,6 +71,7 @@ export class CalendarView extends ItemView {
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
     
     this.updateCalendarVisibility();
+    this.setupDragAndDrop();
   }
 
   private createControls(container: HTMLElement): HTMLElement {
@@ -442,5 +444,77 @@ export class CalendarView extends ItemView {
       }
       this.agenda.classList.remove("agenda-only");
     }
+  }
+
+  private setupDragAndDrop() {
+    if (!this.agenda) return;
+
+    // Prevent default drag behavior
+    this.agenda.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.agenda.addClass("drag-over");
+    });
+
+    this.agenda.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Only remove class if we're leaving the agenda entirely
+      if (e.target === this.agenda) {
+        this.agenda.removeClass("drag-over");
+      }
+    });
+
+    this.agenda.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.agenda.removeClass("drag-over");
+
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+
+      // Handle only the first file
+      const file = files[0];
+      
+      // Check if it's an ICS file
+      if (!file.name.endsWith(".ics")) {
+        new Notice("Please drop an ICS calendar file");
+        return;
+      }
+
+      try {
+        // Read the file content
+        const content = await this.readFile(file);
+        
+        // Parse and validate single event
+        const event = IcsImportService.parseSingleEvent(content);
+        
+        // Create note from the event
+        await this.createNoteFromImportedEvent(event);
+        
+        new Notice(`Note created for: ${event.title}`);
+      } catch (error) {
+        console.error("Failed to import ICS file:", error);
+        new Notice(`Failed to import: ${error.message}`);
+      }
+    });
+  }
+
+  private readFile(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target?.result as string);
+      };
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  private async createNoteFromImportedEvent(event: CalendarEvent) {
+    // Use the existing note creation logic
+    await this.showEventDetails(event);
   }
 }
