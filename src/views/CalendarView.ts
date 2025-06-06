@@ -285,10 +285,43 @@ export class CalendarView extends ItemView {
     
     if (events.length > 0) {
       dayEl.addClass("has-events");
-      dayEl.createEl("div", {
-        cls: "memochron-event-dot",
-        text: "•",
-      });
+      
+      // Get unique colors from events that have colors enabled
+      const uniqueColors = [...new Set(events
+        .map(event => event.color)
+        .filter((color): color is string => color !== undefined)
+      )];
+      
+      if (uniqueColors.length === 0) {
+        // No colors enabled - show default indicator
+        const dot = dayEl.createEl("div", {
+          cls: "memochron-event-dot",
+          text: "•",
+        });
+        // Use theme accent color as fallback
+        dot.style.color = "var(--interactive-accent)";
+      } else if (uniqueColors.length === 1) {
+        // Single calendar color
+        const dot = dayEl.createEl("div", {
+          cls: "memochron-event-dot",
+          text: "•",
+        });
+        dot.style.color = uniqueColors[0]!; // We filtered out undefined values
+      } else {
+        // Multiple calendar colors - create a multi-color indicator
+        const dotContainer = dayEl.createEl("div", {
+          cls: "memochron-event-dots"
+        });
+        
+        // Show up to 3 different colors
+        uniqueColors.slice(0, 3).forEach(color => {
+          const dot = dotContainer.createEl("div", {
+            cls: "memochron-event-dot-small",
+            text: "•",
+          });
+          dot.style.color = color!; // We filtered out undefined values
+        });
+      }
     }
   }
 
@@ -337,6 +370,19 @@ export class CalendarView extends ItemView {
     now: Date
   ) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
+    
+    // Apply calendar color if available - make it more prominent
+    if (event.color) {
+      eventEl.style.borderLeft = `6px solid ${event.color}`;
+      eventEl.style.borderLeftWidth = "6px";
+      // Add a very subtle background tint for more distinction
+      const colorWithAlpha = event.color + "08"; // Add 3% opacity
+      eventEl.style.backgroundColor = `color-mix(in srgb, ${event.color} 4%, var(--background-secondary))`;
+    } else {
+      // Use theme accent color as fallback
+      eventEl.style.borderLeft = `6px solid var(--interactive-accent)`;
+      eventEl.style.borderLeftWidth = "6px";
+    }
     
     if (event.end < now) {
       eventEl.addClass("past-event");

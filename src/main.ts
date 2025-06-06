@@ -5,6 +5,7 @@ import { CalendarView } from "./views/CalendarView";
 import { SettingsTab } from "./settings/SettingsTab";
 import { MemoChronSettings, DEFAULT_SETTINGS } from "./settings/types";
 import { MEMOCHRON_VIEW_TYPE } from "./utils/constants";
+import { getDefaultCalendarColor } from "./utils/colorUtils";
 
 export default class MemoChron extends Plugin {
   settings: MemoChronSettings;
@@ -68,6 +69,22 @@ export default class MemoChron extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.migrateCalendarColors();
+  }
+
+  private migrateCalendarColors() {
+    // No longer automatically assign colors - this is now opt-in
+    // Remove this migration in future versions once users have had time to upgrade
+    this.settings.calendarUrls.forEach((source) => {
+      // If the source has a color but no useColor flag, assume they were using colors before
+      if (source.color && source.useColor === undefined) {
+        source.useColor = true;
+      }
+    });
+  }
+
+  private getDefaultCalendarColor(index: number): string {
+    return getDefaultCalendarColor(index);
   }
 
   async saveSettings() {
