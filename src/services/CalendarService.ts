@@ -13,12 +13,12 @@ export interface CalendarEvent {
   description?: string;
   location?: string;
   source: string;
-  color: string;
+  color?: string;
 }
 
 interface CacheData {
   timestamp: number;
-  sources: Array<{ url: string; name: string; color: string }>;
+  sources: Array<{ url: string; name: string; color?: string }>;
   events: CalendarEvent[];
 }
 
@@ -475,7 +475,7 @@ export class CalendarService {
           description: event.description,
           location: event.location,
           source: source.name,
-          color: source.color,
+          color: source.useColor ? source.color : undefined,
         });
       }
     }
@@ -499,7 +499,7 @@ export class CalendarService {
       description: event.description,
       location: event.location,
       source: source.name,
-      color: source.color,
+      color: source.useColor ? source.color : undefined,
     }];
   }
 
@@ -570,7 +570,7 @@ export class CalendarService {
         description: exception.description,
         location: exception.location,
         source: source.name,
-        color: source.color,
+        color: source.useColor ? source.color : undefined,
       };
     }
 

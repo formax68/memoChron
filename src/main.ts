@@ -73,10 +73,12 @@ export default class MemoChron extends Plugin {
   }
 
   private migrateCalendarColors() {
-    // Assign colors to calendar sources that don't have them
-    this.settings.calendarUrls.forEach((source, index) => {
-      if (!source.color) {
-        source.color = this.getDefaultCalendarColor(index);
+    // No longer automatically assign colors - this is now opt-in
+    // Remove this migration in future versions once users have had time to upgrade
+    this.settings.calendarUrls.forEach((source) => {
+      // If the source has a color but no useColor flag, assume they were using colors before
+      if (source.color && source.useColor === undefined) {
+        source.useColor = true;
       }
     });
   }

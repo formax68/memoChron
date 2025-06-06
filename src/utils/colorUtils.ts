@@ -18,6 +18,57 @@ const DEFAULT_CALENDAR_COLORS = [
 ];
 
 /**
+ * Get theme-aware colors by reading CSS variables if available
+ * Falls back to default colors if theme variables are not available
+ */
+function getThemeColors(): string[] {
+  const colors: string[] = [];
+  
+  // Try to get theme-defined accent colors
+  const root = document.documentElement;
+  const style = getComputedStyle(root);
+  
+  // Check for common theme color variables
+  const themeVars = [
+    '--color-accent',
+    '--color-accent-1', 
+    '--color-accent-2',
+    '--interactive-accent',
+    '--text-accent',
+    '--color-blue',
+    '--color-red',
+    '--color-green',
+    '--color-orange',
+    '--color-purple',
+    '--color-pink'
+  ];
+  
+  for (const varName of themeVars) {
+    const color = style.getPropertyValue(varName).trim();
+    if (color && isValidHexColor(color)) {
+      colors.push(color);
+    } else if (color && color.startsWith('hsl(')) {
+      // Convert HSL to hex if needed
+      const hexColor = hslToHex(color);
+      if (hexColor) colors.push(hexColor);
+    }
+  }
+  
+  // If we have some theme colors, use them, otherwise fall back to defaults
+  return colors.length >= 3 ? colors : DEFAULT_CALENDAR_COLORS;
+}
+
+/**
+ * Generate a theme-aware color for a calendar source based on its index
+ * @param index The index of the calendar source
+ * @returns A hex color string
+ */
+export function getThemeAwareCalendarColor(index: number): string {
+  const themeColors = getThemeColors();
+  return themeColors[index % themeColors.length];
+}
+
+/**
  * Generate a color for a calendar source based on its index
  * @param index The index of the calendar source
  * @returns A hex color string
@@ -79,6 +130,46 @@ export function getLuminance(r: number, g: number, b: number): number {
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/**
+ * Convert HSL color string to hex
+ * @param hslString HSL color string like "hsl(210, 50%, 50%)"
+ * @returns Hex color string or null if invalid
+ */
+function hslToHex(hslString: string): string | null {
+  const hslMatch = hslString.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
+  if (!hslMatch) return null;
+
+  const h = parseInt(hslMatch[1]) / 360;
+  const s = parseInt(hslMatch[2]) / 100;
+  const l = parseInt(hslMatch[3]) / 100;
+
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h * 6) % 2 - 1));
+  const m = l - c / 2;
+
+  let r = 0, g = 0, b = 0;
+
+  if (0 <= h && h < 1/6) {
+    r = c; g = x; b = 0;
+  } else if (1/6 <= h && h < 2/6) {
+    r = x; g = c; b = 0;
+  } else if (2/6 <= h && h < 3/6) {
+    r = 0; g = c; b = x;
+  } else if (3/6 <= h && h < 4/6) {
+    r = 0; g = x; b = c;
+  } else if (4/6 <= h && h < 5/6) {
+    r = x; g = 0; b = c;
+  } else if (5/6 <= h && h < 1) {
+    r = c; g = 0; b = x;
+  }
+
+  r = Math.round((r + m) * 255);
+  g = Math.round((g + m) * 255);
+  b = Math.round((b + m) * 255);
+
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
 /**

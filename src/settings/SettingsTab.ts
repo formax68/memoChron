@@ -13,7 +13,7 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
-import { getDefaultCalendarColor } from "../utils/colorUtils";
+import { getDefaultCalendarColor, getThemeAwareCalendarColor } from "../utils/colorUtils";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(
@@ -73,13 +73,12 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private async addNewCalendar(): Promise<void> {
-    const newIndex = this.plugin.settings.calendarUrls.length;
     this.plugin.settings.calendarUrls.push({
       url: "",
       name: "New calendar",
       enabled: true,
       tags: [],
-      color: getDefaultCalendarColor(newIndex),
+      useColor: false, // Colors are now opt-in
     });
     await this.plugin.saveSettings();
     this.display();
@@ -90,14 +89,27 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource, 
     index: number
   ): void {
+    // First row: URL/path input with file picker and remove button
     new Setting(container)
+      .setName(`Calendar ${index + 1}`)
       .addText((text) => this.setupUrlInput(text, source, index))
       .addButton((btn) => this.setupFilePickerButton(btn, index))
-      .addText((text) => this.setupNameInput(text, source, index))
-      .addText((text) => this.setupTagsInput(text, source, index))
-      .addButton((btn) => this.setupColorPicker(btn, source, index))
-      .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
+
+    // Second row: Name and enabled toggle
+    new Setting(container)
+      .setName("Display name")
+      .addText((text) => this.setupNameInput(text, source, index))
+      .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index));
+
+    // Third row: Tags input
+    new Setting(container)
+      .setName("Tags")
+      .setDesc("Comma-separated tags to add to notes from this calendar")
+      .addText((text) => this.setupTagsInput(text, source, index));
+
+    // Fourth row: Color settings (if enabled)
+    this.renderCalendarColorSettings(container, source, index);
   }
 
   private setupUrlInput(
@@ -191,7 +203,7 @@ export class SettingsTab extends PluginSettingTab {
         // Create a color input element
         const colorInput = document.createElement("input");
         colorInput.type = "color";
-        colorInput.value = source.color;
+        colorInput.value = source.color || "#3b82f6"; // Default blue if no color
         colorInput.addEventListener("change", async (e) => {
           const target = e.target as HTMLInputElement;
           this.plugin.settings.calendarUrls[index].color = target.value;
@@ -204,7 +216,7 @@ export class SettingsTab extends PluginSettingTab {
       });
     
     // Set initial color appearance
-    this.updateColorButtonAppearance(button.buttonEl, source.color);
+    this.updateColorButtonAppearance(button.buttonEl, source.color || "#3b82f6");
     return button;
   }
 
@@ -219,6 +231,37 @@ export class SettingsTab extends PluginSettingTab {
       await this.plugin.refreshCalendarView();
       this.display();
     });
+  }
+
+  private renderCalendarColorSettings(
+    container: HTMLElement,
+    source: CalendarSource,
+    index: number
+  ): void {
+    const colorSetting = new Setting(container)
+      .setName("Color coding")
+      .setDesc("Enable color coding to visually distinguish this calendar's events");
+
+    // Toggle for enabling/disabling colors
+    colorSetting.addToggle((toggle) => {
+      toggle
+        .setValue(source.useColor ?? false)
+        .onChange(async (value) => {
+          this.plugin.settings.calendarUrls[index].useColor = value;
+          if (value && !source.color) {
+            // Assign a theme-aware default color when enabling
+            this.plugin.settings.calendarUrls[index].color = this.getThemeAwareColor(index);
+          }
+          await this.plugin.saveSettings();
+          await this.plugin.refreshCalendarView();
+          this.display(); // Refresh the settings to show/hide color picker
+        });
+    });
+
+    // Color picker (only shown if colors are enabled)
+    if (source.useColor) {
+      colorSetting.addButton((btn) => this.setupColorPicker(btn, source, index));
+    }
   }
 
   private renderFirstDayOfWeek(): void {
@@ -516,6 +559,10 @@ export class SettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+  }
+
+  private getThemeAwareColor(index: number): string {
+    return getThemeAwareCalendarColor(index);
   }
 
   private parseTags(value: string): string[] {

@@ -286,16 +286,27 @@ export class CalendarView extends ItemView {
     if (events.length > 0) {
       dayEl.addClass("has-events");
       
-      // Get unique colors from events
-      const uniqueColors = [...new Set(events.map(event => event.color))];
+      // Get unique colors from events that have colors enabled
+      const uniqueColors = [...new Set(events
+        .map(event => event.color)
+        .filter((color): color is string => color !== undefined)
+      )];
       
-      if (uniqueColors.length === 1) {
+      if (uniqueColors.length === 0) {
+        // No colors enabled - show default indicator
+        const dot = dayEl.createEl("div", {
+          cls: "memochron-event-dot",
+          text: "•",
+        });
+        // Use theme accent color as fallback
+        dot.style.color = "var(--interactive-accent)";
+      } else if (uniqueColors.length === 1) {
         // Single calendar color
         const dot = dayEl.createEl("div", {
           cls: "memochron-event-dot",
           text: "•",
         });
-        dot.style.color = uniqueColors[0];
+        dot.style.color = uniqueColors[0]!; // We filtered out undefined values
       } else {
         // Multiple calendar colors - create a multi-color indicator
         const dotContainer = dayEl.createEl("div", {
@@ -308,7 +319,7 @@ export class CalendarView extends ItemView {
             cls: "memochron-event-dot-small",
             text: "•",
           });
-          dot.style.color = color;
+          dot.style.color = color!; // We filtered out undefined values
         });
       }
     }
@@ -360,8 +371,13 @@ export class CalendarView extends ItemView {
   ) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
     
-    // Apply calendar color
-    eventEl.style.borderLeft = `4px solid ${event.color}`;
+    // Apply calendar color if available
+    if (event.color) {
+      eventEl.style.borderLeft = `4px solid ${event.color}`;
+    } else {
+      // Use theme accent color as fallback
+      eventEl.style.borderLeft = `4px solid var(--interactive-accent)`;
+    }
     
     if (event.end < now) {
       eventEl.addClass("past-event");
