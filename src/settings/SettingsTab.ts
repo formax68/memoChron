@@ -184,8 +184,9 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource,
     index: number
   ): ButtonComponent {
-    return btn
+    const button = btn
       .setButtonText("Color")
+      .setClass("memochron-color-picker")
       .onClick(() => {
         // Create a color input element
         const colorInput = document.createElement("input");
@@ -196,9 +197,19 @@ export class SettingsTab extends PluginSettingTab {
           this.plugin.settings.calendarUrls[index].color = target.value;
           await this.plugin.saveSettings();
           await this.plugin.refreshCalendarView();
+          // Update button appearance
+          this.updateColorButtonAppearance(btn.buttonEl, target.value);
         });
         colorInput.click();
       });
+    
+    // Set initial color appearance
+    this.updateColorButtonAppearance(button.buttonEl, source.color);
+    return button;
+  }
+
+  private updateColorButtonAppearance(buttonEl: HTMLElement, color: string) {
+    buttonEl.style.borderLeft = `4px solid ${color}`;
   }
 
   private setupRemoveButton(btn: any, index: number): any {
