@@ -147,23 +147,25 @@
 
 .memochron-event-dot {
   color: var(--interactive-accent);
-  font-size: 1.2em;
+  font-size: 1.4em;
   line-height: 1;
-  height: 8px;
+  height: 10px;
   margin-bottom: 4px;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
 .memochron-event-dots {
   display: flex;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   margin-bottom: 4px;
   line-height: 1;
 }
 
 .memochron-event-dot-small {
-  font-size: 0.7em;
+  font-size: 0.8em;
   line-height: 1;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 /* Week View */
@@ -287,10 +289,13 @@
   border-radius: var(--radius-s);
   cursor: pointer;
   font-size: 0.9em;
+  border-left: 4px solid var(--background-modifier-border);
+  transition: all 0.1s ease;
 }
 
 .memochron-agenda-event:hover {
   background: var(--background-modifier-hover);
+  transform: translateX(2px);
 }
 
 /* Grey out past events in agenda view */

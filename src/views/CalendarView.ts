@@ -371,12 +371,17 @@ export class CalendarView extends ItemView {
   ) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
     
-    // Apply calendar color if available
+    // Apply calendar color if available - make it more prominent
     if (event.color) {
-      eventEl.style.borderLeft = `4px solid ${event.color}`;
+      eventEl.style.borderLeft = `6px solid ${event.color}`;
+      eventEl.style.borderLeftWidth = "6px";
+      // Add a very subtle background tint for more distinction
+      const colorWithAlpha = event.color + "08"; // Add 3% opacity
+      eventEl.style.backgroundColor = `color-mix(in srgb, ${event.color} 4%, var(--background-secondary))`;
     } else {
       // Use theme accent color as fallback
-      eventEl.style.borderLeft = `4px solid var(--interactive-accent)`;
+      eventEl.style.borderLeft = `6px solid var(--interactive-accent)`;
+      eventEl.style.borderLeftWidth = "6px";
     }
     
     if (event.end < now) {

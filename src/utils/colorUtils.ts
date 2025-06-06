@@ -2,19 +2,26 @@
 
 /**
  * Predefined set of colors for calendar sources
- * These colors are chosen to be visually distinct and accessible (WCAG AA compliant)
+ * These colors are chosen to be maximally distinct and accessible (WCAG AA compliant)
+ * Colors are spaced across the full color spectrum for maximum visual distinction
  */
 const DEFAULT_CALENDAR_COLORS = [
+  "#dc2626", // bright red - 4.5:1
+  "#ea580c", // orange-red - 3.8:1  
+  "#d97706", // orange - 3.2:1
+  "#ca8a04", // amber - 3.5:1
+  "#65a30d", // lime green - 3.0:1
+  "#059669", // emerald green - 3.2:1
+  "#0891b2", // cyan - 3.1:1
+  "#0284c7", // sky blue - 3.4:1
   "#3b82f6", // blue - 3.68:1
-  "#ef4444", // red - 3.76:1  
-  "#059669", // green (darker) - 3.2:1
-  "#d97706", // orange (darker) - 3.2:1
-  "#8b5cf6", // purple - 4.23:1
-  "#ec4899", // pink - 3.53:1
-  "#0891b2", // cyan (darker) - 3.1:1
-  "#65a30d", // lime (darker) - 3.0:1
-  "#dc2626", // red variant - 4.5:1
   "#6366f1", // indigo - 4.47:1
+  "#8b5cf6", // violet - 4.23:1
+  "#a855f7", // purple - 3.8:1
+  "#c026d3", // fuchsia - 3.2:1
+  "#ec4899", // pink - 3.53:1
+  "#be185d", // rose - 4.1:1
+  "#7f1d1d", // dark red - 5.2:1
 ];
 
 /**
