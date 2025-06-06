@@ -285,10 +285,32 @@ export class CalendarView extends ItemView {
     
     if (events.length > 0) {
       dayEl.addClass("has-events");
-      dayEl.createEl("div", {
-        cls: "memochron-event-dot",
-        text: "•",
-      });
+      
+      // Get unique colors from events
+      const uniqueColors = [...new Set(events.map(event => event.color))];
+      
+      if (uniqueColors.length === 1) {
+        // Single calendar color
+        const dot = dayEl.createEl("div", {
+          cls: "memochron-event-dot",
+          text: "•",
+        });
+        dot.style.color = uniqueColors[0];
+      } else {
+        // Multiple calendar colors - create a multi-color indicator
+        const dotContainer = dayEl.createEl("div", {
+          cls: "memochron-event-dots"
+        });
+        
+        // Show up to 3 different colors
+        uniqueColors.slice(0, 3).forEach(color => {
+          const dot = dotContainer.createEl("div", {
+            cls: "memochron-event-dot-small",
+            text: "•",
+          });
+          dot.style.color = color;
+        });
+      }
     }
   }
 
@@ -337,6 +359,9 @@ export class CalendarView extends ItemView {
     now: Date
   ) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
+    
+    // Apply calendar color
+    eventEl.style.borderLeft = `4px solid ${event.color}`;
     
     if (event.end < now) {
       eventEl.addClass("past-event");

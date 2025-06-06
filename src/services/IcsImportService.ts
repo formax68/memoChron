@@ -39,7 +39,8 @@ export class IcsImportService {
         end: endDate,
         description: event.description,
         location: event.location,
-        source: "Imported"
+        source: "Imported",
+        color: "#6366f1" // Default color for imported events
       };
     } catch (error) {
       if (error instanceof Error) {

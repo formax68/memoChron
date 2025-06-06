@@ -153,6 +153,18 @@
   margin-bottom: 4px;
 }
 
+.memochron-event-dots {
+  display: flex;
+  justify-content: center;
+  gap: 1px;
+  margin-bottom: 4px;
+}
+
+.memochron-event-dot-small {
+  font-size: 0.8em;
+  line-height: 1;
+}
+
 /* Week View */
 .memochron-week-grid {
   display: grid;

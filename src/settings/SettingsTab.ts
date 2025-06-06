@@ -13,6 +13,7 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
+import { getDefaultCalendarColor } from "../utils/colorUtils";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(
@@ -72,11 +73,13 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private async addNewCalendar(): Promise<void> {
+    const newIndex = this.plugin.settings.calendarUrls.length;
     this.plugin.settings.calendarUrls.push({
       url: "",
       name: "New calendar",
       enabled: true,
       tags: [],
+      color: getDefaultCalendarColor(newIndex),
     });
     await this.plugin.saveSettings();
     this.display();
@@ -92,6 +95,7 @@ export class SettingsTab extends PluginSettingTab {
       .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
       .addText((text) => this.setupTagsInput(text, source, index))
+      .addButton((btn) => this.setupColorPicker(btn, source, index))
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
   }
@@ -173,6 +177,28 @@ export class SettingsTab extends PluginSettingTab {
       await this.plugin.saveSettings();
       await this.plugin.refreshCalendarView();
     });
+  }
+
+  private setupColorPicker(
+    btn: ButtonComponent,
+    source: CalendarSource,
+    index: number
+  ): ButtonComponent {
+    return btn
+      .setButtonText("Color")
+      .onClick(() => {
+        // Create a color input element
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = source.color;
+        colorInput.addEventListener("change", async (e) => {
+          const target = e.target as HTMLInputElement;
+          this.plugin.settings.calendarUrls[index].color = target.value;
+          await this.plugin.saveSettings();
+          await this.plugin.refreshCalendarView();
+        });
+        colorInput.click();
+      });
   }
 
   private setupRemoveButton(btn: any, index: number): any {

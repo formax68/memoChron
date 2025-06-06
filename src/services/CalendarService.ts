@@ -13,11 +13,12 @@ export interface CalendarEvent {
   description?: string;
   location?: string;
   source: string;
+  color: string;
 }
 
 interface CacheData {
   timestamp: number;
-  sources: Array<{ url: string; name: string }>;
+  sources: Array<{ url: string; name: string; color: string }>;
   events: CalendarEvent[];
 }
 
@@ -232,7 +233,7 @@ export class CalendarService {
   private getEnabledSourcesForCache() {
     return this.plugin.settings.calendarUrls
       .filter((source) => source.enabled)
-      .map((source) => ({ url: source.url, name: source.name }));
+      .map((source) => ({ url: source.url, name: source.name, color: source.color }));
   }
 
   private async writeCacheFile(cacheData: CacheData) {
@@ -474,6 +475,7 @@ export class CalendarService {
           description: event.description,
           location: event.location,
           source: source.name,
+          color: source.color,
         });
       }
     }
@@ -497,6 +499,7 @@ export class CalendarService {
       description: event.description,
       location: event.location,
       source: source.name,
+      color: source.color,
     }];
   }
 
@@ -567,6 +570,7 @@ export class CalendarService {
         description: exception.description,
         location: exception.location,
         source: source.name,
+        color: source.color,
       };
     }
 

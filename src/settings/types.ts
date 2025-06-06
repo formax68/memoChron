@@ -16,6 +16,7 @@ export interface CalendarSource {
   name: string;
   enabled: boolean;
   tags: string[];
+  color: string;
 }
 
 export interface MemoChronSettings {
