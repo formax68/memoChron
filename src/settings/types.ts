@@ -16,6 +16,7 @@ export interface CalendarSource {
   name: string;
   enabled: boolean;
   tags: string[];
+  color?: string; // Optional color for this calendar
 }
 
 export interface MemoChronSettings {
@@ -30,6 +31,7 @@ export interface MemoChronSettings {
   firstDayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
   hideCalendar: boolean;
   folderPathTemplate: string; // Template for organizing notes in date-based subfolders
+  enableCalendarColors: boolean; // Global toggle for calendar colors feature
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -56,4 +58,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   firstDayOfWeek: DEFAULT_FIRST_DAY_OF_WEEK,
   hideCalendar: false,
   folderPathTemplate: "", // Empty by default for backwards compatibility
+  enableCalendarColors: false, // Disabled by default
 };

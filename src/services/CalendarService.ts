@@ -13,6 +13,8 @@ export interface CalendarEvent {
   description?: string;
   location?: string;
   source: string;
+  sourceId: string; // Unique identifier for the calendar source
+  color?: string; // Color assigned to this event's calendar
 }
 
 interface CacheData {
@@ -474,6 +476,8 @@ export class CalendarService {
           description: event.description,
           location: event.location,
           source: source.name,
+          sourceId: source.url, // Using URL as unique identifier
+          color: source.color,
         });
       }
     }
@@ -497,6 +501,8 @@ export class CalendarService {
       description: event.description,
       location: event.location,
       source: source.name,
+      sourceId: source.url, // Using URL as unique identifier
+      color: source.color,
     }];
   }
 
@@ -567,6 +573,8 @@ export class CalendarService {
         description: exception.description,
         location: exception.location,
         source: source.name,
+        sourceId: source.url, // Using URL as unique identifier
+        color: source.color,
       };
     }
 

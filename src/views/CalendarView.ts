@@ -57,6 +57,9 @@ export class CalendarView extends ItemView {
     );
     this.renderMonth();
     
+    // Update calendar visibility based on current settings
+    this.updateCalendarVisibility();
+    
     // Always show agenda for selected date or today
     const dateToShow = this.selectedDate || new Date();
     this.showDayAgenda(dateToShow);
@@ -285,10 +288,38 @@ export class CalendarView extends ItemView {
     
     if (events.length > 0) {
       dayEl.addClass("has-events");
-      dayEl.createEl("div", {
-        cls: "memochron-event-dot",
-        text: "•",
-      });
+      
+      if (this.plugin.settings.enableCalendarColors) {
+        // Group events by calendar source to show one dot per calendar
+        const eventsBySource = new Map<string, CalendarEvent>();
+        events.forEach(event => {
+          if (!eventsBySource.has(event.sourceId)) {
+            eventsBySource.set(event.sourceId, event);
+          }
+        });
+        
+        // Create a container for dots
+        const dotsContainer = dayEl.createEl("div", {
+          cls: "memochron-event-dots-container"
+        });
+        
+        // Add a colored dot for each calendar that has events
+        eventsBySource.forEach(event => {
+          const dot = dotsContainer.createEl("div", {
+            cls: "memochron-event-dot colored",
+            text: "•",
+          });
+          if (event.color) {
+            dot.style.color = event.color;
+          }
+        });
+      } else {
+        // Single dot for all events when colors are disabled
+        dayEl.createEl("div", {
+          cls: "memochron-event-dot",
+          text: "•",
+        });
+      }
     }
   }
 
@@ -340,6 +371,12 @@ export class CalendarView extends ItemView {
     
     if (event.end < now) {
       eventEl.addClass("past-event");
+    }
+
+    // Add colored left border if colors are enabled
+    if (this.plugin.settings.enableCalendarColors && event.color) {
+      eventEl.addClass("with-color");
+      eventEl.style.setProperty("--event-color", event.color);
     }
 
     this.renderEventTime(eventEl, event);

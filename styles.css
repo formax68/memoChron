@@ -153,6 +153,21 @@
   margin-bottom: 4px;
 }
 
+/* Colored dots container */
+.memochron-event-dots-container {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.memochron-event-dot.colored {
+  font-size: 1em;
+  height: auto;
+  margin-bottom: 0;
+}
+
 /* Week View */
 .memochron-week-grid {
   display: grid;
@@ -274,16 +289,106 @@
   border-radius: var(--radius-s);
   cursor: pointer;
   font-size: 0.9em;
+  position: relative;
+  overflow: hidden;
 }
 
 .memochron-agenda-event:hover {
   background: var(--background-modifier-hover);
 }
 
+/* Colored left border for events */
+.memochron-agenda-event.with-color {
+  padding-left: calc(var(--memochron-padding-sm) + 4px);
+}
+
+.memochron-agenda-event.with-color::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--event-color);
+  border-radius: var(--radius-s) 0 0 var(--radius-s);
+}
+
 /* Grey out past events in agenda view */
 .memochron-agenda-event.past-event {
   opacity: 0.8;
   color: var(--text-muted);
+}
+
+/* Color picker styles */
+.memochron-color-button {
+  position: relative;
+}
+
+.memochron-color-button::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--selected-color);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.memochron-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--size-4-2);
+  margin: var(--size-4-4) 0;
+}
+
+.memochron-color-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--size-4-3);
+  border: 2px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 50px;
+  position: relative;
+}
+
+.memochron-color-option::before {
+  content: "";
+  position: absolute;
+  left: var(--size-4-2);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--color);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.memochron-color-option span {
+  margin-left: var(--size-4-6);
+  font-size: 0.9em;
+  color: var(--text-normal);
+}
+
+.memochron-color-option:hover {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+
+.memochron-color-option.selected {
+  border-color: var(--interactive-accent);
+  background: var(--interactive-accent);
+}
+
+.memochron-color-option.selected span {
+  color: var(--text-on-accent);
 }
 
 .memochron-event-time {
@@ -321,6 +426,75 @@
 
 .memochron-calendar-list .setting-item:last-child {
   border-bottom: none;
+}
+
+/* Improve calendar source settings layout */
+.memochron-calendar-list .setting-item {
+  min-height: auto;
+}
+
+.memochron-calendar-list .setting-item .setting-item-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: flex-start;
+  min-height: 2.5rem;
+}
+
+.memochron-calendar-list .setting-item .setting-item-control > * {
+  margin: 0 !important;
+}
+
+/* URL input should be wider */
+.memochron-calendar-list .setting-item input[type="text"]:first-of-type {
+  min-width: 200px;
+  flex: 2;
+}
+
+/* Name input */
+.memochron-calendar-list .setting-item input[type="text"]:nth-of-type(2) {
+  min-width: 100px;
+  flex: 1;
+}
+
+/* Tags input */
+.memochron-calendar-list .setting-item input[type="text"]:nth-of-type(3) {
+  min-width: 80px;
+  flex: 1;
+}
+
+/* Color button styling */
+.memochron-color-button {
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+/* File picker button */
+.memochron-calendar-list .setting-item button[aria-label*="folder"] {
+  flex-shrink: 0;
+}
+
+/* Toggle and remove buttons */
+.memochron-calendar-list .setting-item .checkbox-container,
+.memochron-calendar-list .setting-item button:last-child {
+  flex-shrink: 0;
+}
+
+/* Force break to new line when needed */
+@media screen and (max-width: 1200px) {
+  .memochron-calendar-list .setting-item .setting-item-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .memochron-calendar-list .setting-item .setting-item-control > * {
+    width: 100%;
+    margin-bottom: var(--size-4-1) !important;
+  }
+  
+  .memochron-calendar-list .setting-item input[type="text"] {
+    min-width: auto;
+  }
 }
 
 .memochron-setting-item-container {

@@ -39,7 +39,8 @@ export class IcsImportService {
         end: endDate,
         description: event.description,
         location: event.location,
-        source: "Imported"
+        source: "Imported",
+        sourceId: "imported" // Special source ID for imported events
       };
     } catch (error) {
       if (error instanceof Error) {

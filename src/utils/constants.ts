@@ -21,3 +21,16 @@ export const TEMPLATE_VARIABLES = {
     DESCRIPTION: '{{description}}',
     LOCATION: '{{location}}',
 };
+
+// Color palette for auto-assigning calendar colors
+// Using CSS variables that work well with Obsidian themes
+export const CALENDAR_COLOR_PALETTE = [
+    'var(--color-red)',
+    'var(--color-blue)',
+    'var(--color-green)',
+    'var(--color-purple)',
+    'var(--color-orange)',
+    'var(--color-yellow)',
+    'var(--color-pink)',
+    'var(--color-cyan)',
+];

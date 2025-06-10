@@ -13,6 +13,7 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
+import { CALENDAR_COLOR_PALETTE } from "../utils/constants";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(
@@ -50,6 +51,7 @@ export class SettingsTab extends PluginSettingTab {
   private renderGeneralSection(): void {
     this.renderFirstDayOfWeek();
     this.renderHideCalendar();
+    this.renderEnableCalendarColors();
     this.renderRefreshInterval();
   }
 
@@ -72,14 +74,38 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private async addNewCalendar(): Promise<void> {
-    this.plugin.settings.calendarUrls.push({
+    const newCalendar: CalendarSource = {
       url: "",
       name: "New calendar",
       enabled: true,
       tags: [],
-    });
+    };
+
+    // Auto-assign color if colors are enabled
+    if (this.plugin.settings.enableCalendarColors) {
+      newCalendar.color = this.getNextAvailableColor();
+    }
+
+    this.plugin.settings.calendarUrls.push(newCalendar);
     await this.plugin.saveSettings();
     this.display();
+  }
+
+  private getNextAvailableColor(): string {
+    const usedColors = this.plugin.settings.calendarUrls
+      .map(source => source.color)
+      .filter(color => color);
+
+    // Find the first unused color in the palette
+    for (const color of CALENDAR_COLOR_PALETTE) {
+      if (!usedColors.includes(color)) {
+        return color;
+      }
+    }
+
+    // If all colors are used, cycle back to the beginning
+    const index = this.plugin.settings.calendarUrls.length % CALENDAR_COLOR_PALETTE.length;
+    return CALENDAR_COLOR_PALETTE[index];
   }
 
   private renderCalendarSource(
@@ -87,11 +113,18 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource, 
     index: number
   ): void {
-    new Setting(container)
+    const setting = new Setting(container)
       .addText((text) => this.setupUrlInput(text, source, index))
       .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
-      .addText((text) => this.setupTagsInput(text, source, index))
+      .addText((text) => this.setupTagsInput(text, source, index));
+    
+    // Add color picker if colors are enabled
+    if (this.plugin.settings.enableCalendarColors) {
+      setting.addButton((btn) => this.setupColorPicker(btn, source, index));
+    }
+    
+    setting
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
   }
@@ -184,6 +217,42 @@ export class SettingsTab extends PluginSettingTab {
     });
   }
 
+  private setupColorPicker(
+    btn: ButtonComponent,
+    source: CalendarSource,
+    index: number
+  ): ButtonComponent {
+    const currentColor = source.color || CALENDAR_COLOR_PALETTE[index % CALENDAR_COLOR_PALETTE.length];
+    
+    return btn
+      .setButtonText("Color")
+      .setTooltip("Choose calendar color")
+      .onClick(() => {
+        this.showColorPicker(source, index, btn);
+      })
+      .then((button) => {
+        // Add a visual color indicator
+        this.updateColorButton(button.buttonEl, currentColor);
+        return button;
+      });
+  }
+
+  private updateColorButton(buttonEl: HTMLElement, color: string) {
+    buttonEl.style.setProperty("--selected-color", color);
+    buttonEl.classList.add("memochron-color-button");
+  }
+
+  private showColorPicker(source: CalendarSource, index: number, button: ButtonComponent) {
+    const modal = new ColorPickerModal(this.app, source.color || CALENDAR_COLOR_PALETTE[0], async (selectedColor) => {
+      this.plugin.settings.calendarUrls[index].color = selectedColor;
+      await this.plugin.saveSettings();
+      // Force refresh to update event colors
+      await this.plugin.refreshCalendarView(true);
+      this.updateColorButton(button.buttonEl, selectedColor);
+    });
+    modal.open();
+  }
+
   private renderFirstDayOfWeek(): void {
     const weekdays = [
       { value: "0", label: "Sunday" },
@@ -224,6 +293,32 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.hideCalendar = value;
             await this.plugin.saveSettings();
             await this.plugin.refreshCalendarView();
+          })
+      );
+  }
+
+  private renderEnableCalendarColors(): void {
+    new Setting(this.containerEl)
+      .setName("Enable calendar colors")
+      .setDesc("Show calendars in different colors for easy identification")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.enableCalendarColors)
+          .onChange(async (value) => {
+            this.plugin.settings.enableCalendarColors = value;
+            
+            // Auto-assign colors to existing calendars if enabling
+            if (value) {
+              this.plugin.settings.calendarUrls.forEach((source, index) => {
+                if (!source.color) {
+                  source.color = CALENDAR_COLOR_PALETTE[index % CALENDAR_COLOR_PALETTE.length];
+                }
+              });
+            }
+            
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView(true); // Force refresh to update colors
+            this.display(); // Refresh settings display to show/hide color pickers
           })
       );
   }
@@ -577,5 +672,56 @@ class FilePickerModal extends SuggestModal<TFile> {
 
   onChooseSuggestion(file: TFile) {
     this.onChoose(file);
+  }
+}
+
+// Color picker modal for calendar colors
+class ColorPickerModal extends Modal {
+  constructor(
+    app: App,
+    private currentColor: string,
+    private onChoose: (color: string) => void
+  ) {
+    super(app);
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+
+    contentEl.createEl("h3", { text: "Choose Calendar Color" });
+
+    const colorGrid = contentEl.createEl("div", { cls: "memochron-color-grid" });
+
+    const colorNames = [
+      "Red", "Blue", "Green", "Purple", 
+      "Orange", "Yellow", "Pink", "Cyan"
+    ];
+
+    CALENDAR_COLOR_PALETTE.forEach((color, index) => {
+      const colorButton = colorGrid.createEl("button", {
+        cls: "memochron-color-option",
+        attr: { title: colorNames[index] }
+      });
+      
+      colorButton.style.setProperty("--color", color);
+      
+      if (color === this.currentColor) {
+        colorButton.classList.add("selected");
+      }
+      
+      colorButton.addEventListener("click", () => {
+        this.onChoose(color);
+        this.close();
+      });
+      
+      // Add color name label
+      colorButton.createEl("span", { text: colorNames[index] });
+    });
+  }
+
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
   }
 }
