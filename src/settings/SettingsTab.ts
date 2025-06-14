@@ -13,7 +13,6 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
-import { CALENDAR_COLOR_PALETTE } from "../utils/constants";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(
@@ -92,20 +91,10 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private getNextAvailableColor(): string {
-    const usedColors = this.plugin.settings.calendarUrls
-      .map(source => source.color)
-      .filter(color => color);
-
-    // Find the first unused color in the palette
-    for (const color of CALENDAR_COLOR_PALETTE) {
-      if (!usedColors.includes(color)) {
-        return color;
-      }
-    }
-
-    // If all colors are used, cycle back to the beginning
-    const index = this.plugin.settings.calendarUrls.length % CALENDAR_COLOR_PALETTE.length;
-    return CALENDAR_COLOR_PALETTE[index];
+    // Generate a random hue for auto-assignment
+    const usedColors = this.plugin.settings.calendarUrls.length;
+    const hue = (usedColors * 137.5) % 360; // Golden angle for nice distribution
+    return `hsl(${hue}, 70%, 50%)`;
   }
 
   private renderCalendarSource(
@@ -222,7 +211,7 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource,
     index: number
   ): ButtonComponent {
-    const currentColor = source.color || CALENDAR_COLOR_PALETTE[index % CALENDAR_COLOR_PALETTE.length];
+    const currentColor = source.color || this.getNextAvailableColor();
     
     return btn
       .setButtonText("Color")
@@ -243,7 +232,8 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private showColorPicker(source: CalendarSource, index: number, button: ButtonComponent) {
-    const modal = new ColorPickerModal(this.app, source.color || CALENDAR_COLOR_PALETTE[0], async (selectedColor) => {
+    const currentColor = source.color || this.getNextAvailableColor();
+    const modal = new ColorPickerModal(this.app, currentColor, async (selectedColor) => {
       this.plugin.settings.calendarUrls[index].color = selectedColor;
       await this.plugin.saveSettings();
       // Force refresh to update event colors
@@ -311,7 +301,8 @@ export class SettingsTab extends PluginSettingTab {
             if (value) {
               this.plugin.settings.calendarUrls.forEach((source, index) => {
                 if (!source.color) {
-                  source.color = CALENDAR_COLOR_PALETTE[index % CALENDAR_COLOR_PALETTE.length];
+                  const hue = (index * 137.5) % 360;
+                  source.color = `hsl(${hue}, 70%, 50%)`;
                 }
               });
             }
@@ -675,14 +666,87 @@ class FilePickerModal extends SuggestModal<TFile> {
   }
 }
 
-// Color picker modal for calendar colors
+// Color picker modal with color wheel
 class ColorPickerModal extends Modal {
+  private currentHue = 0;
+  private currentSaturation = 70;
+  private currentLightness = 50;
+
   constructor(
     app: App,
     private currentColor: string,
     private onChoose: (color: string) => void
   ) {
     super(app);
+    this.parseCurrentColor();
+  }
+
+  private parseCurrentColor() {
+    // Parse HSL color if it exists
+    const hslMatch = this.currentColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (hslMatch) {
+      this.currentHue = parseInt(hslMatch[1]);
+      this.currentSaturation = parseInt(hslMatch[2]);
+      this.currentLightness = parseInt(hslMatch[3]);
+      return;
+    }
+
+    // Parse hex color if it exists
+    const hexMatch = this.currentColor.match(/^#([A-Fa-f0-9]{6})$/);
+    if (hexMatch) {
+      const [h, s, l] = this.hexToHsl(hexMatch[1]);
+      this.currentHue = h;
+      this.currentSaturation = s;
+      this.currentLightness = l;
+    }
+  }
+
+  private hexToHsl(hex: string): [number, number, number] {
+    const r = parseInt(hex.substr(0, 2), 16) / 255;
+    const g = parseInt(hex.substr(2, 2), 16) / 255;
+    const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+  }
+
+  private hslToHex(h: number, s: number, l: number): string {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    
+    const r = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+    const g = Math.round(hue2rgb(p, q, h) * 255);
+    const b = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+
+    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
   }
 
   onOpen() {
@@ -691,32 +755,168 @@ class ColorPickerModal extends Modal {
 
     contentEl.createEl("h3", { text: "Choose Calendar Color" });
 
-    const colorGrid = contentEl.createEl("div", { cls: "memochron-color-grid" });
-
-    const colorNames = [
-      "Red", "Blue", "Green", "Purple", 
-      "Orange", "Yellow", "Pink", "Cyan"
-    ];
-
-    CALENDAR_COLOR_PALETTE.forEach((color, index) => {
-      const colorButton = colorGrid.createEl("button", {
-        cls: "memochron-color-option",
-        attr: { title: colorNames[index] }
-      });
-      
-      colorButton.style.setProperty("--color", color);
-      
-      if (color === this.currentColor) {
-        colorButton.classList.add("selected");
+    // Color picker container
+    const colorContainer = contentEl.createEl("div", { cls: "memochron-color-picker-container" });
+    
+    // Color spectrum area
+    const spectrumContainer = colorContainer.createEl("div", { cls: "memochron-spectrum-container" });
+    
+    // Main color spectrum (hue/saturation picker)
+    const spectrum = spectrumContainer.createEl("canvas", {
+      cls: "memochron-color-spectrum",
+      attr: { width: "300", height: "200" }
+    }) as HTMLCanvasElement;
+    
+    // Lightness bar
+    const lightnessBar = spectrumContainer.createEl("canvas", {
+      cls: "memochron-lightness-bar",
+      attr: { width: "300", height: "20" }
+    }) as HTMLCanvasElement;
+    
+    // Color preview and hex input row
+    const inputRow = colorContainer.createEl("div", { cls: "memochron-input-row" });
+    
+    // Color preview
+    const preview = inputRow.createEl("div", { cls: "memochron-color-preview-small" });
+    
+    // Hex input
+    const hexInput = inputRow.createEl("input", {
+      type: "text",
+      cls: "memochron-hex-input",
+      attr: {
+        placeholder: "#ff0000",
+        maxlength: "7"
       }
-      
-      colorButton.addEventListener("click", () => {
-        this.onChoose(color);
-        this.close();
+    }) as HTMLInputElement;
+    
+    // Preset colors
+    const presetsContainer = colorContainer.createEl("div", { cls: "memochron-color-presets" });
+    presetsContainer.createEl("div", { text: "Quick colors:", cls: "memochron-presets-label" });
+    const presetColors = [
+      "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", 
+      "#3498db", "#9b59b6", "#34495e", "#95a5a6"
+    ];
+    
+    const presetsGrid = presetsContainer.createEl("div", { cls: "memochron-presets-grid" });
+    presetColors.forEach(color => {
+      const preset = presetsGrid.createEl("div", {
+        cls: "memochron-color-preset",
+        attr: { "data-color": color }
       });
+      preset.style.backgroundColor = color;
+      preset.addEventListener("click", () => {
+        hexInput.value = color;
+        updateFromHex();
+      });
+    });
+    
+    // Initialize canvases
+    const spectrumCtx = spectrum.getContext("2d")!;
+    const lightnessCtx = lightnessBar.getContext("2d")!;
+    
+    // Draw color spectrum
+    const drawSpectrum = () => {
+      const width = spectrum.width;
+      const height = spectrum.height;
       
-      // Add color name label
-      colorButton.createEl("span", { text: colorNames[index] });
+      // Create gradient
+      for (let x = 0; x < width; x++) {
+        const hue = (x / width) * 360;
+        const gradient = spectrumCtx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, `hsl(${hue}, 100%, 50%)`);
+        gradient.addColorStop(1, `hsl(${hue}, 0%, 50%)`);
+        spectrumCtx.fillStyle = gradient;
+        spectrumCtx.fillRect(x, 0, 1, height);
+      }
+    };
+    
+    // Draw lightness bar
+    const drawLightnessBar = () => {
+      const width = lightnessBar.width;
+      const gradient = lightnessCtx.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, `hsl(${this.currentHue}, ${this.currentSaturation}%, 0%)`);
+      gradient.addColorStop(0.5, `hsl(${this.currentHue}, ${this.currentSaturation}%, 50%)`);
+      gradient.addColorStop(1, `hsl(${this.currentHue}, ${this.currentSaturation}%, 100%)`);
+      lightnessCtx.fillStyle = gradient;
+      lightnessCtx.fillRect(0, 0, width, 20);
+    };
+    
+    // Update color display
+    const updateColor = () => {
+      const color = `hsl(${this.currentHue}, ${this.currentSaturation}%, ${this.currentLightness}%)`;
+      preview.style.backgroundColor = color;
+      hexInput.value = this.hslToHex(this.currentHue, this.currentSaturation, this.currentLightness);
+      drawLightnessBar();
+    };
+    
+    // Handle spectrum click
+    spectrum.addEventListener("click", (e) => {
+      const rect = spectrum.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      this.currentHue = Math.round((x / spectrum.width) * 360);
+      this.currentSaturation = Math.round((1 - y / spectrum.height) * 100);
+      updateColor();
+    });
+    
+    // Handle lightness bar click
+    lightnessBar.addEventListener("click", (e) => {
+      const rect = lightnessBar.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      this.currentLightness = Math.round((x / lightnessBar.width) * 100);
+      updateColor();
+    });
+    
+    // Hex input handler
+    const updateFromHex = () => {
+      const hexValue = hexInput.value.trim();
+      const hexMatch = hexValue.match(/^#?([A-Fa-f0-9]{6})$/);
+      
+      if (hexMatch) {
+        const hex = hexMatch[1];
+        const [h, s, l] = this.hexToHsl(hex);
+        this.currentHue = h;
+        this.currentSaturation = s;
+        this.currentLightness = l;
+        updateColor();
+      }
+    };
+
+    hexInput.addEventListener("input", updateFromHex);
+    hexInput.addEventListener("blur", updateFromHex);
+    
+    // Initial draw
+    drawSpectrum();
+    updateColor();
+
+    // Buttons
+    const buttonContainer = contentEl.createEl("div", { cls: "memochron-color-buttons" });
+    
+    const confirmButton = buttonContainer.createEl("button", {
+      text: "Choose Color",
+      cls: "mod-cta"
+    });
+    
+    const cancelButton = buttonContainer.createEl("button", {
+      text: "Cancel"
+    });
+
+    confirmButton.addEventListener("click", () => {
+      // Use hex if user entered it, otherwise use HSL
+      const hexValue = hexInput.value.trim();
+      const isValidHex = /^#?([A-Fa-f0-9]{6})$/.test(hexValue);
+      
+      const finalColor = isValidHex 
+        ? (hexValue.startsWith('#') ? hexValue : '#' + hexValue)
+        : `hsl(${this.currentHue}, ${this.currentSaturation}%, ${this.currentLightness}%)`;
+        
+      this.onChoose(finalColor);
+      this.close();
+    });
+
+    cancelButton.addEventListener("click", () => {
+      this.close();
     });
   }
 
