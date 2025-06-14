@@ -112,6 +112,12 @@ export default class MemoChron extends Plugin {
     }
   }
 
+  updateCalendarColors() {
+    if (this.calendarView) {
+      this.calendarView.updateColors();
+    }
+  }
+
   private async goToToday() {
     if (this.calendarView) {
       await this.calendarView.goToToday();

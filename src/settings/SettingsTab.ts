@@ -236,8 +236,8 @@ export class SettingsTab extends PluginSettingTab {
     const modal = new ColorPickerModal(this.app, currentColor, async (selectedColor) => {
       this.plugin.settings.calendarUrls[index].color = selectedColor;
       await this.plugin.saveSettings();
-      // Force refresh to update event colors
-      await this.plugin.refreshCalendarView(true);
+      // Update colors visually without fetching calendar data
+      this.plugin.updateCalendarColors();
       this.updateColorButton(button.buttonEl, selectedColor);
     });
     modal.open();
@@ -308,7 +308,7 @@ export class SettingsTab extends PluginSettingTab {
             }
             
             await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView(true); // Force refresh to update colors
+            this.plugin.updateCalendarColors(); // Update colors visually without fetching
             this.display(); // Refresh settings display to show/hide color pickers
           })
       );

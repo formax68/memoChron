@@ -16,6 +16,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - ✨ **Automatic Note Creation**: Create notes for events with customizable templates
 - 🔄 **Auto-Refresh**: Keep your calendar data up to date with configurable refresh intervals
 - 🎨 **Customizable**: Configure note templates, locations, and naming conventions
+- 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with customizable colors
 
 ![settings](screenshots/settings.png)
 
@@ -166,6 +167,14 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Note Title Format**: Customize how note titles are generated
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes
+- **Enable Calendar Colors**: Toggle color differentiation for calendar sources
+  - When enabled, each calendar gets an automatically assigned color
+  - Colors appear as dots in the calendar view and left borders in the agenda view
+  - Click the color button to open a visual color picker with:
+    - Color spectrum for intuitive selection
+    - Lightness bar for brightness control
+    - Hex input for precise color values
+    - Quick color presets for common colors
 
 ## Current Limitations
 

@@ -65,6 +65,33 @@ export class CalendarView extends ItemView {
     this.showDayAgenda(dateToShow);
   }
 
+  updateColors() {
+    // Update event colors in memory without fetching
+    this.updateEventColors();
+    
+    // Re-render the calendar view with new colors
+    this.renderMonth();
+    
+    // Re-render the agenda with new colors
+    const dateToShow = this.selectedDate || new Date();
+    this.showDayAgenda(dateToShow);
+  }
+
+  private updateEventColors() {
+    // Update colors for all cached events based on current settings
+    const events = this.plugin.calendarService.getAllEvents();
+    const calendarMap = new Map(
+      this.plugin.settings.calendarUrls.map(source => [source.url, source])
+    );
+    
+    events.forEach(event => {
+      const calendar = calendarMap.get(event.sourceId);
+      if (calendar) {
+        event.color = this.plugin.settings.enableCalendarColors ? calendar.color : undefined;
+      }
+    });
+  }
+
   private createUI() {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();

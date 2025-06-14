@@ -78,6 +78,10 @@ export class CalendarService {
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }
 
+  getAllEvents(): CalendarEvent[] {
+    return this.events;
+  }
+
   private shouldLoadFromCache(forceRefresh: boolean): boolean {
     return this.events.length === 0 && !forceRefresh;
   }
