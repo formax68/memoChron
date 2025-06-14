@@ -322,19 +322,24 @@
 /* Color picker styles */
 .memochron-color-button {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 24px !important;
 }
 
 .memochron-color-button::after {
   content: "";
   position: absolute;
-  right: 4px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background-color: var(--selected-color);
   border: 1px solid var(--background-modifier-border);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 /* Visual color picker styles */
@@ -438,6 +443,93 @@
   margin-top: var(--size-4-4);
 }
 
+/* Enhanced color picker styles */
+.memochron-enhanced-color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-4);
+  margin: var(--size-4-4) 0;
+  min-width: 320px;
+}
+
+.memochron-base-colors-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--size-4-2);
+  margin-bottom: var(--size-4-4);
+}
+
+.memochron-base-color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-s);
+  border: 2px solid var(--background-modifier-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.memochron-base-color-swatch:hover {
+  transform: scale(1.1);
+  border-color: var(--interactive-accent);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.memochron-custom-color-button {
+  padding: var(--size-4-3) var(--size-4-4);
+  border: 1px solid var(--interactive-accent);
+  border-radius: var(--radius-s);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.memochron-custom-color-button:hover {
+  background: var(--interactive-accent-hover);
+  border-color: var(--interactive-accent-hover);
+}
+
+.memochron-back-button {
+  align-self: flex-start;
+  padding: var(--size-4-2) var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  margin-bottom: var(--size-4-4);
+}
+
+.memochron-back-button:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 600px) {
+  .memochron-base-colors-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .memochron-enhanced-color-picker {
+    min-width: 280px;
+  }
+  
+  .memochron-base-color-swatch {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .memochron-spectrum-container canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
 .memochron-event-time {
   color: var(--text-muted);
   font-size: 0.85em;
@@ -512,7 +604,7 @@
 
 /* Color button styling */
 .memochron-color-button {
-  min-width: 70px;
+  min-width: 85px;
   flex-shrink: 0;
 }
 

@@ -666,11 +666,12 @@ class FilePickerModal extends SuggestModal<TFile> {
   }
 }
 
-// Color picker modal with color wheel
+// Enhanced color picker modal with Obsidian base colors and custom option
 class ColorPickerModal extends Modal {
   private currentHue = 0;
   private currentSaturation = 70;
   private currentLightness = 50;
+  private showCustomPicker = false;
 
   constructor(
     app: App,
@@ -749,14 +750,101 @@ class ColorPickerModal extends Modal {
     return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
   }
 
+  private getObsidianBaseColors() {
+    return [
+      // Obsidian theme accent
+      { cssVar: "--interactive-accent", fallback: "#7c3aed" },
+      // Good calendar colors that work with themes
+      { cssVar: null, fallback: "#e74c3c" }, // Red
+      { cssVar: null, fallback: "#e67e22" }, // Orange  
+      { cssVar: null, fallback: "#f1c40f" }, // Yellow
+      { cssVar: null, fallback: "#2ecc71" }, // Green
+      { cssVar: null, fallback: "#3498db" }, // Blue
+      { cssVar: null, fallback: "#9b59b6" }, // Purple
+      { cssVar: null, fallback: "#e91e63" }, // Pink
+      { cssVar: null, fallback: "#00bcd4" }, // Cyan
+      { cssVar: null, fallback: "#ff9800" }, // Amber
+      { cssVar: null, fallback: "#4caf50" }, // Light Green
+      { cssVar: null, fallback: "#795548" }, // Brown
+      { cssVar: "--text-muted", fallback: "#999999" } // Theme muted
+    ];
+  }
+
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
 
     contentEl.createEl("h3", { text: "Choose Calendar Color" });
 
+    // Main container
+    const mainContainer = contentEl.createEl("div", { cls: "memochron-enhanced-color-picker" });
+
+    if (!this.showCustomPicker) {
+      this.renderBaseColorSelection(mainContainer);
+    } else {
+      this.renderCustomColorPicker(mainContainer);
+    }
+  }
+
+  private renderBaseColorSelection(container: HTMLElement) {
+    // Base colors grid
+    const baseColorsGrid = container.createEl("div", { cls: "memochron-base-colors-grid" });
+    
+    const baseColors = this.getObsidianBaseColors();
+    baseColors.forEach(color => {
+      const colorSwatch = baseColorsGrid.createEl("div", { cls: "memochron-base-color-swatch" });
+      
+      // Get computed color value at render time
+      const finalColor = color.cssVar 
+        ? (getComputedStyle(document.documentElement).getPropertyValue(color.cssVar).trim() || color.fallback)
+        : color.fallback;
+      
+      // Use the computed color directly
+      colorSwatch.style.backgroundColor = finalColor;
+      
+      colorSwatch.addEventListener("click", () => {
+        this.onChoose(finalColor);
+        this.close();
+      });
+    });
+
+    // Custom color button
+    const customButton = container.createEl("button", {
+      text: "Custom Color",
+      cls: "memochron-custom-color-button"
+    });
+    
+    customButton.addEventListener("click", () => {
+      this.showCustomPicker = true;
+      this.onOpen(); // Re-render with custom picker
+    });
+
+    // Cancel button
+    const buttonContainer = container.createEl("div", { cls: "memochron-color-buttons" });
+    
+    const cancelButton = buttonContainer.createEl("button", {
+      text: "Cancel"
+    });
+
+    cancelButton.addEventListener("click", () => {
+      this.close();
+    });
+  }
+
+  private renderCustomColorPicker(container: HTMLElement) {
+    // Back button
+    const backButton = container.createEl("button", {
+      text: "← Back to Base Colors",
+      cls: "memochron-back-button"
+    });
+    
+    backButton.addEventListener("click", () => {
+      this.showCustomPicker = false;
+      this.onOpen(); // Re-render with base colors
+    });
+
     // Color picker container
-    const colorContainer = contentEl.createEl("div", { cls: "memochron-color-picker-container" });
+    const colorContainer = container.createEl("div", { cls: "memochron-color-picker-container" });
     
     // Color spectrum area
     const spectrumContainer = colorContainer.createEl("div", { cls: "memochron-spectrum-container" });
@@ -788,27 +876,6 @@ class ColorPickerModal extends Modal {
         maxlength: "7"
       }
     }) as HTMLInputElement;
-    
-    // Preset colors
-    const presetsContainer = colorContainer.createEl("div", { cls: "memochron-color-presets" });
-    presetsContainer.createEl("div", { text: "Quick colors:", cls: "memochron-presets-label" });
-    const presetColors = [
-      "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", 
-      "#3498db", "#9b59b6", "#34495e", "#95a5a6"
-    ];
-    
-    const presetsGrid = presetsContainer.createEl("div", { cls: "memochron-presets-grid" });
-    presetColors.forEach(color => {
-      const preset = presetsGrid.createEl("div", {
-        cls: "memochron-color-preset",
-        attr: { "data-color": color }
-      });
-      preset.style.backgroundColor = color;
-      preset.addEventListener("click", () => {
-        hexInput.value = color;
-        updateFromHex();
-      });
-    });
     
     // Initialize canvases
     const spectrumCtx = spectrum.getContext("2d")!;
@@ -891,7 +958,7 @@ class ColorPickerModal extends Modal {
     updateColor();
 
     // Buttons
-    const buttonContainer = contentEl.createEl("div", { cls: "memochron-color-buttons" });
+    const buttonContainer = colorContainer.createEl("div", { cls: "memochron-color-buttons" });
     
     const confirmButton = buttonContainer.createEl("button", {
       text: "Choose Color",
