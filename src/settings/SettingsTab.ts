@@ -15,10 +15,7 @@ import MemoChron from "../main";
 import { CalendarSource } from "./types";
 
 export class SettingsTab extends PluginSettingTab {
-  constructor(
-    app: App, 
-    private plugin: MemoChron
-  ) {
+  constructor(app: App, private plugin: MemoChron) {
     super(app, plugin);
   }
 
@@ -32,8 +29,11 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderCalendarSection(): void {
-    this.createHeading("Calendar sources", "Add and manage your iCalendar URLs");
-    
+    this.createHeading(
+      "Calendar sources",
+      "Add and manage your iCalendar URLs"
+    );
+
     new Setting(this.containerEl).addButton((btn) =>
       btn.setButtonText("Add calendar").onClick(() => this.addNewCalendar())
     );
@@ -56,7 +56,7 @@ export class SettingsTab extends PluginSettingTab {
 
   private renderNotesSection(): void {
     new Setting(this.containerEl).setName("Notes").setHeading();
-    
+
     this.renderNoteLocation();
     this.renderFolderPathTemplate();
     this.renderNoteTitleFormat();
@@ -67,9 +67,7 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private createHeading(name: string, desc: string): void {
-    new Setting(this.containerEl)
-      .setName(name)
-      .setDesc(desc);
+    new Setting(this.containerEl).setName(name).setDesc(desc);
   }
 
   private async addNewCalendar(): Promise<void> {
@@ -98,8 +96,8 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderCalendarSource(
-    container: HTMLElement, 
-    source: CalendarSource, 
+    container: HTMLElement,
+    source: CalendarSource,
     index: number
   ): void {
     const setting = new Setting(container)
@@ -107,20 +105,24 @@ export class SettingsTab extends PluginSettingTab {
       .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
       .addText((text) => this.setupTagsInput(text, source, index));
-    
-    // Add color picker if colors are enabled
+
+    // Inline color picker if colors are enabled
     if (this.plugin.settings.enableCalendarColors) {
-      setting.addButton((btn) => this.setupColorPicker(btn, source, index));
+      // Remove the button, add inline swatches
+      const colorContainer = setting.controlEl.createDiv({
+        cls: "memochron-inline-color-picker",
+      });
+      this.renderInlineColorPicker(colorContainer, source, index);
     }
-    
+
     setting
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
   }
 
   private setupUrlInput(
-    text: TextComponent, 
-    source: CalendarSource, 
+    text: TextComponent,
+    source: CalendarSource,
     index: number
   ): TextComponent {
     return text
@@ -140,8 +142,10 @@ export class SettingsTab extends PluginSettingTab {
       .setIcon("folder-open")
       .setTooltip("Choose ICS file from vault")
       .onClick(async () => {
-        const files = this.app.vault.getFiles().filter(f => f.extension === "ics");
-        
+        const files = this.app.vault
+          .getFiles()
+          .filter((f) => f.extension === "ics");
+
         if (files.length === 0) {
           new Notice("No ICS files found in vault");
           return;
@@ -158,8 +162,8 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private setupNameInput(
-    text: TextComponent, 
-    source: CalendarSource, 
+    text: TextComponent,
+    source: CalendarSource,
     index: number
   ): TextComponent {
     return text
@@ -172,8 +176,8 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private setupTagsInput(
-    text: TextComponent, 
-    source: CalendarSource, 
+    text: TextComponent,
+    source: CalendarSource,
     index: number
   ): TextComponent {
     return text
@@ -186,8 +190,8 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private setupEnabledToggle(
-    toggle: any, 
-    source: CalendarSource, 
+    toggle: any,
+    source: CalendarSource,
     index: number
   ): any {
     return toggle.setValue(source.enabled).onChange(async (value: boolean) => {
@@ -206,41 +210,148 @@ export class SettingsTab extends PluginSettingTab {
     });
   }
 
-  private setupColorPicker(
-    btn: ButtonComponent,
+  private renderInlineColorPicker(
+    container: HTMLElement,
     source: CalendarSource,
     index: number
-  ): ButtonComponent {
+  ) {
+    const baseColors = this.getObsidianBaseColors();
     const currentColor = source.color || this.getNextAvailableColor();
-    
-    return btn
-      .setButtonText("Color")
-      .setTooltip("Choose calendar color")
-      .onClick(() => {
-        this.showColorPicker(source, index, btn);
-      })
-      .then((button) => {
-        // Add a visual color indicator
-        this.updateColorButton(button.buttonEl, currentColor);
-        return button;
+
+    // Render color swatches
+    baseColors.forEach((color) => {
+      const swatch = container.createDiv({
+        cls: "memochron-inline-color-swatch",
       });
-  }
-
-  private updateColorButton(buttonEl: HTMLElement, color: string) {
-    buttonEl.style.setProperty("--selected-color", color);
-    buttonEl.classList.add("memochron-color-button");
-  }
-
-  private showColorPicker(source: CalendarSource, index: number, button: ButtonComponent) {
-    const currentColor = source.color || this.getNextAvailableColor();
-    const modal = new ColorPickerModal(this.app, currentColor, async (selectedColor) => {
-      this.plugin.settings.calendarUrls[index].color = selectedColor;
-      await this.plugin.saveSettings();
-      // Update colors visually without fetching calendar data
-      this.plugin.updateCalendarColors();
-      this.updateColorButton(button.buttonEl, selectedColor);
+      const finalColor = color.cssVar
+        ? getComputedStyle(document.documentElement)
+            .getPropertyValue(color.cssVar)
+            .trim() || color.fallback
+        : color.fallback;
+      swatch.style.backgroundColor = finalColor;
+      if (finalColor === currentColor) {
+        swatch.classList.add("selected");
+      }
+      swatch.addEventListener("click", async () => {
+        this.plugin.settings.calendarUrls[index].color = finalColor;
+        await this.plugin.saveSettings();
+        this.plugin.updateCalendarColors();
+        // Rerender to update selection
+        container.empty();
+        this.renderInlineColorPicker(container, source, index);
+      });
     });
-    modal.open();
+
+    // Custom color input
+    const customLabel = container.createDiv({
+      cls: "memochron-inline-color-custom-label",
+    });
+    const isCustom = !baseColors.some((c) => {
+      const col = c.cssVar
+        ? getComputedStyle(document.documentElement)
+            .getPropertyValue(c.cssVar)
+            .trim() || c.fallback
+        : c.fallback;
+      return col === currentColor;
+    });
+    if (isCustom) {
+      // Show current color as a filled circle
+      customLabel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${currentColor}" stroke="#888" stroke-width="2"/></svg>`;
+    } else {
+      // Show + icon
+      customLabel.innerHTML =
+        '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#888" stroke-width="2"/><text x="12" y="17" text-anchor="middle" font-size="16" fill="#888">+</text></svg>';
+    }
+    customLabel.style.position = "relative";
+    customLabel.style.display = "inline-block";
+    customLabel.style.width = "24px";
+    customLabel.style.height = "24px";
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = this.colorToHex(currentColor);
+    colorInput.className = "memochron-inline-color-input";
+    colorInput.style.position = "absolute";
+    colorInput.style.top = "0";
+    colorInput.style.left = "0";
+    colorInput.style.width = "24px";
+    colorInput.style.height = "24px";
+    colorInput.style.opacity = "0";
+    colorInput.style.cursor = "pointer";
+    colorInput.style.border = "none";
+    colorInput.style.padding = "0";
+    colorInput.style.margin = "0";
+    customLabel.appendChild(colorInput);
+    colorInput.addEventListener("change", async (e) => {
+      const hex = (e.target as HTMLInputElement).value;
+      this.plugin.settings.calendarUrls[index].color = hex;
+      await this.plugin.saveSettings();
+      this.plugin.updateCalendarColors();
+      container.empty();
+      this.renderInlineColorPicker(container, source, index);
+    });
+    // Highlight if current color is custom
+    if (isCustom) {
+      customLabel.classList.add("selected");
+    }
+  }
+
+  // Helper to convert color to hex for <input type="color">
+  private colorToHex(color: string): string {
+    // Accepts hex or hsl
+    if (color.startsWith("#")) return color;
+    const hslMatch = color.match(/hsl\((\d+),\s*(\d+)%?,\s*(\d+)%?\)/);
+    if (hslMatch) {
+      // Convert HSL to hex
+      let h = parseInt(hslMatch[1]) / 360,
+        s = parseInt(hslMatch[2]) / 100,
+        l = parseInt(hslMatch[3]) / 100;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1 / 6) return p + (q - p) * 6 * t;
+          if (t < 1 / 2) return q;
+          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+      }
+      return (
+        "#" +
+        [r, g, b]
+          .map((x) =>
+            Math.round(x * 255)
+              .toString(16)
+              .padStart(2, "0")
+          )
+          .join("")
+      );
+    }
+    // fallback
+    return "#888888";
+  }
+
+  private getObsidianBaseColors() {
+    return [
+      // Obsidian theme accent
+      { cssVar: "--interactive-accent", fallback: "#7c3aed" },
+      // Good calendar colors that work with themes
+      { cssVar: null, fallback: "#e74c3c" }, // Red
+      { cssVar: null, fallback: "#e67e22" }, // Orange
+      { cssVar: null, fallback: "#f1c40f" }, // Yellow
+      { cssVar: null, fallback: "#2ecc71" }, // Green
+      { cssVar: null, fallback: "#3498db" }, // Blue
+      { cssVar: null, fallback: "#9b59b6" }, // Purple
+      { cssVar: null, fallback: "#e91e63" }, // Pink
+      { cssVar: "--text-muted", fallback: "#999999" }, // Theme muted
+    ];
   }
 
   private renderFirstDayOfWeek(): void {
@@ -261,7 +372,7 @@ export class SettingsTab extends PluginSettingTab {
         weekdays.forEach(({ value, label }) => {
           dropdown.addOption(value, label);
         });
-        
+
         dropdown
           .setValue(String(this.plugin.settings.firstDayOfWeek))
           .onChange(async (value) => {
@@ -296,7 +407,7 @@ export class SettingsTab extends PluginSettingTab {
           .setValue(this.plugin.settings.enableCalendarColors)
           .onChange(async (value) => {
             this.plugin.settings.enableCalendarColors = value;
-            
+
             // Auto-assign colors to existing calendars if enabling
             if (value) {
               this.plugin.settings.calendarUrls.forEach((source, index) => {
@@ -306,7 +417,7 @@ export class SettingsTab extends PluginSettingTab {
                 }
               });
             }
-            
+
             await this.plugin.saveSettings();
             this.plugin.updateCalendarColors(); // Update colors visually without fetching
             this.display(); // Refresh settings display to show/hide color pickers
@@ -391,7 +502,7 @@ export class SettingsTab extends PluginSettingTab {
         dateFormats.forEach(({ value, label }) => {
           dropdown.addOption(value, label);
         });
-        
+
         dropdown
           .setValue(this.plugin.settings.noteDateFormat)
           .onChange(async (value) => {
@@ -439,15 +550,17 @@ export class SettingsTab extends PluginSettingTab {
   private renderFolderPathTemplate(): void {
     const templateSetting = new Setting(this.containerEl)
       .setName("Folder path template")
-      .setDesc("Organize notes in date-based subfolders. Leave empty to save all notes in the same folder.");
+      .setDesc(
+        "Organize notes in date-based subfolders. Leave empty to save all notes in the same folder."
+      );
 
     templateSetting.descEl.createEl("br");
     templateSetting.descEl.createEl("small", {
-      text: "Available variables: {YYYY}, {YY}, {MM}, {M}, {MMM}, {MMMM}, {DD}, {D}, {DDD}, {DDDD}, {Q}, {source}, {event_title}"
+      text: "Available variables: {YYYY}, {YY}, {MM}, {M}, {MMM}, {MMMM}, {DD}, {D}, {DDD}, {DDDD}, {Q}, {source}, {event_title}",
     });
     templateSetting.descEl.createEl("br");
     templateSetting.descEl.createEl("small", {
-      text: "Examples: {YYYY}/{MM}, {YYYY}-{MMM}, {source}/{YYYY}/{MMM}"
+      text: "Examples: {YYYY}/{MM}, {YYYY}-{MMM}, {source}/{YYYY}/{MMM}",
     });
 
     templateSetting.addText((text) =>
@@ -464,24 +577,32 @@ export class SettingsTab extends PluginSettingTab {
     const previewContainer = templateSetting.controlEl.createDiv({
       cls: "memochron-template-preview",
     });
-    this.updateTemplatePreview(previewContainer, this.plugin.settings.folderPathTemplate);
+    this.updateTemplatePreview(
+      previewContainer,
+      this.plugin.settings.folderPathTemplate
+    );
 
     // Update preview when input changes
-    const textInput = templateSetting.controlEl.querySelector('input') as HTMLInputElement;
+    const textInput = templateSetting.controlEl.querySelector(
+      "input"
+    ) as HTMLInputElement;
     if (textInput) {
-      textInput.addEventListener('input', () => {
+      textInput.addEventListener("input", () => {
         this.updateTemplatePreview(previewContainer, textInput.value);
       });
     }
   }
 
-  private updateTemplatePreview(container: HTMLElement, template: string): void {
+  private updateTemplatePreview(
+    container: HTMLElement,
+    template: string
+  ): void {
     container.empty();
-    
+
     if (!template.trim()) {
       container.createEl("small", {
         text: "Preview: Notes will be saved directly in the note location folder",
-        cls: "memochron-preview-text"
+        cls: "memochron-preview-text",
       });
       return;
     }
@@ -492,34 +613,60 @@ export class SettingsTab extends PluginSettingTab {
       title: "Sample Meeting",
       start: sampleDate,
       end: sampleDate,
-      source: "Work Calendar"
+      source: "Work Calendar",
     };
 
     try {
       const previewPath = this.generatePreviewPath(template, sampleEvent);
       container.createEl("small", {
         text: `Preview: ${previewPath}/`,
-        cls: "memochron-preview-text"
+        cls: "memochron-preview-text",
       });
     } catch (error) {
       container.createEl("small", {
         text: "Invalid template format",
-        cls: "memochron-preview-error"
+        cls: "memochron-preview-error",
       });
     }
   }
 
   private generatePreviewPath(template: string, event: any): string {
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     const monthAbbreviations = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     const dayNames = [
-      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
     ];
     const dayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -593,7 +740,7 @@ export class SettingsTab extends PluginSettingTab {
 
     input.inputEl.addEventListener("focus", showSuggestions);
     input.inputEl.addEventListener("input", showSuggestions);
-    
+
     input.inputEl.addEventListener("blur", () => {
       setTimeout(() => {
         // Check if container still exists before manipulating
@@ -648,347 +795,20 @@ class FilePickerModal extends SuggestModal<TFile> {
   }
 
   getSuggestions(query: string): TFile[] {
-    return this.files.filter(file =>
+    return this.files.filter((file) =>
       file.path.toLowerCase().includes(query.toLowerCase())
     );
   }
 
   renderSuggestion(file: TFile, el: HTMLElement) {
     el.createEl("div", { text: file.path });
-    el.createEl("small", { 
+    el.createEl("small", {
       text: `Modified: ${new Date(file.stat.mtime).toLocaleDateString()}`,
-      cls: "memochron-file-picker-date"
+      cls: "memochron-file-picker-date",
     });
   }
 
   onChooseSuggestion(file: TFile) {
     this.onChoose(file);
-  }
-}
-
-// Enhanced color picker modal with Obsidian base colors and custom option
-class ColorPickerModal extends Modal {
-  private currentHue = 0;
-  private currentSaturation = 70;
-  private currentLightness = 50;
-  private showCustomPicker = false;
-
-  constructor(
-    app: App,
-    private currentColor: string,
-    private onChoose: (color: string) => void
-  ) {
-    super(app);
-    this.parseCurrentColor();
-  }
-
-  private parseCurrentColor() {
-    // Parse HSL color if it exists
-    const hslMatch = this.currentColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-    if (hslMatch) {
-      this.currentHue = parseInt(hslMatch[1]);
-      this.currentSaturation = parseInt(hslMatch[2]);
-      this.currentLightness = parseInt(hslMatch[3]);
-      return;
-    }
-
-    // Parse hex color if it exists
-    const hexMatch = this.currentColor.match(/^#([A-Fa-f0-9]{6})$/);
-    if (hexMatch) {
-      const [h, s, l] = this.hexToHsl(hexMatch[1]);
-      this.currentHue = h;
-      this.currentSaturation = s;
-      this.currentLightness = l;
-    }
-  }
-
-  private hexToHsl(hex: string): [number, number, number] {
-    const r = parseInt(hex.substr(0, 2), 16) / 255;
-    const g = parseInt(hex.substr(2, 2), 16) / 255;
-    const b = parseInt(hex.substr(4, 2), 16) / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-      }
-      h /= 6;
-    }
-
-    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
-  }
-
-  private hslToHex(h: number, s: number, l: number): string {
-    h /= 360;
-    s /= 100;
-    l /= 100;
-
-    const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
-
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    
-    const r = Math.round(hue2rgb(p, q, h + 1/3) * 255);
-    const g = Math.round(hue2rgb(p, q, h) * 255);
-    const b = Math.round(hue2rgb(p, q, h - 1/3) * 255);
-
-    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-  }
-
-  private getObsidianBaseColors() {
-    return [
-      // Obsidian theme accent
-      { cssVar: "--interactive-accent", fallback: "#7c3aed" },
-      // Good calendar colors that work with themes
-      { cssVar: null, fallback: "#e74c3c" }, // Red
-      { cssVar: null, fallback: "#e67e22" }, // Orange  
-      { cssVar: null, fallback: "#f1c40f" }, // Yellow
-      { cssVar: null, fallback: "#2ecc71" }, // Green
-      { cssVar: null, fallback: "#3498db" }, // Blue
-      { cssVar: null, fallback: "#9b59b6" }, // Purple
-      { cssVar: null, fallback: "#e91e63" }, // Pink
-      { cssVar: null, fallback: "#00bcd4" }, // Cyan
-      { cssVar: null, fallback: "#ff9800" }, // Amber
-      { cssVar: null, fallback: "#4caf50" }, // Light Green
-      { cssVar: null, fallback: "#795548" }, // Brown
-      { cssVar: "--text-muted", fallback: "#999999" } // Theme muted
-    ];
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-
-    contentEl.createEl("h3", { text: "Choose Calendar Color" });
-
-    // Main container
-    const mainContainer = contentEl.createEl("div", { cls: "memochron-enhanced-color-picker" });
-
-    if (!this.showCustomPicker) {
-      this.renderBaseColorSelection(mainContainer);
-    } else {
-      this.renderCustomColorPicker(mainContainer);
-    }
-  }
-
-  private renderBaseColorSelection(container: HTMLElement) {
-    // Base colors grid
-    const baseColorsGrid = container.createEl("div", { cls: "memochron-base-colors-grid" });
-    
-    const baseColors = this.getObsidianBaseColors();
-    baseColors.forEach(color => {
-      const colorSwatch = baseColorsGrid.createEl("div", { cls: "memochron-base-color-swatch" });
-      
-      // Get computed color value at render time
-      const finalColor = color.cssVar 
-        ? (getComputedStyle(document.documentElement).getPropertyValue(color.cssVar).trim() || color.fallback)
-        : color.fallback;
-      
-      // Use the computed color directly
-      colorSwatch.style.backgroundColor = finalColor;
-      
-      colorSwatch.addEventListener("click", () => {
-        this.onChoose(finalColor);
-        this.close();
-      });
-    });
-
-    // Custom color button
-    const customButton = container.createEl("button", {
-      text: "Custom Color",
-      cls: "memochron-custom-color-button"
-    });
-    
-    customButton.addEventListener("click", () => {
-      this.showCustomPicker = true;
-      this.onOpen(); // Re-render with custom picker
-    });
-
-    // Cancel button
-    const buttonContainer = container.createEl("div", { cls: "memochron-color-buttons" });
-    
-    const cancelButton = buttonContainer.createEl("button", {
-      text: "Cancel"
-    });
-
-    cancelButton.addEventListener("click", () => {
-      this.close();
-    });
-  }
-
-  private renderCustomColorPicker(container: HTMLElement) {
-    // Back button
-    const backButton = container.createEl("button", {
-      text: "← Back to Base Colors",
-      cls: "memochron-back-button"
-    });
-    
-    backButton.addEventListener("click", () => {
-      this.showCustomPicker = false;
-      this.onOpen(); // Re-render with base colors
-    });
-
-    // Color picker container
-    const colorContainer = container.createEl("div", { cls: "memochron-color-picker-container" });
-    
-    // Color spectrum area
-    const spectrumContainer = colorContainer.createEl("div", { cls: "memochron-spectrum-container" });
-    
-    // Main color spectrum (hue/saturation picker)
-    const spectrum = spectrumContainer.createEl("canvas", {
-      cls: "memochron-color-spectrum",
-      attr: { width: "300", height: "200" }
-    }) as HTMLCanvasElement;
-    
-    // Lightness bar
-    const lightnessBar = spectrumContainer.createEl("canvas", {
-      cls: "memochron-lightness-bar",
-      attr: { width: "300", height: "20" }
-    }) as HTMLCanvasElement;
-    
-    // Color preview and hex input row
-    const inputRow = colorContainer.createEl("div", { cls: "memochron-input-row" });
-    
-    // Color preview
-    const preview = inputRow.createEl("div", { cls: "memochron-color-preview-small" });
-    
-    // Hex input
-    const hexInput = inputRow.createEl("input", {
-      type: "text",
-      cls: "memochron-hex-input",
-      attr: {
-        placeholder: "#ff0000",
-        maxlength: "7"
-      }
-    }) as HTMLInputElement;
-    
-    // Initialize canvases
-    const spectrumCtx = spectrum.getContext("2d")!;
-    const lightnessCtx = lightnessBar.getContext("2d")!;
-    
-    // Draw color spectrum
-    const drawSpectrum = () => {
-      const width = spectrum.width;
-      const height = spectrum.height;
-      
-      // Create gradient
-      for (let x = 0; x < width; x++) {
-        const hue = (x / width) * 360;
-        const gradient = spectrumCtx.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, `hsl(${hue}, 100%, 50%)`);
-        gradient.addColorStop(1, `hsl(${hue}, 0%, 50%)`);
-        spectrumCtx.fillStyle = gradient;
-        spectrumCtx.fillRect(x, 0, 1, height);
-      }
-    };
-    
-    // Draw lightness bar
-    const drawLightnessBar = () => {
-      const width = lightnessBar.width;
-      const gradient = lightnessCtx.createLinearGradient(0, 0, width, 0);
-      gradient.addColorStop(0, `hsl(${this.currentHue}, ${this.currentSaturation}%, 0%)`);
-      gradient.addColorStop(0.5, `hsl(${this.currentHue}, ${this.currentSaturation}%, 50%)`);
-      gradient.addColorStop(1, `hsl(${this.currentHue}, ${this.currentSaturation}%, 100%)`);
-      lightnessCtx.fillStyle = gradient;
-      lightnessCtx.fillRect(0, 0, width, 20);
-    };
-    
-    // Update color display
-    const updateColor = () => {
-      const color = `hsl(${this.currentHue}, ${this.currentSaturation}%, ${this.currentLightness}%)`;
-      preview.style.backgroundColor = color;
-      hexInput.value = this.hslToHex(this.currentHue, this.currentSaturation, this.currentLightness);
-      drawLightnessBar();
-    };
-    
-    // Handle spectrum click
-    spectrum.addEventListener("click", (e) => {
-      const rect = spectrum.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      this.currentHue = Math.round((x / spectrum.width) * 360);
-      this.currentSaturation = Math.round((1 - y / spectrum.height) * 100);
-      updateColor();
-    });
-    
-    // Handle lightness bar click
-    lightnessBar.addEventListener("click", (e) => {
-      const rect = lightnessBar.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      this.currentLightness = Math.round((x / lightnessBar.width) * 100);
-      updateColor();
-    });
-    
-    // Hex input handler
-    const updateFromHex = () => {
-      const hexValue = hexInput.value.trim();
-      const hexMatch = hexValue.match(/^#?([A-Fa-f0-9]{6})$/);
-      
-      if (hexMatch) {
-        const hex = hexMatch[1];
-        const [h, s, l] = this.hexToHsl(hex);
-        this.currentHue = h;
-        this.currentSaturation = s;
-        this.currentLightness = l;
-        updateColor();
-      }
-    };
-
-    hexInput.addEventListener("input", updateFromHex);
-    hexInput.addEventListener("blur", updateFromHex);
-    
-    // Initial draw
-    drawSpectrum();
-    updateColor();
-
-    // Buttons
-    const buttonContainer = colorContainer.createEl("div", { cls: "memochron-color-buttons" });
-    
-    const confirmButton = buttonContainer.createEl("button", {
-      text: "Choose Color",
-      cls: "mod-cta"
-    });
-    
-    const cancelButton = buttonContainer.createEl("button", {
-      text: "Cancel"
-    });
-
-    confirmButton.addEventListener("click", () => {
-      // Use hex if user entered it, otherwise use HSL
-      const hexValue = hexInput.value.trim();
-      const isValidHex = /^#?([A-Fa-f0-9]{6})$/.test(hexValue);
-      
-      const finalColor = isValidHex 
-        ? (hexValue.startsWith('#') ? hexValue : '#' + hexValue)
-        : `hsl(${this.currentHue}, ${this.currentSaturation}%, ${this.currentLightness}%)`;
-        
-      this.onChoose(finalColor);
-      this.close();
-    });
-
-    cancelButton.addEventListener("click", () => {
-      this.close();
-    });
-  }
-
-  onClose() {
-    const { contentEl } = this;
-    contentEl.empty();
   }
 }
