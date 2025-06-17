@@ -186,20 +186,6 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 
 ## What's New in v1.4.0
 
-### 🎨 Enhanced Calendar Color Picker
-
-- **Improved Color Selection**: The visual color picker has been significantly enhanced with better color accuracy and smoother spectrum selection
-- **Optimized Performance**: Color updates now work more efficiently without requiring calendar data refresh
-- **Better User Experience**: Refined interface with intuitive base color presets and improved lightness controls
-- **Consistent Application**: Colors are reliably applied across both calendar dots and agenda borders
-
-### 🐛 Bug Fixes
-
-- Resolved GitHub issue #26 improving overall plugin stability
-- Enhanced error handling for edge cases in calendar event processing
-
-## What's New in v1.3.1
-
 ### 🎨 Visual Calendar Color Picker
 
 - **Custom Colors**: Assign unique colors to each calendar source for better visual organization
