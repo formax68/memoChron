@@ -16,6 +16,7 @@ export interface CalendarEvent {
   title: string;
   start: Date;
   end: Date;
+  isAllDay: boolean;
   description?: string;
   location?: string;
   source: string;
@@ -513,6 +514,7 @@ export class CalendarService {
           title: event.summary,
           start: startDate,
           end: adjustedEndDate,
+          isAllDay: isAllDay,
           description: event.description,
           location: event.location,
           source: source.name,
@@ -544,6 +546,7 @@ export class CalendarService {
         title: event.summary,
         start: startDate,
         end: adjustedEndDate,
+        isAllDay: isAllDay,
         description: event.description,
         location: event.location,
         source: source.name,
@@ -622,6 +625,7 @@ export class CalendarService {
         title: exception.summary,
         start: startDate,
         end: adjustedEndDate,
+        isAllDay: isAllDay,
         description: exception.description,
         location: exception.location,
         source: source.name,

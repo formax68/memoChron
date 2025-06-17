@@ -413,12 +413,20 @@ export class CalendarView extends ItemView {
   }
 
   private renderEventTime(eventEl: HTMLElement, event: CalendarEvent) {
-    const timeFormat = { hour: "2-digit", minute: "2-digit" } as const;
-    
-    eventEl.createEl("div", {
-      cls: "memochron-event-time",
-      text: `${event.start.toLocaleTimeString([], timeFormat)} - ${event.end.toLocaleTimeString([], timeFormat)}`,
-    });
+    // Don't show times for all-day events
+    if (event.isAllDay) {
+      eventEl.createEl("div", {
+        cls: "memochron-event-time all-day",
+        text: "All day",
+      });
+    } else {
+      const timeFormat = { hour: "2-digit", minute: "2-digit" } as const;
+      
+      eventEl.createEl("div", {
+        cls: "memochron-event-time",
+        text: `${event.start.toLocaleTimeString([], timeFormat)} - ${event.end.toLocaleTimeString([], timeFormat)}`,
+      });
+    }
   }
 
   private renderEventTitle(eventEl: HTMLElement, event: CalendarEvent) {

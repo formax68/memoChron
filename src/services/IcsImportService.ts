@@ -27,16 +27,20 @@ export class IcsImportService {
       // Extract timezone if present
       const dtstart = vevent.getFirstProperty("dtstart");
       const tzid = dtstart ? dtstart.getParameter("tzid") : null;
+      
+      // Check if it's an all-day event
+      const isAllDay = IcsImportService.isAllDayEvent(vevent);
 
       // Convert dates properly using the timezone - use Time objects directly
-      const startDate = convertIcalTimeToDate(event.startDate, tzid);
-      const endDate = convertIcalTimeToDate(event.endDate, tzid);
+      const startDate = convertIcalTimeToDate(event.startDate, tzid, isAllDay);
+      const endDate = convertIcalTimeToDate(event.endDate, tzid, isAllDay);
 
       return {
         id: event.uid || `imported-${Date.now()}`,
         title: event.summary || "Untitled Event",
         start: startDate,
         end: endDate,
+        isAllDay: isAllDay,
         description: event.description,
         location: event.location,
         source: "Imported",
@@ -48,5 +52,21 @@ export class IcsImportService {
       }
       throw new Error("Failed to parse ICS file");
     }
+  }
+  
+  private static isAllDayEvent(vevent: Component): boolean {
+    const dtstart = vevent.getFirstProperty("dtstart");
+    if (!dtstart) return false;
+    
+    // Check if the property has a VALUE=DATE parameter
+    const valueParam = dtstart.getParameter("value");
+    if (valueParam === "DATE") return true;
+    
+    // Also check if the type is 'date' in the jCal representation
+    // This handles cases where ical.js represents date-only values differently
+    const jcal = (dtstart as any).jCal;
+    if (jcal && jcal[2] === "date") return true;
+    
+    return false;
   }
 }

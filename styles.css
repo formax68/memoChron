@@ -535,6 +535,11 @@
   font-size: 0.85em;
 }
 
+.memochron-event-time.all-day {
+  color: var(--text-accent);
+  font-weight: 500;
+}
+
 .memochron-event-title {
   margin: var(--memochron-padding-xs) 0;
 }
