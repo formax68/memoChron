@@ -473,10 +473,10 @@ export class CalendarService {
     const isAllDay = this.isAllDayEvent(vevent);
 
     while ((next = iterator.next())) {
-      const startDate = convertIcalTimeToDate(next, tzid);
+      const startDate = convertIcalTimeToDate(next, tzid, isAllDay);
       const endTime = next.clone();
       endTime.addDuration(event.duration);
-      const endDate = convertIcalTimeToDate(endTime, tzid);
+      const endDate = convertIcalTimeToDate(endTime, tzid, isAllDay);
 
       // For all-day events, adjust the end date to be inclusive
       const adjustedEndDate = isAllDay
@@ -530,11 +530,10 @@ export class CalendarService {
     source: CalendarSource,
     tzid: string | null
   ): CalendarEvent[] {
-    const startDate = convertIcalTimeToDate(event.startDate, tzid);
-    const endDate = convertIcalTimeToDate(event.endDate, tzid);
-
     // For all-day events, adjust the end date to be inclusive
     const isAllDay = this.isAllDayEvent(event.component);
+    const startDate = convertIcalTimeToDate(event.startDate, tzid, isAllDay);
+    const endDate = convertIcalTimeToDate(event.endDate, tzid, isAllDay);
     const adjustedEndDate = isAllDay
       ? new Date(endDate.getTime() - 1)
       : endDate;
@@ -608,12 +607,11 @@ export class CalendarService {
   ): CalendarEvent | null {
     if (!exception) return null;
 
-    const exTzid = this.extractExceptionTimezone(exception, tzid);
-    const startDate = convertIcalTimeToDate(exception.startDate, exTzid);
-    const endDate = convertIcalTimeToDate(exception.endDate, exTzid);
-
     // For all-day events, adjust the end date to be inclusive
     const isAllDay = this.isAllDayEvent(exception.component);
+    const exTzid = this.extractExceptionTimezone(exception, tzid);
+    const startDate = convertIcalTimeToDate(exception.startDate, exTzid, isAllDay);
+    const endDate = convertIcalTimeToDate(exception.endDate, exTzid, isAllDay);
     const adjustedEndDate = isAllDay
       ? new Date(endDate.getTime() - 1)
       : endDate;
@@ -670,6 +668,17 @@ export class CalendarService {
 
   private isAllDayEvent(vevent: Component): boolean {
     const dtstart = vevent.getFirstProperty("dtstart");
-    return dtstart && dtstart.getParameter("value") === "DATE";
+    if (!dtstart) return false;
+    
+    // Check if the property has a VALUE=DATE parameter
+    const valueParam = dtstart.getParameter("value");
+    if (valueParam === "DATE") return true;
+    
+    // Also check if the type is 'date' in the jCal representation
+    // This handles cases where ical.js represents date-only values differently
+    const jcal = (dtstart as any).jCal;
+    if (jcal && jcal[2] === "date") return true;
+    
+    return false;
   }
 }

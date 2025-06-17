@@ -141,9 +141,10 @@ function normalizeTimezone(tzid: string): string {
  * Convert an ICAL Time object to a JavaScript Date in the local timezone
  * @param icalTime The ICAL Time object to convert
  * @param tzid The timezone ID (can be Windows or IANA format)
+ * @param isAllDay Whether this is an all-day event (VALUE=DATE)
  * @returns Date object in local timezone
  */
-export function convertIcalTimeToDate(icalTime: Time, tzid: string | null): Date {
+export function convertIcalTimeToDate(icalTime: Time, tzid: string | null, isAllDay: boolean = false): Date {
   // Get the time components from the ICAL Time object
   const year = icalTime.year;
   const month = icalTime.month;
@@ -151,6 +152,14 @@ export function convertIcalTimeToDate(icalTime: Time, tzid: string | null): Date
   const hour = icalTime.hour;
   const minute = icalTime.minute;
   const second = icalTime.second;
+
+  // All-day events should be treated as timezone-agnostic
+  // They represent a date in local time, not a specific moment in time
+  if (isAllDay) {
+    // For all-day events, ignore timezone and create date in local time
+    // This ensures the event stays on the correct day regardless of timezone
+    return new Date(year, month - 1, day, 0, 0, 0);
+  }
 
   // If no timezone specified, let ical.js handle the conversion
   // This preserves the original behavior while fixing UTC times
