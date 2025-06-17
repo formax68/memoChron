@@ -16,7 +16,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - ✨ **Automatic Note Creation**: Create notes for events with customizable templates
 - 🔄 **Auto-Refresh**: Keep your calendar data up to date with configurable refresh intervals
 - 🎨 **Customizable**: Configure note templates, locations, and naming conventions
-- 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with customizable colors
+- 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with an advanced color picker
 
 ![settings](screenshots/settings.png)
 
@@ -168,13 +168,14 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes
 - **Enable Calendar Colors**: Toggle color differentiation for calendar sources
-  - When enabled, each calendar gets an automatically assigned color
+  - When enabled, each calendar gets a customizable color
   - Colors appear as dots in the calendar view and left borders in the agenda view
-  - Click the color button to open a visual color picker with:
-    - Color spectrum for intuitive selection
-    - Lightness bar for brightness control
-    - Hex input for precise color values
-    - Quick color presets for common colors
+  - Click the color button to open an advanced visual color picker featuring:
+    - Enhanced color spectrum for intuitive and accurate selection
+    - Improved lightness bar for precise brightness control
+    - Hex input for exact color values
+    - Carefully selected base color presets optimized for calendar use
+    - Instant color updates without requiring calendar refresh
 
 ## Current Limitations
 
@@ -182,6 +183,34 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.4.0
+
+### 🎨 Enhanced Calendar Color Picker
+
+- **Improved Color Selection**: The visual color picker has been significantly enhanced with better color accuracy and smoother spectrum selection
+- **Optimized Performance**: Color updates now work more efficiently without requiring calendar data refresh
+- **Better User Experience**: Refined interface with intuitive base color presets and improved lightness controls
+- **Consistent Application**: Colors are reliably applied across both calendar dots and agenda borders
+
+### 🐛 Bug Fixes
+
+- Resolved GitHub issue #26 improving overall plugin stability
+- Enhanced error handling for edge cases in calendar event processing
+
+## What's New in v1.3.1
+
+### 🎨 Visual Calendar Color Picker
+
+- **Custom Colors**: Assign unique colors to each calendar source for better visual organization
+- **Interactive Picker**: Choose from 12 preset colors or create custom colors with the visual spectrum selector
+- **Instant Updates**: Colors update immediately without requiring a calendar refresh
+- **Smart Integration**: Colors appear as dots in calendar view and borders in agenda view
+
+### 🐛 Bug Fixes
+
+- Fixed all-day events incorrectly spanning into the next day
+- Improved timezone handling for all-day events
 
 ## What's New in v1.3.0
 

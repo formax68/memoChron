@@ -2,7 +2,13 @@ import { requestUrl, Platform, Notice, TFile } from "obsidian";
 import { Component, Event as ICalEvent, parse, Time } from "ical.js";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
-import { getPathInfo, isLocalPath, isRemoteUrl, PathType, PathInfo } from "../utils/pathUtils";
+import {
+  getPathInfo,
+  isLocalPath,
+  isRemoteUrl,
+  PathType,
+  PathInfo,
+} from "../utils/pathUtils";
 import { convertIcalTimeToDate, convertTimezone } from "../utils/timezoneUtils";
 
 export interface CalendarEvent {
@@ -24,16 +30,12 @@ interface CacheData {
 }
 
 export class CalendarService {
-
   private events: CalendarEvent[] = [];
   private lastFetch = 0;
   private isLoadingCache = false;
   private isFetchingCalendars = false;
 
-  constructor(
-    private plugin: MemoChron,
-    private refreshMinutes: number
-  ) {}
+  constructor(private plugin: MemoChron, private refreshMinutes: number) {}
 
   async fetchCalendars(
     sources: CalendarSource[],
@@ -44,7 +46,7 @@ export class CalendarService {
     }
 
     const enabledSources = sources.filter((source) => source.enabled);
-    
+
     if (enabledSources.length === 0) {
       this.events = [];
       console.warn("No enabled calendar sources to fetch.");
@@ -74,7 +76,9 @@ export class CalendarService {
     targetEndOfDay.setHours(23, 59, 59, 999);
 
     return this.events
-      .filter((event) => this.eventOccursOnDate(event, targetStartOfDay, targetEndOfDay))
+      .filter((event) =>
+        this.eventOccursOnDate(event, targetStartOfDay, targetEndOfDay)
+      )
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }
 
@@ -90,10 +94,14 @@ export class CalendarService {
     setTimeout(() => this.fetchCalendars(sources, true), 100);
   }
 
-  private needsRefresh(enabledSources: CalendarSource[], forceRefresh: boolean): boolean {
+  private needsRefresh(
+    enabledSources: CalendarSource[],
+    forceRefresh: boolean
+  ): boolean {
     const now = Date.now();
-    const cacheExpired = now - this.lastFetch >= this.refreshMinutes * 60 * 1000;
-    
+    const cacheExpired =
+      now - this.lastFetch >= this.refreshMinutes * 60 * 1000;
+
     return (
       forceRefresh ||
       this.events.length === 0 ||
@@ -106,11 +114,11 @@ export class CalendarService {
     const hasDisabledEvents = this.events.some(
       (event) => !enabledSources.find((source) => source.name === event.source)
     );
-    
+
     const hasNewSources = enabledSources.some(
       (source) => !this.events.find((event) => event.source === source.name)
     );
-    
+
     return hasDisabledEvents || hasNewSources;
   }
 
@@ -126,7 +134,7 @@ export class CalendarService {
         this.fetchCalendar(source)
       );
       const results = await Promise.all(fetchPromises);
-      
+
       this.events = results.flat();
       this.lastFetch = Date.now();
 
@@ -137,7 +145,7 @@ export class CalendarService {
     } catch (error) {
       console.error("Error fetching calendars:", error);
       this.showErrorNotification(forceRefresh);
-      
+
       return this.events;
     } finally {
       this.isFetchingCalendars = false;
@@ -154,13 +162,17 @@ export class CalendarService {
 
   private showCompletionNotification(forceRefresh: boolean) {
     if (forceRefresh) {
-      new Notice(`MemoChron: Calendar refresh complete (${this.events.length} events)`);
+      new Notice(
+        `MemoChron: Calendar refresh complete (${this.events.length} events)`
+      );
     }
   }
 
   private showErrorNotification(forceRefresh: boolean) {
     if (forceRefresh) {
-      new Notice("MemoChron: Failed to refresh calendars. Check the console for details.");
+      new Notice(
+        "MemoChron: Failed to refresh calendars. Check the console for details."
+      );
     }
   }
 
@@ -192,10 +204,7 @@ export class CalendarService {
 
   private isValidCache(cache: any): cache is CacheData {
     return (
-      cache &&
-      cache.timestamp &&
-      cache.events &&
-      Array.isArray(cache.events)
+      cache && cache.timestamp && cache.events && Array.isArray(cache.events)
     );
   }
 
@@ -212,7 +221,7 @@ export class CalendarService {
   private async saveToCache(): Promise<void> {
     try {
       await this.ensureCacheDirectory();
-      
+
       const cacheData: CacheData = {
         timestamp: this.lastFetch,
         sources: this.getEnabledSourcesForCache(),
@@ -248,13 +257,17 @@ export class CalendarService {
     );
   }
 
-  private async fetchCalendar(source: CalendarSource): Promise<CalendarEvent[]> {
+  private async fetchCalendar(
+    source: CalendarSource
+  ): Promise<CalendarEvent[]> {
     try {
       const response = await this.fetchCalendarData(source);
-      
+
       if (response.status !== 200) {
         console.error(
-          `Failed to fetch calendar ${source.name}: ${response.status} ${response.text || 'Unknown error'}`
+          `Failed to fetch calendar ${source.name}: ${response.status} ${
+            response.text || "Unknown error"
+          }`
         );
         return [];
       }
@@ -297,7 +310,9 @@ export class CalendarService {
 
       if (pathInfo.type === PathType.VAULT_RELATIVE) {
         // Read from vault
-        const file = this.plugin.app.vault.getAbstractFileByPath(pathInfo.normalizedPath);
+        const file = this.plugin.app.vault.getAbstractFileByPath(
+          pathInfo.normalizedPath
+        );
         if (!file || !(file instanceof TFile)) {
           return {
             status: 404,
@@ -308,7 +323,9 @@ export class CalendarService {
       } else {
         // Read from absolute path or file URL
         try {
-          content = await this.plugin.app.vault.adapter.read(pathInfo.normalizedPath);
+          content = await this.plugin.app.vault.adapter.read(
+            pathInfo.normalizedPath
+          );
         } catch (error) {
           return {
             status: 404,
@@ -330,7 +347,10 @@ export class CalendarService {
     }
   }
 
-  private parseCalendarData(data: string, source: CalendarSource): CalendarEvent[] {
+  private parseCalendarData(
+    data: string,
+    source: CalendarSource
+  ): CalendarEvent[] {
     const jcalData = parse(data);
     const comp = new Component(jcalData);
     const vevents = comp.getAllSubcomponents("vevent");
@@ -349,7 +369,7 @@ export class CalendarService {
         periodStart,
         periodEnd
       );
-      
+
       events.push(...eventData);
     }
 
@@ -368,19 +388,26 @@ export class CalendarService {
     return { periodStart, periodEnd };
   }
 
-  private collectRecurrenceExceptions(vevents: Component[]): Map<string, ICalEvent> {
+  private collectRecurrenceExceptions(
+    vevents: Component[]
+  ): Map<string, ICalEvent> {
     const exceptions = new Map<string, ICalEvent>();
 
     for (const vevent of vevents) {
       if (!vevent.hasProperty("recurrence-id")) continue;
-      
+
       if (this.isCancelledEvent(vevent)) continue;
 
       const event = new ICalEvent(vevent);
       const uid = event.uid;
-      const recurrenceId = vevent.getFirstProperty("recurrence-id").getFirstValue();
-      const recKey = `${uid}-${recurrenceId.toJSDate().toISOString().substring(0, 10)}`;
-      
+      const recurrenceId = vevent
+        .getFirstProperty("recurrence-id")
+        .getFirstValue();
+      const recKey = `${uid}-${recurrenceId
+        .toJSDate()
+        .toISOString()
+        .substring(0, 10)}`;
+
       exceptions.set(recKey, event);
     }
 
@@ -388,10 +415,7 @@ export class CalendarService {
   }
 
   private shouldSkipEvent(vevent: Component): boolean {
-    return (
-      vevent.hasProperty("recurrence-id") ||
-      this.isCancelledEvent(vevent)
-    );
+    return vevent.hasProperty("recurrence-id") || this.isCancelledEvent(vevent);
   }
 
   private isCancelledEvent(vevent: Component): boolean {
@@ -428,7 +452,7 @@ export class CalendarService {
 
   private extractTimezone(vevent: Component): string | null {
     if (!vevent.hasProperty("dtstart")) return null;
-    
+
     const dtstart = vevent.getFirstProperty("dtstart");
     return dtstart ? dtstart.getParameter("tzid") : null;
   }
@@ -446,20 +470,32 @@ export class CalendarService {
     const excludedDates = this.getExcludedDates(vevent);
     const iterator = event.iterator();
     let next: Time | null;
+    const isAllDay = this.isAllDayEvent(vevent);
 
     while ((next = iterator.next())) {
-      // Use the ICAL Time object directly for proper timezone handling
       const startDate = convertIcalTimeToDate(next, tzid);
       const endTime = next.clone();
       endTime.addDuration(event.duration);
       const endDate = convertIcalTimeToDate(endTime, tzid);
+
+      // For all-day events, adjust the end date to be inclusive
+      const adjustedEndDate = isAllDay
+        ? new Date(endDate.getTime() - 1)
+        : endDate;
 
       if (startDate > periodEnd) break;
 
       const dateStr = next.toJSDate().toISOString().substring(0, 10);
       const recKey = `${event.uid}-${dateStr}`;
 
-      if (this.shouldSkipOccurrence(next.toJSDate(), excludedDates, recurrenceExceptions, recKey)) {
+      if (
+        this.shouldSkipOccurrence(
+          next.toJSDate(),
+          excludedDates,
+          recurrenceExceptions,
+          recKey
+        )
+      ) {
         const exception = this.processException(
           recurrenceExceptions.get(recKey),
           source,
@@ -471,16 +507,16 @@ export class CalendarService {
         continue;
       }
 
-      if (startDate <= periodEnd && endDate >= periodStart) {
+      if (startDate <= periodEnd && adjustedEndDate >= periodStart) {
         events.push({
           id: `${event.uid}-${next.toUnixTime()}`,
           title: event.summary,
           start: startDate,
-          end: endDate,
+          end: adjustedEndDate,
           description: event.description,
           location: event.location,
           source: source.name,
-          sourceId: source.url, // Using URL as unique identifier
+          sourceId: source.url,
           color: source.color,
         });
       }
@@ -497,22 +533,30 @@ export class CalendarService {
     const startDate = convertIcalTimeToDate(event.startDate, tzid);
     const endDate = convertIcalTimeToDate(event.endDate, tzid);
 
-    return [{
-      id: event.uid,
-      title: event.summary,
-      start: startDate,
-      end: endDate,
-      description: event.description,
-      location: event.location,
-      source: source.name,
-      sourceId: source.url, // Using URL as unique identifier
-      color: source.color,
-    }];
+    // For all-day events, adjust the end date to be inclusive
+    const isAllDay = this.isAllDayEvent(event.component);
+    const adjustedEndDate = isAllDay
+      ? new Date(endDate.getTime() - 1)
+      : endDate;
+
+    return [
+      {
+        id: event.uid,
+        title: event.summary,
+        start: startDate,
+        end: adjustedEndDate,
+        description: event.description,
+        location: event.location,
+        source: source.name,
+        sourceId: source.url,
+        color: source.color,
+      },
+    ];
   }
 
   private getExcludedDates(vevent: Component): Date[] {
     const excludedDates: Date[] = [];
-    
+
     if (!vevent.hasProperty("exdate")) return excludedDates;
 
     const exdateProps = vevent.getAllProperties("exdate");
@@ -540,7 +584,7 @@ export class CalendarService {
     recurrenceExceptions: Map<string, ICalEvent>,
     recKey: string
   ): boolean {
-    const isExcluded = excludedDates.some((exDate) => 
+    const isExcluded = excludedDates.some((exDate) =>
       this.isSameDate(exDate, date)
     );
 
@@ -568,16 +612,22 @@ export class CalendarService {
     const startDate = convertIcalTimeToDate(exception.startDate, exTzid);
     const endDate = convertIcalTimeToDate(exception.endDate, exTzid);
 
-    if (startDate <= periodEnd && endDate >= periodStart) {
+    // For all-day events, adjust the end date to be inclusive
+    const isAllDay = this.isAllDayEvent(exception.component);
+    const adjustedEndDate = isAllDay
+      ? new Date(endDate.getTime() - 1)
+      : endDate;
+
+    if (startDate <= periodEnd && adjustedEndDate >= periodStart) {
       return {
         id: `${exception.uid}-${exception.startDate.toUnixTime()}`,
         title: exception.summary,
         start: startDate,
-        end: endDate,
+        end: adjustedEndDate,
         description: exception.description,
         location: exception.location,
         source: source.name,
-        sourceId: source.url, // Using URL as unique identifier
+        sourceId: source.url,
         color: source.color,
       };
     }
@@ -585,12 +635,15 @@ export class CalendarService {
     return null;
   }
 
-  private extractExceptionTimezone(exception: ICalEvent, defaultTzid: string | null): string | null {
+  private extractExceptionTimezone(
+    exception: ICalEvent,
+    defaultTzid: string | null
+  ): string | null {
     if (!exception.component.hasProperty("dtstart")) return defaultTzid;
-    
+
     const dtstart = exception.component.getFirstProperty("dtstart");
     const paramTzid = dtstart?.getParameter("tzid");
-    
+
     return paramTzid || defaultTzid;
   }
 
@@ -601,7 +654,8 @@ export class CalendarService {
   ): boolean {
     const startsOnThisDay = this.isSameDate(event.start, targetStartOfDay);
     const endsOnThisDay = this.isSameDate(event.end, targetStartOfDay);
-    const spansThisDay = event.start < targetEndOfDay && event.end > targetStartOfDay;
+    const spansThisDay =
+      event.start < targetEndOfDay && event.end > targetStartOfDay;
 
     return startsOnThisDay || endsOnThisDay || spansThisDay;
   }
@@ -612,5 +666,10 @@ export class CalendarService {
       electron: Platform.isDesktop,
       networkAvailable: navigator.onLine,
     });
+  }
+
+  private isAllDayEvent(vevent: Component): boolean {
+    const dtstart = vevent.getFirstProperty("dtstart");
+    return dtstart && dtstart.getParameter("value") === "DATE";
   }
 }
