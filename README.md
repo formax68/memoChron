@@ -1,5 +1,7 @@
 # MemoChron 
 ![GitHub all releases](https://img.shields.io/github/downloads/formax68/memoChron/total?color=573E7A&logo=github&style=for-the-badge)
+![GitHub manifest version](https://img.shields.io/github/manifest-json/v/formax68/memoChron?color=573E7A&logo=github&style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/github/stars/formax68/memoChron?color=573E7A&logo=github&style=for-the-badge)
 
 MemoChron is an Obsidian plugin that bridges the gap between personal knowledge management and time management.
 It showcases a list of your calendar events. When you click on an event, it creates a note for this event.
