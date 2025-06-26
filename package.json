@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "ical.js": "^1.5.0",
-    "luxon": "^3.6.1"
+    "luxon": "^3.6.1",
+    "obsidian-daily-notes-interface": "^0.9.4"
   }
 }

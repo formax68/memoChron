@@ -3,6 +3,12 @@ import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
 import { IcsImportService } from "../services/IcsImportService";
+import { 
+  createDailyNote, 
+  getDailyNote, 
+  getAllDailyNotes,
+  appHasDailyNotesPluginLoaded 
+} from "obsidian-daily-notes-interface";
 
 interface DateElements {
   [key: string]: HTMLElement;
@@ -432,34 +438,41 @@ export class CalendarView extends ItemView {
 
   private async handleDailyNoteClick(date: Date) {
     try {
-      // @ts-ignore - Daily notes plugin methods
-      const { createDailyNote, getDailyNote, getAllDailyNotes } = this.app.internalPlugins.plugins['daily-notes']?.instance;
-      
-      if (!createDailyNote || !getDailyNote || !getAllDailyNotes) {
-        new Notice("Daily Notes plugin is not enabled");
+      // Check if daily notes plugin is loaded
+      if (!appHasDailyNotesPluginLoaded()) {
+        new Notice("Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins.");
         return;
       }
       
-      // Format date for daily notes
-      const moment = (window as any).moment(date);
+      // Use moment for date handling (same as Obsidian's daily notes)
+      const moment = (window as any).moment;
+      if (!moment) {
+        new Notice("Moment.js is not available");
+        return;
+      }
       
-      // Get all daily notes to check if one exists
+      const momentDate = moment(date);
+      
+      // Get all daily notes
       const allDailyNotes = getAllDailyNotes();
-      let dailyNote = getDailyNote(moment, allDailyNotes);
       
-      // Create the daily note if it doesn't exist
+      // Check if daily note already exists
+      let dailyNote = getDailyNote(momentDate, allDailyNotes);
+      
       if (!dailyNote) {
-        dailyNote = await createDailyNote(moment);
+        // Create the daily note if it doesn't exist
+        dailyNote = await createDailyNote(momentDate);
       }
       
       // Open the daily note
-      const leaf = this.app.workspace.getLeaf("tab");
-      if (leaf && dailyNote) {
+      if (dailyNote) {
+        const leaf = this.app.workspace.getLeaf("tab");
         await leaf.openFile(dailyNote);
       }
+      
     } catch (error) {
       console.error("Failed to handle daily note:", error);
-      new Notice("Failed to open daily note. Make sure Daily Notes plugin is enabled.");
+      new Notice("Failed to open daily note. Make sure Daily Notes plugin is enabled and configured.");
     }
   }
 
