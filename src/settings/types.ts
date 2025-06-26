@@ -32,6 +32,8 @@ export interface MemoChronSettings {
   hideCalendar: boolean;
   folderPathTemplate: string; // Template for organizing notes in date-based subfolders
   enableCalendarColors: boolean; // Global toggle for calendar colors feature
+  showDailyNoteInAgenda: boolean; // Show daily note as an entry in the agenda
+  dailyNoteColor?: string; // Color for daily note entry when calendar colors are enabled
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -59,4 +61,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   hideCalendar: false,
   folderPathTemplate: "", // Empty by default for backwards compatibility
   enableCalendarColors: false, // Disabled by default
+  showDailyNoteInAgenda: false, // Disabled by default
 };

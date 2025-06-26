@@ -319,6 +319,11 @@
   color: var(--text-muted);
 }
 
+/* Daily note entry styling */
+.memochron-agenda-event.memochron-daily-note {
+  /* Keep the same background as regular events */
+}
+
 /* Color picker styles */
 .memochron-color-button {
   position: relative;

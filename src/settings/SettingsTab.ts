@@ -50,6 +50,7 @@ export class SettingsTab extends PluginSettingTab {
   private renderGeneralSection(): void {
     this.renderFirstDayOfWeek();
     this.renderHideCalendar();
+    this.renderShowDailyNoteInAgenda();
     this.renderEnableCalendarColors();
     this.renderRefreshInterval();
   }
@@ -295,6 +296,90 @@ export class SettingsTab extends PluginSettingTab {
     }
   }
 
+  private renderDailyNoteColorPicker(container: HTMLElement) {
+    const baseColors = this.getObsidianBaseColors();
+    const currentColor = this.plugin.settings.dailyNoteColor || 
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--interactive-accent')
+        .trim() || '#7c3aed';
+
+    // Render color swatches
+    baseColors.forEach((color) => {
+      const swatch = container.createDiv({
+        cls: "memochron-inline-color-swatch",
+      });
+      const finalColor = color.cssVar
+        ? getComputedStyle(document.documentElement)
+            .getPropertyValue(color.cssVar)
+            .trim() || color.fallback
+        : color.fallback;
+      swatch.style.backgroundColor = finalColor;
+      if (finalColor === currentColor) {
+        swatch.classList.add("selected");
+      }
+      swatch.addEventListener("click", async () => {
+        this.plugin.settings.dailyNoteColor = finalColor;
+        await this.plugin.saveSettings();
+        this.plugin.updateCalendarColors();
+        // Rerender to update selection
+        container.empty();
+        this.renderDailyNoteColorPicker(container);
+      });
+    });
+
+    // Custom color input
+    const customLabel = container.createDiv({
+      cls: "memochron-inline-color-custom-label",
+    });
+    const isCustom = !baseColors.some((c) => {
+      const col = c.cssVar
+        ? getComputedStyle(document.documentElement)
+            .getPropertyValue(c.cssVar)
+            .trim() || c.fallback
+        : c.fallback;
+      return col === currentColor;
+    });
+    if (isCustom) {
+      // Show current color as a filled circle
+      customLabel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${currentColor}" stroke="#888" stroke-width="2"/></svg>`;
+    } else {
+      // Show + icon
+      customLabel.innerHTML =
+        '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#888" stroke-width="2"/><text x="12" y="17" text-anchor="middle" font-size="16" fill="#888">+</text></svg>';
+    }
+    customLabel.style.position = "relative";
+    customLabel.style.display = "inline-block";
+    customLabel.style.width = "24px";
+    customLabel.style.height = "24px";
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = this.colorToHex(currentColor);
+    colorInput.className = "memochron-inline-color-input";
+    colorInput.style.position = "absolute";
+    colorInput.style.top = "0";
+    colorInput.style.left = "0";
+    colorInput.style.width = "24px";
+    colorInput.style.height = "24px";
+    colorInput.style.opacity = "0";
+    colorInput.style.cursor = "pointer";
+    colorInput.style.border = "none";
+    colorInput.style.padding = "0";
+    colorInput.style.margin = "0";
+    customLabel.appendChild(colorInput);
+    colorInput.addEventListener("change", async (e) => {
+      const hex = (e.target as HTMLInputElement).value;
+      this.plugin.settings.dailyNoteColor = hex;
+      await this.plugin.saveSettings();
+      this.plugin.updateCalendarColors();
+      container.empty();
+      this.renderDailyNoteColorPicker(container);
+    });
+    // Highlight if current color is custom
+    if (isCustom) {
+      customLabel.classList.add("selected");
+    }
+  }
+
   // Helper to convert color to hex for <input type="color">
   private colorToHex(color: string): string {
     // Accepts hex or hsl
@@ -398,6 +483,31 @@ export class SettingsTab extends PluginSettingTab {
       );
   }
 
+  private renderShowDailyNoteInAgenda(): void {
+    const dailyNoteSetting = new Setting(this.containerEl)
+      .setName("Show daily note in agenda")
+      .setDesc("Display the daily note as an entry in the agenda view");
+
+    // Add color picker first if calendar colors are enabled
+    if (this.plugin.settings.enableCalendarColors) {
+      const colorContainer = dailyNoteSetting.controlEl.createDiv({
+        cls: "memochron-inline-color-picker",
+      });
+      this.renderDailyNoteColorPicker(colorContainer);
+    }
+
+    // Then add the toggle
+    dailyNoteSetting.addToggle((toggle) =>
+      toggle
+        .setValue(this.plugin.settings.showDailyNoteInAgenda)
+        .onChange(async (value) => {
+          this.plugin.settings.showDailyNoteInAgenda = value;
+          await this.plugin.saveSettings();
+          await this.plugin.refreshCalendarView();
+        })
+    );
+  }
+
   private renderEnableCalendarColors(): void {
     new Setting(this.containerEl)
       .setName("Enable calendar colors")
@@ -416,6 +526,13 @@ export class SettingsTab extends PluginSettingTab {
                   source.color = `hsl(${hue}, 70%, 50%)`;
                 }
               });
+              
+              // Set default daily note color if not set
+              if (!this.plugin.settings.dailyNoteColor) {
+                this.plugin.settings.dailyNoteColor = getComputedStyle(document.documentElement)
+                  .getPropertyValue('--interactive-accent')
+                  .trim() || '#7c3aed';
+              }
             }
 
             await this.plugin.saveSettings();

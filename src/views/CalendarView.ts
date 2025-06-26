@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
@@ -361,13 +361,28 @@ export class CalendarView extends ItemView {
     this.createAgendaHeader(date);
     
     const events = this.plugin.calendarService.getEventsForDate(date);
+    const hasEvents = events.length > 0;
+    const showDailyNote = this.plugin.settings.showDailyNoteInAgenda;
     
-    if (events.length === 0) {
+    if (!hasEvents && !showDailyNote) {
       this.agenda.createEl("p", { text: "No events scheduled" });
       return;
     }
 
-    this.renderEventsList(events);
+    const list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
+    
+    // Add daily note entry if enabled
+    if (showDailyNote) {
+      this.renderDailyNoteEntry(list, date);
+    }
+    
+    // Add events
+    if (hasEvents) {
+      const now = new Date();
+      events.forEach((event) => {
+        this.renderEventItem(list, event, now);
+      });
+    }
   }
 
   private createAgendaHeader(date: Date) {
@@ -380,13 +395,72 @@ export class CalendarView extends ItemView {
     });
   }
 
-  private renderEventsList(events: CalendarEvent[]) {
-    const list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
-    const now = new Date();
-
-    events.forEach((event) => {
-      this.renderEventItem(list, event, now);
+  private renderDailyNoteEntry(list: HTMLElement, date: Date) {
+    const dailyNoteEl = list.createEl("div", { 
+      cls: "memochron-agenda-event memochron-daily-note" 
     });
+    
+    // Add a subtle accent color if calendar colors are enabled
+    if (this.plugin.settings.enableCalendarColors) {
+      dailyNoteEl.addClass("with-color");
+      // Use the configured color or default to theme's accent color
+      const dailyNoteColor = this.plugin.settings.dailyNoteColor || 
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--interactive-accent')
+          .trim() || '#7c3aed';
+      dailyNoteEl.style.setProperty("--event-color", dailyNoteColor);
+    }
+    
+    // Add title first
+    dailyNoteEl.createEl("div", {
+      cls: "memochron-event-title",
+      text: "Daily Note"
+    });
+    
+    // Add icon below like a location
+    dailyNoteEl.createEl("div", {
+      cls: "memochron-event-location",
+      text: "📝 Open daily note"
+    });
+    
+    // Add click handler to open or create daily note
+    dailyNoteEl.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await this.handleDailyNoteClick(date);
+    });
+  }
+
+  private async handleDailyNoteClick(date: Date) {
+    try {
+      // @ts-ignore - Daily notes plugin methods
+      const { createDailyNote, getDailyNote, getAllDailyNotes } = this.app.internalPlugins.plugins['daily-notes']?.instance;
+      
+      if (!createDailyNote || !getDailyNote || !getAllDailyNotes) {
+        new Notice("Daily Notes plugin is not enabled");
+        return;
+      }
+      
+      // Format date for daily notes
+      const moment = (window as any).moment(date);
+      
+      // Get all daily notes to check if one exists
+      const allDailyNotes = getAllDailyNotes();
+      let dailyNote = getDailyNote(moment, allDailyNotes);
+      
+      // Create the daily note if it doesn't exist
+      if (!dailyNote) {
+        dailyNote = await createDailyNote(moment);
+      }
+      
+      // Open the daily note
+      const leaf = this.app.workspace.getLeaf("tab");
+      if (leaf && dailyNote) {
+        await leaf.openFile(dailyNote);
+      }
+    } catch (error) {
+      console.error("Failed to handle daily note:", error);
+      new Notice("Failed to open daily note. Make sure Daily Notes plugin is enabled.");
+    }
   }
 
   private renderEventItem(
