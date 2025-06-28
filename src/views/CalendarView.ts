@@ -21,6 +21,7 @@ export class CalendarView extends ItemView {
   private selectedDate: Date | null = null;
   private currentMonthDays: Map<string, HTMLElement> = new Map();
   private isViewEventsRegistered = false;
+  private dailyNotes: Map<string, TFile> = new Map();
 
   constructor(
     leaf: WorkspaceLeaf, 
@@ -45,6 +46,7 @@ export class CalendarView extends ItemView {
   async onOpen() {
     this.createUI();
     this.registerViewEvents();
+    this.loadDailyNotes();
     await this.refreshEvents();
     
     // If calendar is hidden, show today's agenda
@@ -61,6 +63,10 @@ export class CalendarView extends ItemView {
       this.plugin.settings.calendarUrls,
       forceRefresh
     );
+    
+    // Reload daily notes
+    this.loadDailyNotes();
+    
     this.renderMonth();
     
     // Update calendar visibility based on current settings
@@ -81,6 +87,50 @@ export class CalendarView extends ItemView {
     // Re-render the agenda with new colors
     const dateToShow = this.selectedDate || new Date();
     this.showDayAgenda(dateToShow);
+  }
+
+  private loadDailyNotes() {
+    // Clear existing daily notes
+    this.dailyNotes.clear();
+    
+    // Check if daily notes plugin is loaded
+    if (!appHasDailyNotesPluginLoaded()) {
+      return;
+    }
+    
+    try {
+      // Get all daily notes
+      const allDailyNotes = getAllDailyNotes();
+      
+      // Store them in our map with date as key
+      Object.entries(allDailyNotes).forEach(([dateStr, file]) => {
+        this.dailyNotes.set(dateStr, file as TFile);
+      });
+    } catch (error) {
+      console.error("Failed to load daily notes:", error);
+    }
+  }
+
+  private checkDailyNoteForDate(date: Date): boolean {
+    if (!appHasDailyNotesPluginLoaded()) {
+      return false;
+    }
+    
+    try {
+      const moment = (window as any).moment;
+      if (!moment) {
+        return false;
+      }
+      
+      const momentDate = moment(date);
+      const allDailyNotes = getAllDailyNotes();
+      const dailyNote = getDailyNote(momentDate, allDailyNotes);
+      
+      return dailyNote !== null;
+    } catch (error) {
+      console.error("Error checking daily note:", error);
+      return false;
+    }
   }
 
   private updateEventColors() {
@@ -318,8 +368,9 @@ export class CalendarView extends ItemView {
 
   private addDayEventIndicator(dayEl: HTMLElement, date: Date) {
     const events = this.plugin.calendarService.getEventsForDate(date);
+    const hasDailyNote = this.checkDailyNoteForDate(date);
     
-    if (events.length > 0) {
+    if (events.length > 0 || hasDailyNote) {
       dayEl.addClass("has-events");
       
       if (this.plugin.settings.enableCalendarColors) {
@@ -336,6 +387,19 @@ export class CalendarView extends ItemView {
           cls: "memochron-event-dots-container"
         });
         
+        // Add daily note dot first if it exists (show on calendar even if not shown in agenda)
+        if (hasDailyNote) {
+          const dailyNoteDot = dotsContainer.createEl("div", {
+            cls: "memochron-event-dot daily-note-dot colored",
+            text: "•",
+          });
+          const dailyNoteColor = this.plugin.settings.dailyNoteColor || 
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--interactive-accent')
+              .trim() || '#7c3aed';
+          dailyNoteDot.style.color = dailyNoteColor;
+        }
+        
         // Add a colored dot for each calendar that has events
         eventsBySource.forEach(event => {
           const dot = dotsContainer.createEl("div", {
@@ -347,11 +411,26 @@ export class CalendarView extends ItemView {
           }
         });
       } else {
-        // Single dot for all events when colors are disabled
-        dayEl.createEl("div", {
-          cls: "memochron-event-dot",
-          text: "•",
+        // Create container for multiple dots even when colors are disabled
+        const dotsContainer = dayEl.createEl("div", {
+          cls: "memochron-event-dots-container"
         });
+        
+        // Add daily note dot if exists (show on calendar even if not shown in agenda)
+        if (hasDailyNote) {
+          dotsContainer.createEl("div", {
+            cls: "memochron-event-dot daily-note-dot",
+            text: "•",
+          });
+        }
+        
+        // Add event dot if there are events
+        if (events.length > 0) {
+          dotsContainer.createEl("div", {
+            cls: "memochron-event-dot",
+            text: "•",
+          });
+        }
       }
     }
   }

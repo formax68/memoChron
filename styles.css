@@ -168,6 +168,17 @@
   margin-bottom: 0;
 }
 
+/* Daily note dot styling */
+.memochron-event-dot.daily-note-dot {
+  font-weight: bold;
+  position: relative;
+}
+
+/* Make daily note dot slightly larger when it's the only dot */
+.memochron-event-dots-container:has(.daily-note-dot):not(:has(.memochron-event-dot:not(.daily-note-dot))) .daily-note-dot {
+  font-size: 1.2em;
+}
+
 /* Week View */
 .memochron-week-grid {
   display: grid;

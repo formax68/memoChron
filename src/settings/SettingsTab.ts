@@ -25,6 +25,7 @@ export class SettingsTab extends PluginSettingTab {
 
     this.renderCalendarSection();
     this.renderGeneralSection();
+    this.renderDailyNotesSection();
     this.renderNotesSection();
   }
 
@@ -50,7 +51,6 @@ export class SettingsTab extends PluginSettingTab {
   private renderGeneralSection(): void {
     this.renderFirstDayOfWeek();
     this.renderHideCalendar();
-    this.renderShowDailyNoteInAgenda();
     this.renderEnableCalendarColors();
     this.renderRefreshInterval();
   }
@@ -65,6 +65,12 @@ export class SettingsTab extends PluginSettingTab {
     this.renderDefaultFrontmatter();
     this.renderNoteTemplate();
     this.renderDefaultTags();
+  }
+
+  private renderDailyNotesSection(): void {
+    new Setting(this.containerEl).setName("Daily notes").setHeading();
+    
+    this.renderShowDailyNoteInAgenda();
   }
 
   private createHeading(name: string, desc: string): void {
