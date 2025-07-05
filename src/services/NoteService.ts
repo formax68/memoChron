@@ -6,6 +6,10 @@ interface EventTemplateVariables {
   event_title: string;
   date: string;
   "date-iso": string;
+  start_date: string;
+  "start_date-iso": string;
+  end_date: string;
+  "end_date-iso": string;
   start_time: string;
   end_time: string;
   source: string;
@@ -182,12 +186,20 @@ export class NoteService {
   private getEventTemplateVariables(event: CalendarEvent): EventTemplateVariables {
     const dateStr = this.formatDate(event.start);
     const dateIsoStr = event.start.toISOString().split("T")[0];
+    const startDateStr = this.formatDate(event.start);
+    const startDateIsoStr = event.start.toISOString().split("T")[0];
+    const endDateStr = this.formatDate(event.end);
+    const endDateIsoStr = event.end.toISOString().split("T")[0];
     const timeOptions = { hour: "2-digit", minute: "2-digit" } as const;
     
     return {
       event_title: event.title,
       date: dateStr,
       "date-iso": dateIsoStr,
+      start_date: startDateStr,
+      "start_date-iso": startDateIsoStr,
+      end_date: endDateStr,
+      "end_date-iso": endDateIsoStr,
       start_time: event.start.toLocaleTimeString([], timeOptions),
       end_time: event.end.toLocaleTimeString([], timeOptions),
       source: event.source,

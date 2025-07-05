@@ -47,7 +47,7 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   noteTemplate: `# {{event_title}}
 
 ## 📝 Event Details
-📅 {{date}}
+📅 {{start_date}}
 ⏰ {{start_time}} - {{end_time}}
 📆 {{source}}
 {{location}}

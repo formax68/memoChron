@@ -113,13 +113,39 @@ In the plugin settings, you can customize:
 - Note title format
 - Default template with variables like:
   - {{event_title}}
-  - {{date}}
-  - {{date-iso}} - The event date in YYYY-MM-DD format, regardless of the "Note date format" setting.
+  - {{date}} - The event start date (for backward compatibility)
+  - {{date-iso}} - The event start date in YYYY-MM-DD format (for backward compatibility)
+  - {{start_date}} - The event start date
+  - {{start_date-iso}} - The event start date in YYYY-MM-DD format
+  - {{end_date}} - The event end date
+  - {{end_date-iso}} - The event end date in YYYY-MM-DD format
   - {{start_time}}
   - {{end_time}}
   - {{description}}
   - {{location}}
   - {{source}}
+
+### Multi-Day Event Support
+
+MemoChron now supports better handling of multi-day events with dedicated template variables:
+
+- **{{start_date}}** and **{{end_date}}** explicitly show when an event begins and ends
+- **{{start_date-iso}}** and **{{end_date-iso}}** provide ISO format dates for consistency
+- The original **{{date}}** variable remains available for backward compatibility (uses start date)
+
+**Example Template for Multi-Day Events:**
+```markdown
+## {{event_title}}
+
+**Duration**: {{start_date}} - {{end_date}}
+**Time**: {{start_time}} - {{end_time}}
+**Location**: {{location}}
+
+### Description
+{{description}}
+```
+
+This makes it easy to see at a glance when multi-day conferences, trips, or extended events begin and end.
 
 ### Organizing Notes with Folder Templates
 
@@ -186,6 +212,15 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.5.1
+
+### 📅 Enhanced Multi-Day Event Support
+
+- **New Template Variables**: Added `{{start_date}}`, `{{end_date}}`, `{{start_date-iso}}`, and `{{end_date-iso}}` for better handling of multi-day events
+- **Updated Defaults**: All default templates now use `{{start_date}}` for clarity (existing templates with `{{date}}` will continue to work)
+- **Backward Compatibility**: The original `{{date}}` variable continues to work as before (uses event start date)
+- **Clearer Event Duration**: Easily display event duration in your templates with separate start and end date variables
 
 ## What's New in v1.4.0
 

@@ -597,11 +597,11 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Note title format")
       .setDesc(
-        "Format for new note titles. Available variables: {{event_title}}, {{date}}, {{source}}"
+        "Format for new note titles. Available variables: {{event_title}}, {{start_date}}, {{source}}"
       )
       .addText((text) =>
         text
-          .setPlaceholder("{{event_title}} - {{date}}")
+          .setPlaceholder("{{event_title}} - {{start_date}}")
           .setValue(this.plugin.settings.noteTitleFormat)
           .onChange(async (value) => {
             this.plugin.settings.noteTitleFormat = value;
@@ -641,7 +641,7 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc("YAML frontmatter to add at the top of each event note")
       .addTextArea((text) => {
         text
-          .setPlaceholder("---\ntype: event\ndate: {{date}}\n---")
+          .setPlaceholder("---\ntype: event\ndate: {{start_date}}\n---")
           .setValue(this.plugin.settings.defaultFrontmatter)
           .onChange(async (value) => {
             this.plugin.settings.defaultFrontmatter = value;
@@ -656,7 +656,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Note template")
       .setDesc(
-        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
+        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
       )
       .addTextArea((text) => {
         text
