@@ -222,19 +222,10 @@ export class NoteService {
 
   private formatTitle(format: string, event: CalendarEvent): string {
     const variables = this.getEventTemplateVariables(event);
-    const allowedKeys: (keyof EventTemplateVariables)[] = [
-      "event_title",
-      "date",
-      "date-iso",
-      "start_time",
-      "end_time",
-      "source",
-      "location",
-    ];
-
-    return allowedKeys.reduce((title, key) => {
+    
+    // Apply all template variables, sanitizing each value for use in filenames
+    return Object.entries(variables).reduce((title, [key, value]) => {
       const placeholder = `{{${key}}}`;
-      const value = variables[key];
       return title.replace(
         new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
         this.sanitizeFileName(value)

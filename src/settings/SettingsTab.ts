@@ -597,7 +597,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Note title format")
       .setDesc(
-        "Format for new note titles. Available variables: {{event_title}}, {{start_date}}, {{source}}"
+        "Format for new note titles. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
       )
       .addText((text) =>
         text

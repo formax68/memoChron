@@ -1,4 +1,5 @@
-# MemoChron 
+# MemoChron
+
 ![GitHub all releases](https://img.shields.io/github/downloads/formax68/memoChron/total?color=573E7A&logo=github&style=for-the-badge)
 ![GitHub manifest version](https://img.shields.io/github/manifest-json/v/formax68/memoChron?color=573E7A&logo=github&style=for-the-badge)
 ![GitHub Repo stars](https://img.shields.io/github/stars/formax68/memoChron?color=573E7A&logo=github&style=for-the-badge)
@@ -37,6 +38,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 MemoChron supports both remote calendar URLs and local ICS files.
 
 #### Remote Calendars
+
 1. Go to Settings > MemoChron
 2. Click "Add Calendar"
 3. Enter your public iCalendar (ICS) URL (e.g., `https://calendar.google.com/calendar/ical/...`)
@@ -44,12 +46,13 @@ MemoChron supports both remote calendar URLs and local ICS files.
 5. Enable/disable calendars as needed
 
 #### Local ICS Files
+
 You can also use ICS files stored in your Obsidian vault or local file system:
 
 1. Go to Settings > MemoChron
 2. Click "Add Calendar"
 3. Use one of these methods to specify your local file:
-   - **File Picker (Recommended)**: 
+   - **File Picker (Recommended)**:
      - Click the folder icon (📁) button next to the URL field
      - A search dialog will open showing all ICS files in your vault
      - Type to search/filter files by name
@@ -74,6 +77,7 @@ You can quickly create notes from individual meeting invites by dragging ICS fil
 4. A note will be created immediately for that event
 
 **Important**:
+
 - Only **single-event** ICS files are supported
 - Files with multiple events will show an error
 - Drag & drop only works on the **agenda view**, not the calendar grid
@@ -81,6 +85,7 @@ You can quickly create notes from individual meeting invites by dragging ICS fil
 - All timezones are properly handled and converted to your local time
 
 **Use Cases**:
+
 - Quick note creation from meeting invites
 - Importing events from colleagues without calendar access
 - Creating notes for one-off events without cluttering your calendar
@@ -110,7 +115,7 @@ In the plugin settings, you can customize:
 
 - Note location in your vault
 - **Folder path template** for organizing notes in date-based subfolders
-- Note title format
+- **Note title format** - Use any of the template variables below
 - Default template with variables like:
   - {{event_title}}
   - {{date}} - The event start date (for backward compatibility)
@@ -134,6 +139,7 @@ MemoChron now supports better handling of multi-day events with dedicated templa
 - The original **{{date}}** variable remains available for backward compatibility (uses start date)
 
 **Example Template for Multi-Day Events:**
+
 ```markdown
 ## {{event_title}}
 
@@ -142,6 +148,7 @@ MemoChron now supports better handling of multi-day events with dedicated templa
 **Location**: {{location}}
 
 ### Description
+
 {{description}}
 ```
 
@@ -218,6 +225,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 ### 📅 Enhanced Multi-Day Event Support
 
 - **New Template Variables**: Added `{{start_date}}`, `{{end_date}}`, `{{start_date-iso}}`, and `{{end_date-iso}}` for better handling of multi-day events
+- **Enhanced Note Titles**: All template variables can now be used in note title format (previously limited to a subset)
 - **Updated Defaults**: All default templates now use `{{start_date}}` for clarity (existing templates with `{{date}}` will continue to work)
 - **Backward Compatibility**: The original `{{date}}` variable continues to work as before (uses event start date)
 - **Clearer Event Duration**: Easily display event duration in your templates with separate start and end date variables
@@ -248,6 +256,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 ### 📂 Folder Organization Templates
 
 Organize your event notes automatically with powerful template variables:
+
 - Date-based organization: `{YYYY}/{MM}`, `{YYYY}/{MMM}`, `{YYYY}/Q{Q}`
 - Source-based organization: `{source}/{YYYY}/{MMM}`
 - Custom combinations: `{MMM} {YYYY}`, `{YYYY}-{MM}`, and more
@@ -255,6 +264,7 @@ Organize your event notes automatically with powerful template variables:
 ### 📁 Local ICS Support
 
 Now supports multiple ways to add local calendar sources:
+
 - Vault-relative paths with file picker
 - Absolute file system paths
 - File:// URLs
