@@ -586,7 +586,11 @@ export class CalendarView extends ItemView {
         text: "All day",
       });
     } else {
-      const timeFormat = { hour: "2-digit", minute: "2-digit" } as const;
+      const timeFormat: Intl.DateTimeFormatOptions = { 
+        hour: "2-digit", 
+        minute: "2-digit",
+        hour12: this.plugin.settings.noteTimeFormat === '12h'
+      };
       
       eventEl.createEl("div", {
         cls: "memochron-event-time",

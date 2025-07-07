@@ -190,7 +190,6 @@ export class NoteService {
     const startDateIsoStr = event.start.toISOString().split("T")[0];
     const endDateStr = this.formatDate(event.end);
     const endDateIsoStr = event.end.toISOString().split("T")[0];
-    const timeOptions = { hour: "2-digit", minute: "2-digit" } as const;
     
     return {
       event_title: event.title,
@@ -200,8 +199,8 @@ export class NoteService {
       "start_date-iso": startDateIsoStr,
       end_date: endDateStr,
       "end_date-iso": endDateIsoStr,
-      start_time: event.start.toLocaleTimeString([], timeOptions),
-      end_time: event.end.toLocaleTimeString([], timeOptions),
+      start_time: this.formatTime(event.start),
+      end_time: this.formatTime(event.end),
       source: event.source,
       location: event.location || "",
       locationText: this.formatLocationText(event.location),
@@ -282,6 +281,15 @@ export class NoteService {
 
     const formatter = formatters[this.settings.noteDateFormat];
     return formatter ? formatter() : formatters.ISO();
+  }
+
+  private formatTime(date: Date): string {
+    const options: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: this.settings.noteTimeFormat === '12h'
+    };
+    return date.toLocaleTimeString([], options);
   }
 
   private cleanDescription(description: string): string {

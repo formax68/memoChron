@@ -6,6 +6,7 @@ import {
   DEFAULT_NOTE_LOCATION,
   DEFAULT_NOTE_TITLE_FORMAT,
   DEFAULT_NOTE_DATE_FORMAT,
+  DEFAULT_NOTE_TIME_FORMAT,
   DEFAULT_FRONTMATTER,
   DEFAULT_TAGS,
   DEFAULT_FIRST_DAY_OF_WEEK
@@ -25,6 +26,7 @@ export interface MemoChronSettings {
   noteTitleFormat: string;
   refreshInterval: number;
   noteDateFormat: string;
+  noteTimeFormat: '12h' | '24h';
   defaultFrontmatter: string;
   defaultTags: string[];
   noteTemplate: string;
@@ -42,6 +44,7 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   noteTitleFormat: DEFAULT_NOTE_TITLE_FORMAT,
   refreshInterval: DEFAULT_REFRESH_INTERVAL,
   noteDateFormat: DEFAULT_NOTE_DATE_FORMAT,
+  noteTimeFormat: DEFAULT_NOTE_TIME_FORMAT,
   defaultFrontmatter: DEFAULT_FRONTMATTER,
   defaultTags: DEFAULT_TAGS,
   noteTemplate: `# {{event_title}}

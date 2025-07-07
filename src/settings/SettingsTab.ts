@@ -62,6 +62,7 @@ export class SettingsTab extends PluginSettingTab {
     this.renderFolderPathTemplate();
     this.renderNoteTitleFormat();
     this.renderNoteDateFormat();
+    this.renderNoteTimeFormat();
     this.renderDefaultFrontmatter();
     this.renderNoteTemplate();
     this.renderDefaultTags();
@@ -631,6 +632,31 @@ export class SettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.noteDateFormat = value;
             await this.plugin.saveSettings();
+          });
+      });
+  }
+
+  private renderNoteTimeFormat(): void {
+    const timeFormats = [
+      { value: "24h", label: "24-hour (13:30)" },
+      { value: "12h", label: "12-hour (1:30 PM)" },
+    ];
+
+    new Setting(this.containerEl)
+      .setName("Note time format")
+      .setDesc("Choose how times appear in event notes and calendar view")
+      .addDropdown((dropdown) => {
+        timeFormats.forEach(({ value, label }) => {
+          dropdown.addOption(value, label);
+        });
+
+        dropdown
+          .setValue(this.plugin.settings.noteTimeFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.noteTimeFormat = value as '12h' | '24h';
+            await this.plugin.saveSettings();
+            // Refresh the calendar view to show the new time format
+            this.plugin.calendarView?.refreshEvents();
           });
       });
   }

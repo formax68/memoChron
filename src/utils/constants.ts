@@ -9,6 +9,7 @@ export const DEFAULT_VIEW: 'monthly' | 'weekly' = 'monthly';
 export const DEFAULT_NOTE_LOCATION: string = '/';
 export const DEFAULT_NOTE_TITLE_FORMAT: string = '{{start_date}} - {{event_title}}';
 export const DEFAULT_NOTE_DATE_FORMAT: string = 'ISO';
+export const DEFAULT_NOTE_TIME_FORMAT: '12h' | '24h' = '24h';
 export const DEFAULT_FRONTMATTER: string = '---\ntype: event\ndate: {{start_date}}\n---';
 export const DEFAULT_TAGS: string[] = ['event', 'meeting'];
 export const DEFAULT_FIRST_DAY_OF_WEEK: number = 1; // Monday

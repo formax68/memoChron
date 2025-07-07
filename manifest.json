@@ -1,7 +1,7 @@
 {
   "id": "memochron",
   "name": "MemoChron",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "minAppVersion": "1.8.9",
   "description": "Calendar integration and note creation with support for public iCalendar URLs",
   "author": "Michalis Efstratiadis",

@@ -201,6 +201,8 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Note Location**: Set the default folder for event notes
 - **Folder Path Template**: Organize notes in date-based subfolders with customizable patterns
 - **Note Title Format**: Customize how note titles are generated
+- **Note Date Format**: Choose how dates appear in notes (ISO, US, UK, or Long format)
+- **Note Time Format**: Choose between 12-hour (1:30 PM) or 24-hour (13:30) time display
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes
 - **Enable Calendar Colors**: Toggle color differentiation for calendar sources
@@ -226,6 +228,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 
 - **New Template Variables**: Added `{{start_date}}`, `{{end_date}}`, `{{start_date-iso}}`, and `{{end_date-iso}}` for better handling of multi-day events
 - **Enhanced Note Titles**: All template variables can now be used in note title format (previously limited to a subset)
+- **Time Format Control**: New setting to choose between 12-hour (1:30 PM) or 24-hour (13:30) time display throughout the plugin
 - **Updated Defaults**: All default templates now use `{{start_date}}` for clarity (existing templates with `{{date}}` will continue to work)
 - **Backward Compatibility**: The original `{{date}}` variable continues to work as before (uses event start date)
 - **Clearer Event Duration**: Easily display event duration in your templates with separate start and end date variables
