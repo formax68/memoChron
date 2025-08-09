@@ -56,7 +56,8 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderNotesSection(): void {
-    new Setting(this.containerEl).setName("Notes").setHeading();
+    new Setting(this.containerEl).setName("Default note settings").setHeading()
+      .setDesc("These settings are used as defaults for all calendars, unless a calendar has custom note settings enabled.");
 
     this.renderNoteLocation();
     this.renderFolderPathTemplate();
@@ -109,7 +110,11 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource,
     index: number
   ): void {
-    const setting = new Setting(container)
+    const calendarContainer = container.createDiv({
+      cls: "memochron-calendar-source-container",
+    });
+
+    const setting = new Setting(calendarContainer)
       .addText((text) => this.setupUrlInput(text, source, index))
       .addButton((btn) => this.setupFilePickerButton(btn, index))
       .addText((text) => this.setupNameInput(text, source, index))
@@ -127,6 +132,9 @@ export class SettingsTab extends PluginSettingTab {
     setting
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
+
+    // Add custom note settings section
+    this.renderCalendarNoteSettings(calendarContainer, source, index);
   }
 
   private setupUrlInput(
@@ -950,6 +958,123 @@ export class SettingsTab extends PluginSettingTab {
         container.classList.remove("is-visible");
       });
     });
+  }
+
+  private renderCalendarNoteSettings(
+    container: HTMLElement,
+    source: CalendarSource,
+    index: number
+  ): void {
+    const useCustom = source.useCustomNoteSettings || false;
+
+    // Toggle for custom note settings
+    const customNoteSetting = new Setting(container)
+      .setName("Custom note settings")
+      .setDesc("Use custom note settings for this calendar instead of the defaults")
+      .addToggle((toggle) =>
+        toggle.setValue(useCustom).onChange(async (value: boolean) => {
+          this.plugin.settings.calendarUrls[index].useCustomNoteSettings = value;
+          await this.plugin.saveSettings();
+          this.display(); // Refresh to show/hide custom settings
+        })
+      );
+
+    // Only show custom settings if toggle is enabled
+    if (!useCustom) {
+      return;
+    }
+
+    // Create collapsible section for custom settings
+    const customSettingsContainer = container.createDiv({
+      cls: "memochron-custom-note-settings",
+    });
+
+    // Note location
+    new Setting(customSettingsContainer)
+      .setName("Note location")
+      .setDesc("Where to save new event notes for this calendar")
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.settings.noteLocation)
+          .setValue(source.noteLocation || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].noteLocation = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Folder path template
+    new Setting(customSettingsContainer)
+      .setName("Folder path template")
+      .setDesc("Organize notes in date-based subfolders for this calendar")
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.settings.folderPathTemplate || "{YYYY}/{MMM}")
+          .setValue(source.folderPathTemplate || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].folderPathTemplate = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Note title format
+    new Setting(customSettingsContainer)
+      .setName("Note title format")
+      .setDesc("Format for new note titles from this calendar")
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.settings.noteTitleFormat)
+          .setValue(source.noteTitleFormat || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].noteTitleFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Note template
+    new Setting(customSettingsContainer)
+      .setName("Note template")
+      .setDesc("Template for the note content from this calendar")
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("Use default template")
+          .setValue(source.noteTemplate || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].noteTemplate = value;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 8;
+        text.inputEl.cols = 50;
+      });
+
+    // Default frontmatter
+    new Setting(customSettingsContainer)
+      .setName("Default frontmatter")
+      .setDesc("YAML frontmatter to add at the top of each event note from this calendar")
+      .addTextArea((text) => {
+        text
+          .setPlaceholder(this.plugin.settings.defaultFrontmatter)
+          .setValue(source.defaultFrontmatter || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].defaultFrontmatter = value;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 4;
+        text.inputEl.cols = 50;
+      });
+
+    // Attendee links toggle
+    new Setting(customSettingsContainer)
+      .setName("Create links for attendees")
+      .setDesc("Automatically create wiki links [[Name]] for event attendees from this calendar")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(source.enableAttendeeLinks ?? this.plugin.settings.enableAttendeeLinks)
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].enableAttendeeLinks = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }
 

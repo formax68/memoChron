@@ -32,7 +32,7 @@ export default class MemoChron extends Plugin {
       this,
       this.settings.refreshInterval
     );
-    this.noteService = new NoteService(this.app, this.settings);
+    this.noteService = new NoteService(this.app, this);
   }
 
   private registerViews() {

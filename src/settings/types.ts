@@ -18,6 +18,14 @@ export interface CalendarSource {
   enabled: boolean;
   tags: string[];
   color?: string; // Optional color for this calendar
+  // Optional per-calendar note settings
+  useCustomNoteSettings?: boolean; // Toggle to use custom settings instead of global
+  noteLocation?: string;
+  noteTitleFormat?: string;
+  noteTemplate?: string;
+  folderPathTemplate?: string;
+  defaultFrontmatter?: string;
+  enableAttendeeLinks?: boolean;
 }
 
 export interface MemoChronSettings {

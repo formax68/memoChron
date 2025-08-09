@@ -1,6 +1,7 @@
 import { App, TFile, TFolder, normalizePath } from "obsidian";
-import { MemoChronSettings } from "../settings/types";
+import { MemoChronSettings, CalendarSource } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
+import MemoChron from "../main";
 
 interface EventTemplateVariables {
   event_title: string;
@@ -53,8 +54,43 @@ export class NoteService {
 
   constructor(
     private app: App, 
-    private settings: MemoChronSettings
+    private plugin: MemoChron
   ) {}
+
+  private get settings(): MemoChronSettings {
+    return this.plugin.settings;
+  }
+
+  private getCalendarSource(event: CalendarEvent): CalendarSource | undefined {
+    return this.settings.calendarUrls.find(source => source.name === event.source);
+  }
+
+  private getEffectiveSettings(event: CalendarEvent) {
+    const calendarSource = this.getCalendarSource(event);
+    const useCustom = calendarSource?.useCustomNoteSettings || false;
+
+    if (!useCustom || !calendarSource) {
+      // Use global settings
+      return {
+        noteLocation: this.settings.noteLocation,
+        noteTitleFormat: this.settings.noteTitleFormat,
+        noteTemplate: this.settings.noteTemplate,
+        folderPathTemplate: this.settings.folderPathTemplate,
+        defaultFrontmatter: this.settings.defaultFrontmatter,
+        enableAttendeeLinks: this.settings.enableAttendeeLinks,
+      };
+    }
+
+    // Use calendar-specific settings with fallback to global
+    return {
+      noteLocation: calendarSource.noteLocation || this.settings.noteLocation,
+      noteTitleFormat: calendarSource.noteTitleFormat || this.settings.noteTitleFormat,
+      noteTemplate: calendarSource.noteTemplate || this.settings.noteTemplate,
+      folderPathTemplate: calendarSource.folderPathTemplate || this.settings.folderPathTemplate,
+      defaultFrontmatter: calendarSource.defaultFrontmatter || this.settings.defaultFrontmatter,
+      enableAttendeeLinks: calendarSource.enableAttendeeLinks ?? this.settings.enableAttendeeLinks,
+    };
+  }
 
   async createEventNote(event: CalendarEvent): Promise<TFile> {
     const filePath = this.buildFilePath(event);
@@ -89,17 +125,17 @@ export class NoteService {
   }
 
   private buildFilePath(event: CalendarEvent): string {
-    const { noteLocation, noteTitleFormat, folderPathTemplate } = this.settings;
-    const normalizedPath = normalizePath(noteLocation);
-    const title = this.formatTitle(noteTitleFormat, event);
+    const effectiveSettings = this.getEffectiveSettings(event);
+    const normalizedPath = normalizePath(effectiveSettings.noteLocation);
+    const title = this.formatTitle(effectiveSettings.noteTitleFormat, event);
     
     // If folderPathTemplate is empty, use the old behavior
-    if (!folderPathTemplate.trim()) {
+    if (!effectiveSettings.folderPathTemplate.trim()) {
       return normalizePath(`${normalizedPath}/${title}.md`);
     }
     
     // Apply folder template to create subfolder structure
-    const subfolderPath = this.applyFolderTemplate(folderPathTemplate, event);
+    const subfolderPath = this.applyFolderTemplate(effectiveSettings.folderPathTemplate, event);
     return normalizePath(`${normalizedPath}/${subfolderPath}/${title}.md`);
   }
 
@@ -149,15 +185,17 @@ export class NoteService {
   }
 
   private generateNoteContent(event: CalendarEvent): string {
+    const effectiveSettings = this.getEffectiveSettings(event);
     const variables = this.getEventTemplateVariables(event);
     const frontmatter = this.generateFrontmatter(event, variables);
-    const content = this.applyTemplateVariables(this.settings.noteTemplate, variables);
+    const content = this.applyTemplateVariables(effectiveSettings.noteTemplate, variables);
     
     return `${frontmatter}\n${content}`;
   }
 
   private generateFrontmatter(event: CalendarEvent, variables: EventTemplateVariables): string {
-    let frontmatterContent = this.cleanFrontmatter(this.settings.defaultFrontmatter);
+    const effectiveSettings = this.getEffectiveSettings(event);
+    let frontmatterContent = this.cleanFrontmatter(effectiveSettings.defaultFrontmatter);
     frontmatterContent = this.applyTemplateVariables(frontmatterContent, variables);
     
     const tags = this.getTagsForEvent(event);
@@ -198,7 +236,7 @@ export class NoteService {
     const endDateIsoStr = event.end.toISOString().split("T")[0];
     
     const attendeesList = event.attendees || [];
-    const attendeeLinks = this.createAttendeeLinks(attendeesList);
+    const attendeeLinks = this.createAttendeeLinks(attendeesList, event);
     
     return {
       event_title: event.title,
@@ -402,8 +440,9 @@ export class NoteService {
     return str.replace(/[\\/:*?"<>|]/g, "-");
   }
 
-  private createAttendeeLinks(attendees: string[]): string[] {
-    if (!this.settings.enableAttendeeLinks) {
+  private createAttendeeLinks(attendees: string[], event: CalendarEvent): string[] {
+    const effectiveSettings = this.getEffectiveSettings(event);
+    if (!effectiveSettings.enableAttendeeLinks) {
       return attendees;
     }
     
