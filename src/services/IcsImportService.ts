@@ -1,4 +1,4 @@
-import { Component, Event as ICalEvent, parse } from "ical.js";
+import { Component, Event as ICalEvent, parse, Property } from "ical.js";
 import { CalendarEvent } from "./CalendarService";
 import { convertIcalTimeToDate } from "../utils/timezoneUtils";
 
@@ -43,6 +43,7 @@ export class IcsImportService {
         isAllDay: isAllDay,
         description: event.description,
         location: event.location,
+        attendees: IcsImportService.extractAttendees(vevent),
         source: "Imported",
         sourceId: "imported" // Special source ID for imported events
       };
@@ -68,5 +69,30 @@ export class IcsImportService {
     if (jcal && jcal[2] === "date") return true;
     
     return false;
+  }
+
+  private static extractAttendees(vevent: Component): string[] {
+    const attendees: string[] = [];
+    
+    if (!vevent.hasProperty("attendee")) {
+      return attendees;
+    }
+    
+    const attendeeProps = vevent.getAllProperties("attendee");
+    
+    for (const prop of attendeeProps) {
+      const value = prop.getFirstValue();
+      const cn = prop.getParameter("cn"); // Common Name parameter
+      
+      if (cn) {
+        attendees.push(cn);
+      } else if (value) {
+        // Extract email from mailto: format
+        const email = value.replace(/^mailto:/i, "");
+        attendees.push(email);
+      }
+    }
+    
+    return attendees;
   }
 }

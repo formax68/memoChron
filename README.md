@@ -21,6 +21,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - 🔄 **Auto-Refresh**: Keep your calendar data up to date with configurable refresh intervals
 - 🎨 **Customizable**: Configure note templates, locations, and naming conventions
 - 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with an advanced color picker
+- 👥 **Attendee Links**: Automatically create wiki links for event attendees
 
 ![settings](screenshots/settings.png)
 
@@ -129,6 +130,11 @@ In the plugin settings, you can customize:
   - {{description}}
   - {{location}}
   - {{source}}
+  - {{attendees}} - Comma-separated list of attendee names
+  - {{attendees_list}} - Bullet list of attendee names
+  - {{attendees_count}} - Number of attendees
+  - {{attendees_links}} - Comma-separated wiki links (when enabled)
+  - {{attendees_links_list}} - Bullet list of wiki links (when enabled)
 
 ### Multi-Day Event Support
 
@@ -153,6 +159,36 @@ MemoChron now supports better handling of multi-day events with dedicated templa
 ```
 
 This makes it easy to see at a glance when multi-day conferences, trips, or extended events begin and end.
+
+### Attendee Support
+
+MemoChron can extract attendee information from calendar events and optionally create wiki links for them:
+
+**Attendee Variables:**
+- **{{attendees}}** - Shows all attendees as a comma-separated list
+- **{{attendees_list}}** - Shows attendees as a bullet list
+- **{{attendees_count}}** - Shows the number of attendees
+- **{{attendees_links}}** - Creates wiki links for attendees (when enabled in settings)
+- **{{attendees_links_list}}** - Creates a bullet list of wiki links
+
+**Example Template with Attendees:**
+```markdown
+# {{event_title}}
+
+**Date**: {{start_date}}  
+**Time**: {{start_time}} - {{end_time}}  
+**Location**: {{location}}
+
+## Attendees ({{attendees_count}})
+{{attendees_links_list}}
+
+## Notes
+```
+
+**Enabling Attendee Links:**
+1. Go to Settings > MemoChron > Notes
+2. Enable "Create links for attendees"
+3. Links will be created as `[[Name]]` - Obsidian will find the notes regardless of their folder location
 
 ### Organizing Notes with Folder Templates
 
@@ -206,6 +242,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes
 - **Enable Calendar Colors**: Toggle color differentiation for calendar sources
+- **Create Links for Attendees**: Automatically create wiki links for event attendees
   - When enabled, each calendar gets a customizable color
   - Colors appear as dots in the calendar view and left borders in the agenda view
   - Click the color button to open an advanced visual color picker featuring:
@@ -221,6 +258,16 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.6.0
+
+### 👥 Attendee Support
+
+- **Extract Attendees**: Automatically extract attendee information from calendar events
+- **Wiki Links**: Optionally create Obsidian wiki links for attendees
+- **New Variables**: Added 5 new template variables for attendee information
+- **Flexible Organization**: Links use simple `[[Name]]` format - organize people notes anywhere in your vault
+- **ICS Import Support**: Attendee extraction works with both calendar feeds and imported ICS files
 
 ## What's New in v1.5.1
 

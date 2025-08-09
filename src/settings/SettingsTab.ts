@@ -65,6 +65,7 @@ export class SettingsTab extends PluginSettingTab {
     this.renderNoteTimeFormat();
     this.renderDefaultFrontmatter();
     this.renderNoteTemplate();
+    this.renderAttendeeSettings();
     this.renderDefaultTags();
   }
 
@@ -682,7 +683,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Note template")
       .setDesc(
-        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
+        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_count}}"
       )
       .addTextArea((text) => {
         text
@@ -694,6 +695,20 @@ export class SettingsTab extends PluginSettingTab {
         text.inputEl.rows = 10;
         text.inputEl.cols = 50;
       });
+  }
+
+  private renderAttendeeSettings(): void {
+    new Setting(this.containerEl)
+      .setName("Create links for attendees")
+      .setDesc("Automatically create wiki links [[Name]] for event attendees. Obsidian will find the notes regardless of their folder location.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.enableAttendeeLinks)
+          .onChange(async (value) => {
+            this.plugin.settings.enableAttendeeLinks = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 
   private renderFolderPathTemplate(): void {

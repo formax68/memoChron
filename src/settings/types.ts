@@ -36,6 +36,7 @@ export interface MemoChronSettings {
   enableCalendarColors: boolean; // Global toggle for calendar colors feature
   showDailyNoteInAgenda: boolean; // Show daily note as an entry in the agenda
   dailyNoteColor?: string; // Color for daily note entry when calendar colors are enabled
+  enableAttendeeLinks: boolean; // Create wiki links for attendees
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -65,4 +66,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   folderPathTemplate: "", // Empty by default for backwards compatibility
   enableCalendarColors: false, // Disabled by default
   showDailyNoteInAgenda: false, // Disabled by default
+  enableAttendeeLinks: false, // Disabled by default
 };

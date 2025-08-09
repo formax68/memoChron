@@ -16,6 +16,11 @@ interface EventTemplateVariables {
   location: string;
   locationText: string;
   description: string;
+  attendees: string;
+  attendees_list: string;
+  attendees_links: string;
+  attendees_links_list: string;
+  attendees_count: string;
 }
 
 interface FolderTemplateVariables {
@@ -32,6 +37,7 @@ interface FolderTemplateVariables {
   Q: string;
   source: string;
   event_title: string;
+  attendees_count: string;
 }
 
 export class NoteService {
@@ -191,6 +197,9 @@ export class NoteService {
     const endDateStr = this.formatDate(event.end);
     const endDateIsoStr = event.end.toISOString().split("T")[0];
     
+    const attendeesList = event.attendees || [];
+    const attendeeLinks = this.createAttendeeLinks(attendeesList);
+    
     return {
       event_title: event.title,
       date: dateStr,
@@ -205,6 +214,11 @@ export class NoteService {
       location: event.location || "",
       locationText: this.formatLocationText(event.location),
       description: this.cleanDescription(event.description || ""),
+      attendees: attendeesList.join(", "),
+      attendees_list: attendeesList.map(a => `- ${a}`).join("\n"),
+      attendees_links: attendeeLinks.join(", "),
+      attendees_links_list: attendeeLinks.map(link => `- ${link}`).join("\n"),
+      attendees_count: attendeesList.length.toString(),
     };
   }
 
@@ -373,6 +387,7 @@ export class NoteService {
       Q: quarter.toString(),
       source: this.sanitizeFileName(event.source),
       event_title: this.sanitizeFileName(event.title),
+      attendees_count: (event.attendees?.length || 0).toString(),
     };
   }
 
@@ -385,5 +400,17 @@ export class NoteService {
 
   private sanitizeFileName(str: string): string {
     return str.replace(/[\\/:*?"<>|]/g, "-");
+  }
+
+  private createAttendeeLinks(attendees: string[]): string[] {
+    if (!this.settings.enableAttendeeLinks) {
+      return attendees;
+    }
+    
+    return attendees.map(attendee => {
+      // Simply wrap the attendee name in wiki link brackets
+      // Obsidian will find the note regardless of its location
+      return `[[${attendee}]]`;
+    });
   }
 }

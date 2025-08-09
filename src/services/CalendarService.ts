@@ -19,6 +19,7 @@ export interface CalendarEvent {
   isAllDay: boolean;
   description?: string;
   location?: string;
+  attendees?: string[]; // List of attendee emails/names
   source: string;
   sourceId: string; // Unique identifier for the calendar source
   color?: string; // Color assigned to this event's calendar
@@ -517,6 +518,7 @@ export class CalendarService {
           isAllDay: isAllDay,
           description: event.description,
           location: event.location,
+          attendees: this.extractAttendees(vevent),
           source: source.name,
           sourceId: source.url,
           color: source.color,
@@ -549,6 +551,7 @@ export class CalendarService {
         isAllDay: isAllDay,
         description: event.description,
         location: event.location,
+        attendees: this.extractAttendees(event.component),
         source: source.name,
         sourceId: source.url,
         color: source.color,
@@ -601,6 +604,31 @@ export class CalendarService {
     );
   }
 
+  private extractAttendees(vevent: Component): string[] {
+    const attendees: string[] = [];
+    
+    if (!vevent.hasProperty("attendee")) {
+      return attendees;
+    }
+    
+    const attendeeProps = vevent.getAllProperties("attendee");
+    
+    for (const prop of attendeeProps) {
+      const value = prop.getFirstValue();
+      const cn = prop.getParameter("cn"); // Common Name parameter
+      
+      if (cn) {
+        attendees.push(cn);
+      } else if (value) {
+        // Extract email from mailto: format
+        const email = value.replace(/^mailto:/i, "");
+        attendees.push(email);
+      }
+    }
+    
+    return attendees;
+  }
+
   private processException(
     exception: ICalEvent | undefined,
     source: CalendarSource,
@@ -628,6 +656,7 @@ export class CalendarService {
         isAllDay: isAllDay,
         description: exception.description,
         location: exception.location,
+        attendees: this.extractAttendees(exception.component),
         source: source.name,
         sourceId: source.url,
         color: source.color,
