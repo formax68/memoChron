@@ -71,7 +71,7 @@ export class SettingsTab extends PluginSettingTab {
 
   private renderDailyNotesSection(): void {
     new Setting(this.containerEl).setName("Daily notes").setHeading();
-    
+
     this.renderShowDailyNoteInAgenda();
   }
 
@@ -306,10 +306,12 @@ export class SettingsTab extends PluginSettingTab {
 
   private renderDailyNoteColorPicker(container: HTMLElement) {
     const baseColors = this.getObsidianBaseColors();
-    const currentColor = this.plugin.settings.dailyNoteColor || 
+    const currentColor =
+      this.plugin.settings.dailyNoteColor ||
       getComputedStyle(document.documentElement)
-        .getPropertyValue('--interactive-accent')
-        .trim() || '#7c3aed';
+        .getPropertyValue("--interactive-accent")
+        .trim() ||
+      "#7c3aed";
 
     // Render color swatches
     baseColors.forEach((color) => {
@@ -534,12 +536,13 @@ export class SettingsTab extends PluginSettingTab {
                   source.color = `hsl(${hue}, 70%, 50%)`;
                 }
               });
-              
+
               // Set default daily note color if not set
               if (!this.plugin.settings.dailyNoteColor) {
-                this.plugin.settings.dailyNoteColor = getComputedStyle(document.documentElement)
-                  .getPropertyValue('--interactive-accent')
-                  .trim() || '#7c3aed';
+                this.plugin.settings.dailyNoteColor =
+                  getComputedStyle(document.documentElement)
+                    .getPropertyValue("--interactive-accent")
+                    .trim() || "#7c3aed";
               }
             }
 
@@ -654,7 +657,7 @@ export class SettingsTab extends PluginSettingTab {
         dropdown
           .setValue(this.plugin.settings.noteTimeFormat)
           .onChange(async (value) => {
-            this.plugin.settings.noteTimeFormat = value as '12h' | '24h';
+            this.plugin.settings.noteTimeFormat = value as "12h" | "24h";
             await this.plugin.saveSettings();
             // Refresh the calendar view to show the new time format
             this.plugin.calendarView?.refreshEvents();
@@ -683,7 +686,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Note template")
       .setDesc(
-        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_count}}"
+        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_links_list}}, {{attendees_count}}"
       )
       .addTextArea((text) => {
         text
@@ -700,7 +703,9 @@ export class SettingsTab extends PluginSettingTab {
   private renderAttendeeSettings(): void {
     new Setting(this.containerEl)
       .setName("Create links for attendees")
-      .setDesc("Automatically create wiki links [[Name]] for event attendees. Obsidian will find the notes regardless of their folder location.")
+      .setDesc(
+        "Automatically create wiki links [[Name]] for event attendees. Obsidian will find the notes regardless of their folder location."
+      )
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.enableAttendeeLinks)
