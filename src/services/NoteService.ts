@@ -41,7 +41,6 @@ interface FolderTemplateVariables {
 }
 
 export class NoteService {
-  private static readonly NOTES_SECTION_MARKER = "## 📝 Notes";
   private static readonly FRONTMATTER_DELIMITER = "---";
   private static readonly TEAMS_SEPARATOR = "________________";
   
@@ -61,10 +60,9 @@ export class NoteService {
 
     try {
       await this.ensureParentFolder(filePath);
-      
+
       const existingFile = this.app.vault.getAbstractFileByPath(filePath);
       if (existingFile instanceof TFile) {
-        await this.updateExistingNote(existingFile, event);
         return existingFile;
       }
 
@@ -74,6 +72,15 @@ export class NoteService {
       console.error("Error creating note:", error);
       throw error;
     }
+  }
+
+  getExistingEventNote(event: CalendarEvent): TFile | null {
+    const filePath = this.buildFilePath(event);
+    const existingFile = this.app.vault.getAbstractFileByPath(filePath);
+    if (existingFile instanceof TFile) {
+      return existingFile;
+    }
+    return null;
   }
 
   async getAllFolders(): Promise<string[]> {
@@ -117,35 +124,6 @@ export class NoteService {
         this.collectFolderPaths(child, folders);
       }
     });
-  }
-
-  private async updateExistingNote(
-    file: TFile,
-    event: CalendarEvent
-  ): Promise<void> {
-    const existingContent = await this.app.vault.read(file);
-    const preservedNotes = this.extractNotesSection(existingContent);
-    const newContent = this.generateNoteContent(event);
-    const updatedContent = this.mergeContentWithNotes(newContent, preservedNotes);
-    
-    await this.app.vault.modify(file, updatedContent);
-  }
-
-  private extractNotesSection(content: string): string {
-    const notesIndex = content.indexOf(NoteService.NOTES_SECTION_MARKER);
-    if (notesIndex === -1) return "";
-    
-    return content
-      .slice(notesIndex + NoteService.NOTES_SECTION_MARKER.length)
-      .trim();
-  }
-
-  private mergeContentWithNotes(newContent: string, preservedNotes: string): string {
-    const notesIndex = newContent.indexOf(NoteService.NOTES_SECTION_MARKER);
-    if (notesIndex === -1) return newContent;
-    
-    const baseContent = newContent.slice(0, notesIndex + NoteService.NOTES_SECTION_MARKER.length);
-    return baseContent + "\n" + (preservedNotes ? "\n" + preservedNotes : "");
   }
 
   private generateNoteContent(event: CalendarEvent): string {

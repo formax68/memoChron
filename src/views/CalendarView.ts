@@ -653,9 +653,17 @@ export class CalendarView extends ItemView {
       return;
     }
 
-    const file = await this.plugin.noteService.createEventNote(event);
+    let file = this.plugin.noteService.getExistingEventNote(event);
+    const isNewNote = !file;
+    
     if (!file) {
-      throw new Error("Failed to create or update note");
+      file = await this.plugin.noteService.createEventNote(event);
+      if (!file) {
+        throw new Error("Failed to create note");
+      }
+      new Notice(`Created new note: ${file.basename}`);
+    } else {
+      new Notice(`Opened existing note: ${file.basename}`);
     }
 
     const leaf = this.app.workspace.getLeaf("tab");
