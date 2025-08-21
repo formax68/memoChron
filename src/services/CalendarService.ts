@@ -266,11 +266,27 @@ export class CalendarService {
       const response = await this.fetchCalendarData(source);
 
       if (response.status !== 200) {
-        console.error(
-          `Failed to fetch calendar ${source.name}: ${response.status} ${
-            response.text || "Unknown error"
-          }`
-        );
+        // More detailed error messaging for common issues
+        if (response.status === 403) {
+          console.error(`Calendar ${source.name} access denied. The calendar may no longer be public or requires authentication.`);
+          new Notice(`MemoChron: Cannot access calendar "${source.name}". Please check if it's still publicly shared.`);
+        } else if (response.status === 404) {
+          console.error(`Calendar ${source.name} not found at URL: ${source.url}`);
+          new Notice(`MemoChron: Calendar "${source.name}" not found. Please check the URL.`);
+        } else {
+          console.error(
+            `Failed to fetch calendar ${source.name}: ${response.status} ${
+              response.text || "Unknown error"
+            }`
+          );
+        }
+        return [];
+      }
+
+      // Validate that we got actual calendar data
+      if (!response.text || !response.text.includes('BEGIN:VCALENDAR')) {
+        console.error(`Calendar ${source.name} returned invalid data. Expected iCalendar format.`);
+        new Notice(`MemoChron: Calendar "${source.name}" returned invalid data.`);
         return [];
       }
 
@@ -278,6 +294,14 @@ export class CalendarService {
     } catch (error) {
       console.error(`Error fetching calendar ${source.name}:`, error);
       this.logPlatformInfo();
+      
+      // Check for specific error types
+      if (error.message && error.message.includes('CORS')) {
+        new Notice(`MemoChron: Calendar "${source.name}" blocked by CORS policy.`);
+      } else if (error.message && error.message.includes('network')) {
+        new Notice(`MemoChron: Network error fetching calendar "${source.name}".`);
+      }
+      
       return [];
     }
   }
@@ -295,6 +319,73 @@ export class CalendarService {
   }
 
   private async fetchRemoteCalendar(url: string) {
+    // Special handling for Outlook/Office365 URLs
+    if (url.includes('outlook.office365.com') || url.includes('outlook.live.com')) {
+      console.log(`Fetching Outlook calendar from: ${url}`);
+      
+      // First attempt: Try with simple browser-like headers
+      let response = await requestUrl({
+        url,
+        method: "GET",
+        headers: {
+          "Accept": "*/*",
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+        },
+        throw: false,
+      });
+      
+      console.log(`Outlook response status: ${response.status}`);
+      console.log(`Response content type: ${response.headers?.['content-type'] || 'unknown'}`);
+      console.log(`Response text preview: ${response.text?.substring(0, 200)}`);
+      
+      // Check if we got an HTML error page instead of calendar data
+      if (response.text && response.text.includes('<!DOCTYPE html>')) {
+        console.error(`Outlook calendar returned HTML error page for ${url}`);
+        console.error(`Full HTML response: ${response.text.substring(0, 500)}`);
+        
+        // Try with no headers at all (let Obsidian use defaults)
+        console.log("Retrying with no custom headers...");
+        response = await requestUrl({
+          url,
+          method: "GET",
+          throw: false,
+        });
+        
+        console.log(`Retry response status: ${response.status}`);
+        console.log(`Retry response preview: ${response.text?.substring(0, 200)}`);
+        
+        if (response.text && response.text.includes('BEGIN:VCALENDAR')) {
+          console.log("Success with no headers!");
+          return response;
+        }
+        
+        // Last attempt: Try with text/calendar accept header
+        console.log("Final attempt with text/calendar accept header...");
+        response = await requestUrl({
+          url,
+          method: "GET",
+          headers: {
+            "Accept": "text/calendar",
+          },
+          throw: false,
+        });
+        
+        if (response.text && response.text.includes('BEGIN:VCALENDAR')) {
+          console.log("Success with text/calendar header!");
+          return response;
+        }
+        
+        new Notice("MemoChron: Outlook calendar access failed. The URL works in browser but not in Obsidian. This may be due to Obsidian's network restrictions.");
+        return {
+          status: 403,
+          text: "Outlook calendar blocked - please check console for details"
+        };
+      }
+      
+      return response;
+    }
+    
+    // Standard request for other calendar providers
     return requestUrl({
       url,
       method: "GET",
