@@ -321,8 +321,6 @@ export class CalendarService {
   private async fetchRemoteCalendar(url: string) {
     // Special handling for Outlook/Office365 URLs
     if (url.includes('outlook.office365.com') || url.includes('outlook.live.com')) {
-      console.log(`Fetching Outlook calendar from: ${url}`);
-      
       // First attempt: Try with simple browser-like headers
       let response = await requestUrl({
         url,
@@ -334,33 +332,31 @@ export class CalendarService {
         throw: false,
       });
       
-      console.log(`Outlook response status: ${response.status}`);
-      console.log(`Response content type: ${response.headers?.['content-type'] || 'unknown'}`);
-      console.log(`Response text preview: ${response.text?.substring(0, 200)}`);
+      // Check if we got valid calendar data on first try
+      if (response.text && response.text.includes('BEGIN:VCALENDAR')) {
+        return response;
+      }
       
       // Check if we got an HTML error page instead of calendar data
-      if (response.text && response.text.includes('<!DOCTYPE html>')) {
-        console.error(`Outlook calendar returned HTML error page for ${url}`);
-        console.error(`Full HTML response: ${response.text.substring(0, 500)}`);
+      // More robust check: HTML response typically has content-type text/html
+      const isHtmlResponse = (response.headers?.['content-type']?.includes('text/html')) ||
+                            (response.text && (response.text.includes('<!DOCTYPE html') || response.text.includes('<html')));
+      
+      if (isHtmlResponse) {
+        console.error(`Outlook calendar returned HTML error page for ${url.substring(0, 50)}...`);
         
         // Try with no headers at all (let Obsidian use defaults)
-        console.log("Retrying with no custom headers...");
         response = await requestUrl({
           url,
           method: "GET",
           throw: false,
         });
         
-        console.log(`Retry response status: ${response.status}`);
-        console.log(`Retry response preview: ${response.text?.substring(0, 200)}`);
-        
         if (response.text && response.text.includes('BEGIN:VCALENDAR')) {
-          console.log("Success with no headers!");
           return response;
         }
         
         // Last attempt: Try with text/calendar accept header
-        console.log("Final attempt with text/calendar accept header...");
         response = await requestUrl({
           url,
           method: "GET",
@@ -371,14 +367,15 @@ export class CalendarService {
         });
         
         if (response.text && response.text.includes('BEGIN:VCALENDAR')) {
-          console.log("Success with text/calendar header!");
           return response;
         }
         
         new Notice("MemoChron: Outlook calendar access failed. The URL works in browser but not in Obsidian. This may be due to Obsidian's network restrictions.");
+        // Return proper response structure
         return {
+          ...response,
           status: 403,
-          text: "Outlook calendar blocked - please check console for details"
+          text: ""
         };
       }
       
