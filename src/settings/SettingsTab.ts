@@ -1072,6 +1072,12 @@ class CalendarNotesSettingsModal extends Modal {
             } else {
               this.source.notesSettings.useCustomSettings = value;
             }
+
+            // If enabling custom settings, copy default values
+            if (value) {
+              this.copyDefaultSettingsToCustom();
+            }
+
             await this.plugin.saveSettings();
             this.onOpen(); // Refresh the modal
           });
@@ -1266,6 +1272,31 @@ class CalendarNotesSettingsModal extends Modal {
       .split(",")
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
+  }
+
+  private copyDefaultSettingsToCustom(): void {
+    if (!this.source.notesSettings) {
+      this.source.notesSettings = { useCustomSettings: true };
+    }
+
+    // Copy all default settings to custom settings
+    this.source.notesSettings.noteLocation = this.plugin.settings.noteLocation;
+    this.source.notesSettings.noteTitleFormat =
+      this.plugin.settings.noteTitleFormat;
+    this.source.notesSettings.noteDateFormat =
+      this.plugin.settings.noteDateFormat;
+    this.source.notesSettings.noteTimeFormat =
+      this.plugin.settings.noteTimeFormat;
+    this.source.notesSettings.defaultFrontmatter =
+      this.plugin.settings.defaultFrontmatter;
+    this.source.notesSettings.defaultTags = [
+      ...this.plugin.settings.defaultTags,
+    ];
+    this.source.notesSettings.noteTemplate = this.plugin.settings.noteTemplate;
+    this.source.notesSettings.folderPathTemplate =
+      this.plugin.settings.folderPathTemplate;
+    this.source.notesSettings.enableAttendeeLinks =
+      this.plugin.settings.enableAttendeeLinks;
   }
 
   private setupPathSuggestions(
