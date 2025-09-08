@@ -252,7 +252,8 @@ export class SettingsTab extends PluginSettingTab {
               this.app,
               this.plugin,
               source,
-              index
+              index,
+              () => this.display() // Refresh the main settings page
             );
             modal.open();
           });
@@ -1035,17 +1036,20 @@ class CalendarNotesSettingsModal extends Modal {
   private source: CalendarSource;
   private index: number;
   private plugin: MemoChron;
+  private onSettingsChange?: () => void;
 
   constructor(
     app: App,
     plugin: MemoChron,
     source: CalendarSource,
-    index: number
+    index: number,
+    onSettingsChange?: () => void
   ) {
     super(app);
     this.plugin = plugin;
     this.source = source;
     this.index = index;
+    this.onSettingsChange = onSettingsChange;
   }
 
   onOpen() {
@@ -1080,6 +1084,10 @@ class CalendarNotesSettingsModal extends Modal {
 
             await this.plugin.saveSettings();
             this.onOpen(); // Refresh the modal
+            // Refresh the main settings page to update the description
+            if (this.onSettingsChange) {
+              this.onSettingsChange();
+            }
           });
       });
 
