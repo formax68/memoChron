@@ -175,7 +175,10 @@
 }
 
 /* Make daily note dot slightly larger when it's the only dot */
-.memochron-event-dots-container:has(.daily-note-dot):not(:has(.memochron-event-dot:not(.daily-note-dot))) .daily-note-dot {
+.memochron-event-dots-container:has(.daily-note-dot):not(
+    :has(.memochron-event-dot:not(.daily-note-dot))
+  )
+  .daily-note-dot {
   font-size: 1.2em;
 }
 
@@ -530,16 +533,16 @@
   .memochron-base-colors-grid {
     grid-template-columns: repeat(4, 1fr);
   }
-  
+
   .memochron-enhanced-color-picker {
     min-width: 280px;
   }
-  
+
   .memochron-base-color-swatch {
     width: 35px;
     height: 35px;
   }
-  
+
   .memochron-spectrum-container canvas {
     max-width: 100%;
     height: auto;
@@ -646,12 +649,12 @@
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .memochron-calendar-list .setting-item .setting-item-control > * {
     width: 100%;
     margin-bottom: var(--size-4-1) !important;
   }
-  
+
   .memochron-calendar-list .setting-item input[type="text"] {
     min-width: auto;
   }
@@ -774,4 +777,31 @@
     font-size: 0.9em;
     margin: 0 0.35rem;
   }
+}
+
+/* Calendar-specific notes settings styling */
+.memochron-calendar-notes-settings {
+  margin-top: var(--memochron-padding-sm);
+  padding: var(--memochron-padding-sm);
+  background: var(--background-secondary);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.memochron-calendar-notes-settings .setting-item {
+  margin-bottom: var(--memochron-padding-xs);
+}
+
+.memochron-custom-settings-indicator {
+  color: var(--interactive-accent);
+  font-weight: bold;
+}
+
+/* Calendar notes settings modal styling */
+.modal-content .setting-item {
+  margin-bottom: var(--memochron-padding-md);
+}
+
+.modal-content .setting-item-description {
+  margin-bottom: var(--memochron-padding-xs);
 }

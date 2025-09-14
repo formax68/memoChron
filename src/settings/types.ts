@@ -9,8 +9,21 @@ import {
   DEFAULT_NOTE_TIME_FORMAT,
   DEFAULT_FRONTMATTER,
   DEFAULT_TAGS,
-  DEFAULT_FIRST_DAY_OF_WEEK
+  DEFAULT_FIRST_DAY_OF_WEEK,
 } from "../utils/constants";
+
+export interface CalendarNotesSettings {
+  useCustomSettings: boolean; // Whether this calendar uses custom notes settings
+  noteLocation?: string; // Override default note location
+  noteTitleFormat?: string; // Override default title format
+  noteDateFormat?: string; // Override default date format
+  noteTimeFormat?: "12h" | "24h"; // Override default time format
+  defaultFrontmatter?: string; // Override default frontmatter
+  defaultTags?: string[]; // Override default tags
+  noteTemplate?: string; // Override default template
+  folderPathTemplate?: string; // Override default folder path template
+  enableAttendeeLinks?: boolean; // Override default attendee links setting
+}
 
 export interface CalendarSource {
   url: string;
@@ -18,6 +31,7 @@ export interface CalendarSource {
   enabled: boolean;
   tags: string[];
   color?: string; // Optional color for this calendar
+  notesSettings?: CalendarNotesSettings; // Optional custom notes settings
 }
 
 export interface MemoChronSettings {
@@ -26,7 +40,7 @@ export interface MemoChronSettings {
   noteTitleFormat: string;
   refreshInterval: number;
   noteDateFormat: string;
-  noteTimeFormat: '12h' | '24h';
+  noteTimeFormat: "12h" | "24h";
   defaultFrontmatter: string;
   defaultTags: string[];
   noteTemplate: string;

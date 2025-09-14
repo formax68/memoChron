@@ -22,6 +22,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - 🎨 **Customizable**: Configure note templates, locations, and naming conventions
 - 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with an advanced color picker
 - 👥 **Attendee Links**: Automatically create wiki links for event attendees
+- ⚙️ **Calendar-Specific Configuration**: Override default settings for individual calendars
 
 ![settings](screenshots/settings.png)
 
@@ -160,11 +161,49 @@ MemoChron now supports better handling of multi-day events with dedicated templa
 
 This makes it easy to see at a glance when multi-day conferences, trips, or extended events begin and end.
 
+### Calendar-Specific Configuration
+
+Each calendar can have its own custom notes settings, allowing you to override the default configuration for specific calendars. This is perfect for managing different types of calendars (work, personal, projects) with different note templates and organization patterns.
+
+#### Setting Up Calendar-Specific Configuration
+
+1. Go to Settings > MemoChron
+2. Find the calendar you want to configure
+3. Click "Configure custom settings" (or "Edit custom settings" if already configured)
+4. Toggle "Use custom notes settings" to enable calendar-specific configuration
+5. Configure any of the following settings for this calendar:
+
+**Available Calendar-Specific Settings:**
+
+- **Note Location**: Override where notes for this calendar are saved
+- **Note Title Format**: Custom title format for this calendar's events
+- **Note Date Format**: Different date format for this calendar (ISO, US, UK, Long)
+- **Note Time Format**: 12-hour or 24-hour time format for this calendar
+- **Default Frontmatter**: Custom YAML frontmatter for this calendar's notes
+- **Default Tags**: Calendar-specific tags added to all notes from this calendar
+- **Note Template**: Custom note template for this calendar's events
+- **Folder Path Template**: Custom folder organization for this calendar's notes
+- **Attendee Links**: Enable/disable attendee links for this calendar
+
+#### Use Cases
+
+- **Work Calendar**: Use professional templates with work-specific tags and folder organization
+- **Personal Calendar**: Use casual templates with personal tags and different folder structure
+- **Project Calendar**: Use project-specific templates with custom frontmatter and organization
+- **Team Calendar**: Enable attendee links and use team-focused templates
+
+**Example Configuration:**
+
+- Work Calendar: Professional template, "work" tags, organized by `{YYYY}/{MMM}` folders
+- Personal Calendar: Casual template, "personal" tags, organized by `{YYYY}/Personal` folders
+- Project Calendar: Project template, project-specific tags, organized by `{source}/{YYYY}` folders
+
 ### Attendee Support
 
 MemoChron can extract attendee information from calendar events and optionally create wiki links for them:
 
 **Attendee Variables:**
+
 - **{{attendees}}** - Shows all attendees as a comma-separated list
 - **{{attendees_list}}** - Shows attendees as a bullet list
 - **{{attendees_count}}** - Shows the number of attendees
@@ -172,6 +211,7 @@ MemoChron can extract attendee information from calendar events and optionally c
 - **{{attendees_links_list}}** - Creates a bullet list of wiki links
 
 **Example Template with Attendees:**
+
 ```markdown
 # {{event_title}}
 
@@ -180,12 +220,14 @@ MemoChron can extract attendee information from calendar events and optionally c
 **Location**: {{location}}
 
 ## Attendees ({{attendees_count}})
+
 {{attendees_links_list}}
 
 ## Notes
 ```
 
 **Enabling Attendee Links:**
+
 1. Go to Settings > MemoChron > Notes
 2. Enable "Create links for attendees"
 3. Links will be created as `[[Name]]` - Obsidian will find the notes regardless of their folder location
@@ -231,6 +273,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 ### Settings
 
 - **Calendar Sources**: Add, remove, or toggle calendars
+- **Calendar-Specific Settings**: Override default settings for individual calendars
 - **First Day of the Week**: Choose which day the calendar week starts on
 - **Hide Calendar**: Show only the agenda view without the month calendar grid
 - **Refresh Interval**: Set how often calendar data updates
@@ -258,6 +301,18 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.7.0
+
+### ⚙️ Calendar-Specific Configuration
+
+- **Individual Calendar Settings**: Override default settings for each calendar independently
+- **Custom Templates**: Use different note templates for different calendars (work, personal, projects)
+- **Flexible Organization**: Set custom folder organization patterns per calendar
+- **Custom Tags & Frontmatter**: Calendar-specific tags and YAML frontmatter
+- **Format Overrides**: Different date/time formats per calendar
+- **Attendee Link Control**: Enable/disable attendee links per calendar
+- **Easy Setup**: Simple toggle to enable custom settings with automatic default copying
 
 ## What's New in v1.6.0
 

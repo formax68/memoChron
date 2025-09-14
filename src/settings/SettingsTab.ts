@@ -12,7 +12,7 @@ import {
   SuggestModal,
 } from "obsidian";
 import MemoChron from "../main";
-import { CalendarSource } from "./types";
+import { CalendarSource, CalendarNotesSettings } from "./types";
 
 export class SettingsTab extends PluginSettingTab {
   constructor(app: App, private plugin: MemoChron) {
@@ -127,6 +127,9 @@ export class SettingsTab extends PluginSettingTab {
     setting
       .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
       .addButton((btn) => this.setupRemoveButton(btn, index));
+
+    // Add calendar-specific notes settings
+    this.renderCalendarNotesSettings(container, source, index);
   }
 
   private setupUrlInput(
@@ -217,6 +220,52 @@ export class SettingsTab extends PluginSettingTab {
       await this.plugin.refreshCalendarView();
       this.display();
     });
+  }
+
+  private renderCalendarNotesSettings(
+    container: HTMLElement,
+    source: CalendarSource,
+    index: number
+  ): void {
+    const notesContainer = container.createDiv({
+      cls: "memochron-calendar-notes-settings",
+    });
+
+    const hasCustomSettings = source.notesSettings?.useCustomSettings || false;
+    const settingsButton = new Setting(notesContainer)
+      .setName("Notes settings")
+      .setDesc(
+        hasCustomSettings
+          ? "Custom notes settings enabled"
+          : "Use default notes settings"
+      )
+      .addButton((btn) => {
+        btn
+          .setButtonText(
+            hasCustomSettings
+              ? "Edit custom settings"
+              : "Configure custom settings"
+          )
+          .setIcon(hasCustomSettings ? "settings" : "gear")
+          .onClick(() => {
+            const modal = new CalendarNotesSettingsModal(
+              this.app,
+              this.plugin,
+              source,
+              index,
+              () => this.display() // Refresh the main settings page
+            );
+            modal.open();
+          });
+      });
+
+    // Add a small indicator if custom settings are enabled
+    if (hasCustomSettings) {
+      const indicator = settingsButton.descEl.createSpan({
+        cls: "memochron-custom-settings-indicator",
+        text: " ⚙️",
+      });
+    }
   }
 
   private renderInlineColorPicker(
@@ -979,5 +1028,401 @@ class FilePickerModal extends SuggestModal<TFile> {
 
   onChooseSuggestion(file: TFile) {
     this.onChoose(file);
+  }
+}
+
+// Calendar-specific notes settings modal
+class CalendarNotesSettingsModal extends Modal {
+  private source: CalendarSource;
+  private index: number;
+  private plugin: MemoChron;
+  private onSettingsChange?: () => void;
+  private eventListeners: Array<{
+    element: HTMLElement;
+    event: string;
+    handler: EventListener;
+  }> = [];
+
+  constructor(
+    app: App,
+    plugin: MemoChron,
+    source: CalendarSource,
+    index: number,
+    onSettingsChange?: () => void
+  ) {
+    super(app);
+    this.plugin = plugin;
+    this.source = source;
+    this.index = index;
+    this.onSettingsChange = onSettingsChange;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+
+    // Refresh custom settings if needed
+    this.refreshCustomSettingsIfNeeded();
+
+    contentEl.createEl("h2", {
+      text: `Notes Settings for "${this.source.name}"`,
+    });
+
+    // Toggle for using custom settings
+    new Setting(contentEl)
+      .setName("Use custom notes settings")
+      .setDesc("Override default notes settings for this calendar")
+      .addToggle((toggle) => {
+        const currentSettings = this.source.notesSettings || {
+          useCustomSettings: false,
+        };
+        toggle
+          .setValue(currentSettings.useCustomSettings)
+          .onChange(async (value) => {
+            if (!this.source.notesSettings) {
+              this.source.notesSettings = { useCustomSettings: value };
+            } else {
+              this.source.notesSettings.useCustomSettings = value;
+            }
+
+            // If enabling custom settings, copy default values
+            if (value) {
+              this.copyDefaultSettingsToCustom();
+            }
+
+            await this.plugin.saveSettings();
+            this.onOpen(); // Refresh the modal
+            // Refresh the main settings page to update the description
+            if (this.onSettingsChange) {
+              this.onSettingsChange();
+            }
+          });
+      });
+
+    const currentSettings = this.source.notesSettings || {
+      useCustomSettings: false,
+    };
+    if (currentSettings.useCustomSettings) {
+      this.renderCustomSettings(contentEl);
+    }
+  }
+
+  private renderCustomSettings(container: HTMLElement) {
+    const currentSettings = this.source.notesSettings;
+    if (!currentSettings) {
+      console.error("Custom settings not found when rendering custom settings");
+      return;
+    }
+
+    // Note location
+    const locationSetting = new Setting(container)
+      .setName("Note location")
+      .setDesc(
+        "Where to save notes for this calendar (leave empty to use default)"
+      );
+
+    locationSetting.settingEl.addClass("memochron-setting-item-container");
+
+    const locationInput = new TextComponent(locationSetting.controlEl);
+    locationInput
+      .setPlaceholder(this.plugin.settings.noteLocation)
+      .setValue(currentSettings.noteLocation || "");
+
+    const suggestionContainer = locationSetting.controlEl.createDiv({
+      cls: "memochron-suggestion-container",
+    });
+    suggestionContainer.classList.remove("is-visible");
+
+    this.setupPathSuggestions(
+      locationInput,
+      suggestionContainer,
+      async () => await this.plugin.noteService.getAllFolders(),
+      async (value: string) => {
+        currentSettings.noteLocation = value || undefined;
+        await this.plugin.saveSettings();
+      }
+    );
+
+    // Note title format
+    new Setting(container)
+      .setName("Note title format")
+      .setDesc("Title format for this calendar (leave empty to use default)")
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.settings.noteTitleFormat)
+          .setValue(currentSettings.noteTitleFormat || "")
+          .onChange(async (value) => {
+            currentSettings.noteTitleFormat = value || undefined;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Note date format
+    const dateFormats = [
+      { value: "ISO", label: "ISO (YYYY-MM-DD)" },
+      { value: "US", label: "US (MM/DD/YYYY)" },
+      { value: "UK", label: "UK (DD/MM/YYYY)" },
+      { value: "Long", label: "Long (Month DD, YYYY)" },
+    ];
+
+    new Setting(container)
+      .setName("Note date format")
+      .setDesc("Date format for this calendar")
+      .addDropdown((dropdown) => {
+        dropdown.addOption(
+          "",
+          `Default (${this.plugin.settings.noteDateFormat})`
+        );
+        dateFormats.forEach(({ value, label }) => {
+          dropdown.addOption(value, label);
+        });
+        dropdown
+          .setValue(currentSettings.noteDateFormat || "")
+          .onChange(async (value) => {
+            currentSettings.noteDateFormat = value || undefined;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    // Note time format
+    new Setting(container)
+      .setName("Note time format")
+      .setDesc("Time format for this calendar")
+      .addDropdown((dropdown) => {
+        dropdown.addOption(
+          "",
+          `Default (${this.plugin.settings.noteTimeFormat})`
+        );
+        dropdown.addOption("12h", "12-hour (1:30 PM)");
+        dropdown.addOption("24h", "24-hour (13:30)");
+        dropdown
+          .setValue(currentSettings.noteTimeFormat || "")
+          .onChange(async (value) => {
+            currentSettings.noteTimeFormat =
+              (value as "12h" | "24h") || undefined;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    // Default frontmatter
+    new Setting(container)
+      .setName("Default frontmatter")
+      .setDesc(
+        "YAML frontmatter for this calendar (leave empty to use default)"
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder(this.plugin.settings.defaultFrontmatter)
+          .setValue(currentSettings.defaultFrontmatter || "")
+          .onChange(async (value) => {
+            currentSettings.defaultFrontmatter = value || undefined;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 4;
+        text.inputEl.cols = 50;
+      });
+
+    // Default tags
+    new Setting(container)
+      .setName("Default tags")
+      .setDesc("Default tags for this calendar (leave empty to use default)")
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.settings.defaultTags.join(", "))
+          .setValue((currentSettings.defaultTags || []).join(", "))
+          .onChange(async (value) => {
+            currentSettings.defaultTags = value
+              ? this.parseTags(value)
+              : undefined;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Note template
+    new Setting(container)
+      .setName("Note template")
+      .setDesc("Template for this calendar (leave empty to use default)")
+      .addTextArea((text) => {
+        text
+          .setPlaceholder(this.plugin.settings.noteTemplate)
+          .setValue(currentSettings.noteTemplate || "")
+          .onChange(async (value) => {
+            currentSettings.noteTemplate = value || undefined;
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 10;
+        text.inputEl.cols = 50;
+      });
+
+    // Folder path template
+    new Setting(container)
+      .setName("Folder path template")
+      .setDesc(
+        "Folder organization for this calendar (leave empty to use default)"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder(
+            this.plugin.settings.folderPathTemplate || "No template"
+          )
+          .setValue(currentSettings.folderPathTemplate || "")
+          .onChange(async (value) => {
+            currentSettings.folderPathTemplate = value || undefined;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Enable attendee links
+    new Setting(container)
+      .setName("Create links for attendees")
+      .setDesc("Create wiki links for attendees in this calendar")
+      .addToggle((toggle) => {
+        const defaultValue = this.plugin.settings.enableAttendeeLinks;
+        toggle
+          .setValue(currentSettings.enableAttendeeLinks ?? defaultValue)
+          .onChange(async (value) => {
+            currentSettings.enableAttendeeLinks = value;
+            await this.plugin.saveSettings();
+          });
+      });
+  }
+
+  private parseTags(value: string): string[] {
+    return value
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+  }
+
+  private copyDefaultSettingsToCustom(): void {
+    if (!this.source.notesSettings) {
+      this.source.notesSettings = { useCustomSettings: true };
+    }
+
+    // Copy all default settings to custom settings
+    this.source.notesSettings.noteLocation = this.plugin.settings.noteLocation;
+    this.source.notesSettings.noteTitleFormat =
+      this.plugin.settings.noteTitleFormat;
+    this.source.notesSettings.noteDateFormat =
+      this.plugin.settings.noteDateFormat;
+    this.source.notesSettings.noteTimeFormat =
+      this.plugin.settings.noteTimeFormat;
+    this.source.notesSettings.defaultFrontmatter =
+      this.plugin.settings.defaultFrontmatter;
+    this.source.notesSettings.defaultTags = [
+      ...(this.plugin.settings.defaultTags || []),
+    ];
+    this.source.notesSettings.noteTemplate = this.plugin.settings.noteTemplate;
+    this.source.notesSettings.folderPathTemplate =
+      this.plugin.settings.folderPathTemplate;
+    this.source.notesSettings.enableAttendeeLinks =
+      this.plugin.settings.enableAttendeeLinks;
+  }
+
+  private refreshCustomSettingsIfNeeded(): void {
+    if (!this.source.notesSettings?.useCustomSettings) {
+      return;
+    }
+
+    // Check if any custom settings are undefined/null and refresh them from defaults
+    const needsRefresh =
+      !this.source.notesSettings.noteLocation ||
+      !this.source.notesSettings.noteTitleFormat ||
+      !this.source.notesSettings.noteDateFormat ||
+      !this.source.notesSettings.noteTimeFormat ||
+      !this.source.notesSettings.defaultFrontmatter ||
+      !this.source.notesSettings.defaultTags ||
+      !this.source.notesSettings.noteTemplate ||
+      this.source.notesSettings.folderPathTemplate === undefined ||
+      this.source.notesSettings.enableAttendeeLinks === undefined;
+
+    if (needsRefresh) {
+      console.log("Refreshing custom settings with current defaults");
+      this.copyDefaultSettingsToCustom();
+    }
+  }
+
+  private setupPathSuggestions(
+    input: TextComponent,
+    suggestionContainer: HTMLElement,
+    getSuggestions: () => Promise<string[]>,
+    onSelect: (value: string) => Promise<void>
+  ): void {
+    const showSuggestions = async () => {
+      const suggestions = await getSuggestions();
+      this.displaySuggestions(
+        input,
+        suggestionContainer,
+        suggestions,
+        input.getValue(),
+        onSelect
+      );
+    };
+
+    input.inputEl.addEventListener("focus", showSuggestions);
+    input.inputEl.addEventListener("input", showSuggestions);
+
+    input.inputEl.addEventListener("blur", () => {
+      setTimeout(() => {
+        // Check if container still exists before manipulating
+        if (suggestionContainer && suggestionContainer.parentNode) {
+          suggestionContainer.classList.remove("is-visible");
+        }
+      }, 200);
+    });
+  }
+
+  private displaySuggestions(
+    input: TextComponent,
+    container: HTMLElement,
+    allSuggestions: string[],
+    query: string,
+    onSelect: (value: string) => Promise<void>
+  ): void {
+    container.empty();
+
+    const matchingSuggestions = allSuggestions.filter((s) =>
+      s.toLowerCase().includes(query.toLowerCase())
+    );
+
+    if (matchingSuggestions.length === 0) {
+      container.classList.remove("is-visible");
+      return;
+    }
+
+    container.classList.add("is-visible");
+    const ul = container.createEl("ul", { cls: "memochron-suggestion-list" });
+
+    matchingSuggestions.slice(0, 5).forEach((suggestion) => {
+      const li = ul.createEl("li", { text: suggestion });
+      li.addEventListener("mousedown", async (e) => {
+        e.preventDefault();
+        input.setValue(suggestion);
+        await onSelect(suggestion);
+        container.classList.remove("is-visible");
+      });
+    });
+  }
+
+  onClose() {
+    const { contentEl } = this;
+    this.cleanupEventListeners();
+    contentEl.empty();
+  }
+
+  private addEventListener(
+    element: HTMLElement,
+    event: string,
+    handler: EventListener
+  ) {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  private cleanupEventListeners() {
+    this.eventListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
   }
 }
