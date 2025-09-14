@@ -1037,6 +1037,11 @@ class CalendarNotesSettingsModal extends Modal {
   private index: number;
   private plugin: MemoChron;
   private onSettingsChange?: () => void;
+  private eventListeners: Array<{
+    element: HTMLElement;
+    event: string;
+    handler: EventListener;
+  }> = [];
 
   constructor(
     app: App,
@@ -1055,6 +1060,9 @@ class CalendarNotesSettingsModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
+
+    // Refresh custom settings if needed
+    this.refreshCustomSettingsIfNeeded();
 
     contentEl.createEl("h2", {
       text: `Notes Settings for "${this.source.name}"`,
@@ -1100,7 +1108,11 @@ class CalendarNotesSettingsModal extends Modal {
   }
 
   private renderCustomSettings(container: HTMLElement) {
-    const currentSettings = this.source.notesSettings!;
+    const currentSettings = this.source.notesSettings;
+    if (!currentSettings) {
+      console.error("Custom settings not found when rendering custom settings");
+      return;
+    }
 
     // Note location
     const locationSetting = new Setting(container)
@@ -1298,13 +1310,36 @@ class CalendarNotesSettingsModal extends Modal {
     this.source.notesSettings.defaultFrontmatter =
       this.plugin.settings.defaultFrontmatter;
     this.source.notesSettings.defaultTags = [
-      ...this.plugin.settings.defaultTags,
+      ...(this.plugin.settings.defaultTags || []),
     ];
     this.source.notesSettings.noteTemplate = this.plugin.settings.noteTemplate;
     this.source.notesSettings.folderPathTemplate =
       this.plugin.settings.folderPathTemplate;
     this.source.notesSettings.enableAttendeeLinks =
       this.plugin.settings.enableAttendeeLinks;
+  }
+
+  private refreshCustomSettingsIfNeeded(): void {
+    if (!this.source.notesSettings?.useCustomSettings) {
+      return;
+    }
+
+    // Check if any custom settings are undefined/null and refresh them from defaults
+    const needsRefresh =
+      !this.source.notesSettings.noteLocation ||
+      !this.source.notesSettings.noteTitleFormat ||
+      !this.source.notesSettings.noteDateFormat ||
+      !this.source.notesSettings.noteTimeFormat ||
+      !this.source.notesSettings.defaultFrontmatter ||
+      !this.source.notesSettings.defaultTags ||
+      !this.source.notesSettings.noteTemplate ||
+      this.source.notesSettings.folderPathTemplate === undefined ||
+      this.source.notesSettings.enableAttendeeLinks === undefined;
+
+    if (needsRefresh) {
+      console.log("Refreshing custom settings with current defaults");
+      this.copyDefaultSettingsToCustom();
+    }
   }
 
   private setupPathSuggestions(
@@ -1371,6 +1406,23 @@ class CalendarNotesSettingsModal extends Modal {
 
   onClose() {
     const { contentEl } = this;
+    this.cleanupEventListeners();
     contentEl.empty();
+  }
+
+  private addEventListener(
+    element: HTMLElement,
+    event: string,
+    handler: EventListener
+  ) {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  private cleanupEventListeners() {
+    this.eventListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
   }
 }

@@ -93,25 +93,40 @@ export class NoteService {
   }
 
   private buildFilePath(event: CalendarEvent): string {
-    const calendarSettings = this.getCalendarNotesSettings(event.source);
-    const noteLocation =
-      calendarSettings.noteLocation || this.settings.noteLocation;
-    const noteTitleFormat =
-      calendarSettings.noteTitleFormat || this.settings.noteTitleFormat;
-    const folderPathTemplate =
-      calendarSettings.folderPathTemplate || this.settings.folderPathTemplate;
+    try {
+      const calendarSettings = this.getCalendarNotesSettings(event.source);
+      const noteLocation =
+        calendarSettings.noteLocation ?? this.settings.noteLocation;
+      const noteTitleFormat =
+        calendarSettings.noteTitleFormat ?? this.settings.noteTitleFormat;
+      const folderPathTemplate =
+        calendarSettings.folderPathTemplate ?? this.settings.folderPathTemplate;
 
-    const normalizedPath = normalizePath(noteLocation);
-    const title = this.formatTitle(noteTitleFormat, event);
+      if (!noteLocation) {
+        throw new Error("Note location is not configured");
+      }
 
-    // If folderPathTemplate is empty, use the old behavior
-    if (!folderPathTemplate.trim()) {
-      return normalizePath(`${normalizedPath}/${title}.md`);
+      const normalizedPath = normalizePath(noteLocation);
+      const title = this.formatTitle(noteTitleFormat, event);
+
+      // If folderPathTemplate is empty, use the old behavior
+      if (!folderPathTemplate.trim()) {
+        return normalizePath(`${normalizedPath}/${title}.md`);
+      }
+
+      // Apply folder template to create subfolder structure
+      const subfolderPath = this.applyFolderTemplate(folderPathTemplate, event);
+      return normalizePath(`${normalizedPath}/${subfolderPath}/${title}.md`);
+    } catch (error) {
+      console.error("Error building file path:", error);
+      // Fallback to basic path structure
+      const fallbackPath = this.settings.noteLocation || "calendar-notes";
+      const fallbackTitle = this.formatTitle(
+        this.settings.noteTitleFormat,
+        event
+      );
+      return normalizePath(`${fallbackPath}/${fallbackTitle}.md`);
     }
-
-    // Apply folder template to create subfolder structure
-    const subfolderPath = this.applyFolderTemplate(folderPathTemplate, event);
-    return normalizePath(`${normalizedPath}/${subfolderPath}/${title}.md`);
   }
 
   private async ensureParentFolder(filePath: string): Promise<void> {
@@ -131,14 +146,24 @@ export class NoteService {
   }
 
   private generateNoteContent(event: CalendarEvent): string {
-    const variables = this.getEventTemplateVariables(event);
-    const frontmatter = this.generateFrontmatter(event, variables);
-    const calendarSettings = this.getCalendarNotesSettings(event.source);
-    const noteTemplate =
-      calendarSettings.noteTemplate || this.settings.noteTemplate;
-    const content = this.applyTemplateVariables(noteTemplate, variables);
+    try {
+      const variables = this.getEventTemplateVariables(event);
+      const frontmatter = this.generateFrontmatter(event, variables);
+      const calendarSettings = this.getCalendarNotesSettings(event.source);
+      const noteTemplate =
+        calendarSettings.noteTemplate ?? this.settings.noteTemplate;
+      const content = this.applyTemplateVariables(noteTemplate, variables);
 
-    return `${frontmatter}\n${content}`;
+      return `${frontmatter}\n${content}`;
+    } catch (error) {
+      console.error("Error generating note content:", error);
+      // Fallback to basic content
+      return `# ${
+        event.title
+      }\n\n**Date:** ${event.start.toLocaleDateString()}\n**Time:** ${event.start.toLocaleTimeString()}\n**Source:** ${
+        event.source
+      }\n\n${event.description || ""}`;
+    }
   }
 
   private generateFrontmatter(
@@ -147,7 +172,7 @@ export class NoteService {
   ): string {
     const calendarSettings = this.getCalendarNotesSettings(event.source);
     const defaultFrontmatter =
-      calendarSettings.defaultFrontmatter || this.settings.defaultFrontmatter;
+      calendarSettings.defaultFrontmatter ?? this.settings.defaultFrontmatter;
     let frontmatterContent = this.cleanFrontmatter(defaultFrontmatter);
     frontmatterContent = this.applyTemplateVariables(
       frontmatterContent,
@@ -222,24 +247,42 @@ export class NoteService {
     template: string,
     variables: EventTemplateVariables
   ): string {
-    return Object.entries(variables).reduce(
-      (result, [key, value]) =>
-        result.replace(new RegExp(`{{${key}}}`, "g"), value),
-      template
-    );
+    if (!template || !variables) {
+      return template || "";
+    }
+
+    try {
+      return Object.entries(variables).reduce(
+        (result, [key, value]) =>
+          result.replace(new RegExp(`{{${key}}}`, "g"), value || ""),
+        template
+      );
+    } catch (error) {
+      console.error("Error applying template variables:", error);
+      return template;
+    }
   }
 
   private formatTitle(format: string, event: CalendarEvent): string {
-    const variables = this.getEventTemplateVariables(event);
+    if (!format || !event) {
+      return "Untitled Event";
+    }
 
-    // Apply all template variables, sanitizing each value for use in filenames
-    return Object.entries(variables).reduce((title, [key, value]) => {
-      const placeholder = `{{${key}}}`;
-      return title.replace(
-        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
-        this.sanitizeFileName(value)
-      );
-    }, format);
+    try {
+      const variables = this.getEventTemplateVariables(event);
+
+      // Apply all template variables, sanitizing each value for use in filenames
+      return Object.entries(variables).reduce((title, [key, value]) => {
+        const placeholder = `{{${key}}}`;
+        return title.replace(
+          new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+          this.sanitizeFileName(value || "")
+        );
+      }, format);
+    } catch (error) {
+      console.error("Error formatting title:", error);
+      return event.title || "Untitled Event";
+    }
   }
 
   private formatLocationText(location?: string): string {
@@ -274,7 +317,7 @@ export class NoteService {
       ? this.getCalendarNotesSettings(source)
       : null;
     const dateFormat =
-      calendarSettings?.noteDateFormat || this.settings.noteDateFormat;
+      calendarSettings?.noteDateFormat ?? this.settings.noteDateFormat;
 
     const formatters: Record<string, () => string> = {
       ISO: () => date.toISOString().split("T")[0],
@@ -307,7 +350,7 @@ export class NoteService {
       ? this.getCalendarNotesSettings(source)
       : null;
     const timeFormat =
-      calendarSettings?.noteTimeFormat || this.settings.noteTimeFormat;
+      calendarSettings?.noteTimeFormat ?? this.settings.noteTimeFormat;
 
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
@@ -327,11 +370,11 @@ export class NoteService {
   private getTagsForEvent(event: CalendarEvent): string[] {
     const calendarSettings = this.getCalendarNotesSettings(event.source);
     const defaultTags =
-      calendarSettings.defaultTags || this.settings.defaultTags || [];
+      calendarSettings.defaultTags ?? this.settings.defaultTags ?? [];
     const source = this.settings.calendarUrls.find(
       (s) => s.name === event.source
     );
-    const sourceTags = source?.tags || [];
+    const sourceTags = source?.tags ?? [];
 
     return [...new Set([...defaultTags, ...sourceTags])];
   }
@@ -468,7 +511,16 @@ export class NoteService {
   }
 
   private getCalendarNotesSettings(source: string): CalendarNotesSettings {
+    if (!source || !this.settings.calendarUrls) {
+      return { useCustomSettings: false };
+    }
+
     const calendar = this.settings.calendarUrls.find((s) => s.name === source);
-    return calendar?.notesSettings || { useCustomSettings: false };
+    if (!calendar) {
+      console.warn(`Calendar source "${source}" not found in settings`);
+      return { useCustomSettings: false };
+    }
+
+    return calendar.notesSettings ?? { useCustomSettings: false };
   }
 }
