@@ -214,7 +214,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
   ) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
 
-    if (event.end < now && !this.params.showPast) {
+    if (event.end < now && this.params.showPast) {
       eventEl.addClass("past-event");
     }
 
