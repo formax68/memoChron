@@ -23,6 +23,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with an advanced color picker
 - 👥 **Attendee Links**: Automatically create wiki links for event attendees
 - ⚙️ **Calendar-Specific Configuration**: Override default settings for individual calendars
+- 📝 **Embedded Views**: Embed calendar and agenda views directly in your notes using dataview-like code blocks
 
 ![settings](screenshots/settings.png)
 
@@ -198,6 +199,128 @@ Each calendar can have its own custom notes settings, allowing you to override t
 - Personal Calendar: Casual template, "personal" tags, organized by `{YYYY}/Personal` folders
 - Project Calendar: Project template, project-specific tags, organized by `{source}/{YYYY}` folders
 
+## Embedded Views (NEW in v1.8.0)
+
+MemoChron now supports embedding calendar and agenda views directly in your notes using dataview-like code blocks. This allows you to create custom dashboards, project timelines, and event displays anywhere in your vault.
+
+### Calendar Code Blocks
+
+Embed calendar month grids in your notes:
+
+````markdown
+```memochron-calendar
+month: 2025-02
+```
+````
+
+**Available Parameters:**
+- `month`: Display specific month (supports multiple formats)
+  - `2025-02` (YYYY-MM format)
+  - `2025/02` (YYYY/MM format)
+  - `February 2025` (Month Year)
+  - `Feb 2025` (Month abbreviation)
+  - `this.file.name` (extract date from current filename)
+
+**Features:**
+- Navigate between months with arrow buttons
+- "Today" button to jump to current month
+- Click dates to see event details in notifications
+- Color-coded event indicators (if colors enabled)
+- Responsive design for all screen sizes
+
+### Agenda Code Blocks
+
+Embed event lists for specific dates or ranges:
+
+````markdown
+```memochron-agenda
+date: today
+days: 7
+```
+````
+
+**Available Parameters:**
+- `date`: Starting date for the agenda
+  - `today`, `tomorrow`, `yesterday`
+  - `2025-01-15` (YYYY-MM-DD format)
+  - Standard date formats
+  - `this.file.name` (extract date from current filename)
+- `days`: Number of days to display (default: 1, max: 30)
+- `show-daily-note`: Show daily note entries (`true`/`false`)
+- `show-past`: Include past events (`true`/`false`)
+
+**Features:**
+- Single or multi-day event lists
+- Click events to open/create notes
+- Daily note integration
+- Color-coded events (if colors enabled)
+- Responsive scrolling for long lists
+
+### Dynamic File-Based Dates
+
+Use `this.file.name` to automatically extract dates from your note filenames. Perfect for daily notes!
+
+**Supported Filename Formats:**
+- `2025-01-15.md` (YYYY-MM-DD)
+- `2025_01_15.md` (YYYY_MM_DD)
+- `2025.01.15.md` (YYYY.MM.DD)
+- `15-01-2025.md` (DD-MM-YYYY)
+- `01-15-2025.md` (MM-DD-YYYY)
+- `20250115.md` (YYYYMMDD)
+
+**Example Usage in Daily Notes:**
+
+````markdown
+# Daily Note for {{date}}
+
+## Today's Schedule
+```memochron-agenda
+date: this.file.name
+```
+
+## This Month's Overview
+```memochron-calendar
+month: this.file.name
+```
+````
+
+### Use Cases
+
+**Project Management:**
+````markdown
+## Project Timeline
+
+```memochron-calendar
+month: 2025-02
+```
+
+## Upcoming Deadlines
+```memochron-agenda
+date: today
+days: 14
+```
+````
+
+**Meeting Dashboard:**
+````markdown
+## Weekly Meetings
+
+```memochron-agenda
+date: today
+days: 7
+show-daily-note: true
+```
+````
+
+**Monthly Review:**
+````markdown
+## February 2025 Events
+
+```memochron-calendar
+month: February 2025
+```
+````
+
 ### Attendee Support
 
 MemoChron can extract attendee information from calendar events and optionally create wiki links for them:
@@ -301,6 +424,27 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.8.0
+
+### 📝 Embedded Views - Dataview-like Functionality
+
+- **Calendar Code Blocks**: Embed interactive calendar month grids directly in your notes
+- **Agenda Code Blocks**: Embed event lists for specific dates or date ranges
+- **Dynamic Properties**: Support for `this.file.name` to extract dates from filenames
+- **Flexible Parameters**: Customize month display, date ranges, daily note integration
+- **Multiple Date Formats**: Support for various filename formats (YYYY-MM-DD, YYYY_MM_DD, etc.)
+- **Responsive Design**: Mobile-optimized embedded views with theme support
+- **Interactive Navigation**: Navigate between months, click events to create notes
+- **Perfect for Daily Notes**: Automatically show today's agenda and current month calendar
+
+### 🎯 Use Cases
+
+- Create custom project dashboards with embedded calendars
+- Add weekly schedules to meeting notes
+- Build monthly review templates with automatic date detection
+- Enhance daily notes with contextual calendar views
+- Design team dashboards with multi-day event views
 
 ## What's New in v1.7.0
 
