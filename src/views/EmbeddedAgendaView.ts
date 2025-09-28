@@ -1,11 +1,15 @@
 import { MarkdownRenderChild, Notice, TFile } from "obsidian";
 import MemoChron from "../main";
-import { renderAgendaList, parseDate, RenderOptions } from "../utils/viewRenderers";
+import {
+  renderAgendaList,
+  parseDate,
+  RenderOptions,
+} from "../utils/viewRenderers";
 import {
   createDailyNote,
   getDailyNote,
   getAllDailyNotes,
-  appHasDailyNotesPluginLoaded
+  appHasDailyNotesPluginLoaded,
 } from "obsidian-daily-notes-interface";
 
 export interface AgendaCodeBlockParams {
@@ -61,7 +65,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
     // Create header
     const header = this.container.createEl("div", {
-      cls: "memochron-embedded-header"
+      cls: "memochron-embedded-header",
     });
 
     let headerText: string;
@@ -70,7 +74,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
         weekday: "long",
         month: "long",
         day: "numeric",
-        year: "numeric"
+        year: "numeric",
       });
     } else {
       const endDate = new Date(this.startDate);
@@ -80,7 +84,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
     header.createEl("h3", {
       cls: "memochron-embedded-title",
-      text: headerText
+      text: headerText,
     });
 
     // Fetch events
@@ -90,7 +94,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
     // Create agenda container
     const agendaContainer = this.container.createEl("div", {
-      cls: "memochron-agenda memochron-embedded-content"
+      cls: "memochron-agenda memochron-embedded-content",
     });
 
     // Collect all events for the date range
@@ -98,14 +102,15 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     for (let i = 0; i < this.days; i++) {
       const currentDate = new Date(this.startDate);
       currentDate.setDate(this.startDate.getDate() + i);
-      const dayEvents = this.plugin.calendarService.getEventsForDate(currentDate);
-      allEvents.push(...dayEvents.map(e => ({ ...e, date: currentDate })));
+      const dayEvents =
+        this.plugin.calendarService.getEventsForDate(currentDate);
+      allEvents.push(...dayEvents.map((e) => ({ ...e, date: currentDate })));
     }
 
     if (allEvents.length === 0 && !this.params.showDailyNote) {
       agendaContainer.createEl("p", {
         cls: "memochron-no-events",
-        text: "No events scheduled"
+        text: "No events scheduled",
       });
       return;
     }
@@ -114,13 +119,17 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     const options: RenderOptions = {
       enableColors: this.plugin.settings.enableCalendarColors,
       timeFormat: this.plugin.settings.noteTimeFormat,
-      showDailyNote: this.params.showDailyNote !== undefined ?
-        this.params.showDailyNote : this.plugin.settings.showDailyNoteInAgenda,
-      dailyNoteColor: this.plugin.settings.dailyNoteColor
+      showDailyNote:
+        this.params.showDailyNote !== undefined
+          ? this.params.showDailyNote
+          : this.plugin.settings.showDailyNoteInAgenda,
+      dailyNoteColor: this.plugin.settings.dailyNoteColor,
     };
 
     // Render agenda with click handlers
-    const list = agendaContainer.createEl("div", { cls: "memochron-agenda-list" });
+    const list = agendaContainer.createEl("div", {
+      cls: "memochron-agenda-list",
+    });
     const now = new Date();
 
     for (let i = 0; i < this.days; i++) {
@@ -139,7 +148,8 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
         });
       }
 
-      const dayEvents = this.plugin.calendarService.getEventsForDate(currentDate);
+      const dayEvents =
+        this.plugin.calendarService.getEventsForDate(currentDate);
 
       // Add daily note entry if enabled
       if (options.showDailyNote) {
@@ -149,7 +159,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
       if (dayEvents.length === 0 && !options.showDailyNote) {
         list.createEl("p", {
           cls: "memochron-no-events",
-          text: "No events scheduled"
+          text: "No events scheduled",
         });
       } else {
         dayEvents.forEach((event) => {
@@ -165,26 +175,28 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     options: RenderOptions
   ) {
     const dailyNoteEl = list.createEl("div", {
-      cls: "memochron-agenda-event memochron-daily-note"
+      cls: "memochron-agenda-event memochron-daily-note",
     });
 
     if (options.enableColors) {
       dailyNoteEl.addClass("with-color");
-      const dailyNoteColor = options.dailyNoteColor ||
+      const dailyNoteColor =
+        options.dailyNoteColor ||
         getComputedStyle(document.documentElement)
-          .getPropertyValue('--interactive-accent')
-          .trim() || '#7c3aed';
+          .getPropertyValue("--interactive-accent")
+          .trim() ||
+        "#7c3aed";
       dailyNoteEl.style.setProperty("--event-color", dailyNoteColor);
     }
 
     dailyNoteEl.createEl("div", {
       cls: "memochron-event-title",
-      text: "Daily Note"
+      text: "Daily Note",
     });
 
     dailyNoteEl.createEl("div", {
       cls: "memochron-event-location",
-      text: "📝 Open daily note"
+      text: "📝 Open daily note",
     });
 
     // Add click handler
@@ -221,12 +233,15 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
       const timeFormat: Intl.DateTimeFormatOptions = {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: options.timeFormat === '12h'
+        hour12: options.timeFormat === "12h",
       };
 
       eventEl.createEl("div", {
         cls: "memochron-event-time",
-        text: `${event.start.toLocaleTimeString([], timeFormat)} - ${event.end.toLocaleTimeString([], timeFormat)}`,
+        text: `${event.start.toLocaleTimeString(
+          [],
+          timeFormat
+        )} - ${event.end.toLocaleTimeString([], timeFormat)}`,
       });
     }
 
@@ -261,7 +276,9 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
   private async handleDailyNoteClick(date: Date) {
     try {
       if (!appHasDailyNotesPluginLoaded()) {
-        new Notice("Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins.");
+        new Notice(
+          "Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins."
+        );
         return;
       }
 
@@ -283,10 +300,11 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
         const leaf = this.plugin.app.workspace.getLeaf("tab");
         await leaf.openFile(dailyNote);
       }
-
     } catch (error) {
       console.error("Failed to handle daily note:", error);
-      new Notice("Failed to open daily note. Make sure Daily Notes plugin is enabled and configured.");
+      new Notice(
+        "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
+      );
     }
   }
 
@@ -319,7 +337,12 @@ export function parseAgendaCodeBlock(source: string): AgendaCodeBlockParams {
   const lines = source.trim().split("\n");
 
   for (const line of lines) {
-    const [key, value] = line.split(":").map(s => s.trim());
+    const [key, value] = line.split(":").map((s) => s.trim());
+
+    // Skip lines without colons or empty keys
+    if (!key || value === undefined) {
+      continue;
+    }
 
     switch (key.toLowerCase()) {
       case "date":

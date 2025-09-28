@@ -1,6 +1,11 @@
 import { MarkdownRenderChild } from "obsidian";
 import MemoChron from "../main";
-import { renderCalendarGrid, parseMonthYear, parseDate, RenderOptions } from "../utils/viewRenderers";
+import {
+  renderCalendarGrid,
+  parseMonthYear,
+  parseDate,
+  RenderOptions,
+} from "../utils/viewRenderers";
 import { CalendarEvent } from "../services/CalendarService";
 
 export interface CalendarCodeBlockParams {
@@ -26,10 +31,14 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
 
   private initializeDate() {
     // Handle dynamic properties
-    if (this.params.month === 'this.file.name' && this.context?.filename) {
+    if (this.params.month === "this.file.name" && this.context?.filename) {
       const parsedDate = parseDate(this.params.month, this.context);
       if (parsedDate) {
-        this.currentDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1);
+        this.currentDate = new Date(
+          parsedDate.getFullYear(),
+          parsedDate.getMonth(),
+          1
+        );
         return;
       }
     }
@@ -68,7 +77,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
 
     // Create header
     const header = this.container.createEl("div", {
-      cls: "memochron-embedded-header"
+      cls: "memochron-embedded-header",
     });
 
     const title = header.createEl("h3", {
@@ -76,35 +85,35 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       text: this.currentDate.toLocaleString("default", {
         month: "long",
         year: "numeric",
-      })
+      }),
     });
 
     // Create navigation
     const nav = header.createEl("div", {
-      cls: "memochron-embedded-nav"
+      cls: "memochron-embedded-nav",
     });
 
     const prevButton = nav.createEl("span", {
       cls: "memochron-nav-link",
-      text: "<"
+      text: "<",
     });
     prevButton.addEventListener("click", () => this.navigate(-1));
 
     const todayButton = nav.createEl("span", {
       cls: "memochron-nav-link",
-      text: "Today"
+      text: "Today",
     });
     todayButton.addEventListener("click", () => this.goToToday());
 
     const nextButton = nav.createEl("span", {
       cls: "memochron-nav-link",
-      text: ">"
+      text: ">",
     });
     nextButton.addEventListener("click", () => this.navigate(1));
 
     // Create calendar container
     const calendarContainer = this.container.createEl("div", {
-      cls: "memochron-calendar"
+      cls: "memochron-calendar",
     });
 
     // Fetch events
@@ -118,7 +127,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       enableColors: this.plugin.settings.enableCalendarColors,
       firstDayOfWeek: this.plugin.settings.firstDayOfWeek,
       showDailyNote: this.plugin.settings.showDailyNoteInAgenda,
-      dailyNoteColor: this.plugin.settings.dailyNoteColor
+      dailyNoteColor: this.plugin.settings.dailyNoteColor,
     };
 
     renderCalendarGrid(
@@ -152,9 +161,13 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
     }
 
     const eventList = events
-      .map(e => {
-        const time = e.isAllDay ? "All day" :
-          `${e.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      .map((e) => {
+        const time = e.isAllDay
+          ? "All day"
+          : `${e.start.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`;
         return `• ${time}: ${e.title}`;
       })
       .join("\n");
@@ -166,12 +179,19 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
   }
 }
 
-export function parseCalendarCodeBlock(source: string): CalendarCodeBlockParams {
+export function parseCalendarCodeBlock(
+  source: string
+): CalendarCodeBlockParams {
   const params: CalendarCodeBlockParams = {};
   const lines = source.trim().split("\n");
 
   for (const line of lines) {
-    const [key, value] = line.split(":").map(s => s.trim());
+    const [key, value] = line.split(":").map((s) => s.trim());
+
+    // Skip lines without colons or empty keys
+    if (!key || value === undefined) {
+      continue;
+    }
 
     switch (key.toLowerCase()) {
       case "month":
