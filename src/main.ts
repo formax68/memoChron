@@ -5,6 +5,8 @@ import { CalendarView } from "./views/CalendarView";
 import { SettingsTab } from "./settings/SettingsTab";
 import { MemoChronSettings, DEFAULT_SETTINGS } from "./settings/types";
 import { MEMOCHRON_VIEW_TYPE } from "./utils/constants";
+import { EmbeddedCalendarView, parseCalendarCodeBlock } from "./views/EmbeddedCalendarView";
+import { EmbeddedAgendaView, parseAgendaCodeBlock } from "./views/EmbeddedAgendaView";
 
 export default class MemoChron extends Plugin {
   settings: MemoChronSettings;
@@ -18,6 +20,7 @@ export default class MemoChron extends Plugin {
     this.initializeServices();
     this.registerViews();
     this.registerCommands();
+    this.registerCodeBlockProcessors();
     this.addSettingTab(new SettingsTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => {
@@ -60,6 +63,32 @@ export default class MemoChron extends Plugin {
       name: "Toggle calendar visibility",
       callback: () => this.toggleCalendar(),
     });
+  }
+
+  private registerCodeBlockProcessors() {
+    // Register calendar code block processor
+    this.registerMarkdownCodeBlockProcessor(
+      "memochron-calendar",
+      (source, el, ctx) => {
+        const params = parseCalendarCodeBlock(source);
+        const filename = ctx.sourcePath ? ctx.sourcePath.split('/').pop() : undefined;
+        const context = { filename };
+        const calendarView = new EmbeddedCalendarView(el, this, params, context);
+        ctx.addChild(calendarView);
+      }
+    );
+
+    // Register agenda code block processor
+    this.registerMarkdownCodeBlockProcessor(
+      "memochron-agenda",
+      (source, el, ctx) => {
+        const params = parseAgendaCodeBlock(source);
+        const filename = ctx.sourcePath ? ctx.sourcePath.split('/').pop() : undefined;
+        const context = { filename };
+        const agendaView = new EmbeddedAgendaView(el, this, params, context);
+        ctx.addChild(agendaView);
+      }
+    );
   }
 
   onunload() {

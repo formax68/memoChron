@@ -1,0 +1,191 @@
+import { MarkdownRenderChild } from "obsidian";
+import MemoChron from "../main";
+import { renderCalendarGrid, parseMonthYear, parseDate, RenderOptions } from "../utils/viewRenderers";
+import { CalendarEvent } from "../services/CalendarService";
+
+export interface CalendarCodeBlockParams {
+  month?: string;
+  year?: string;
+  showDots?: boolean;
+}
+
+export class EmbeddedCalendarView extends MarkdownRenderChild {
+  private currentDate: Date;
+  private container: HTMLElement;
+
+  constructor(
+    containerEl: HTMLElement,
+    private plugin: MemoChron,
+    private params: CalendarCodeBlockParams,
+    private context?: { filename?: string }
+  ) {
+    super(containerEl);
+    this.container = containerEl;
+    this.initializeDate();
+  }
+
+  private initializeDate() {
+    // Handle dynamic properties
+    if (this.params.month === 'this.file.name' && this.context?.filename) {
+      const parsedDate = parseDate(this.params.month, this.context);
+      if (parsedDate) {
+        this.currentDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1);
+        return;
+      }
+    }
+
+    // Parse month/year from params
+    if (this.params.month) {
+      const parsedDate = parseMonthYear(this.params.month);
+      if (parsedDate) {
+        this.currentDate = parsedDate;
+        return;
+      }
+    }
+
+    // Fallback to separate year/month params
+    if (this.params.year && this.params.month) {
+      const year = parseInt(this.params.year);
+      const month = parseInt(this.params.month) - 1; // 0-indexed
+      if (!isNaN(year) && !isNaN(month) && month >= 0 && month < 12) {
+        this.currentDate = new Date(year, month, 1);
+        return;
+      }
+    }
+
+    // Default to current month
+    this.currentDate = new Date();
+  }
+
+  async onload() {
+    await this.render();
+  }
+
+  private async render() {
+    this.container.empty();
+    this.container.addClass("memochron-embedded");
+    this.container.addClass("memochron-embedded-calendar");
+
+    // Create header
+    const header = this.container.createEl("div", {
+      cls: "memochron-embedded-header"
+    });
+
+    const title = header.createEl("h3", {
+      cls: "memochron-embedded-title",
+      text: this.currentDate.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      })
+    });
+
+    // Create navigation
+    const nav = header.createEl("div", {
+      cls: "memochron-embedded-nav"
+    });
+
+    const prevButton = nav.createEl("span", {
+      cls: "memochron-nav-link",
+      text: "<"
+    });
+    prevButton.addEventListener("click", () => this.navigate(-1));
+
+    const todayButton = nav.createEl("span", {
+      cls: "memochron-nav-link",
+      text: "Today"
+    });
+    todayButton.addEventListener("click", () => this.goToToday());
+
+    const nextButton = nav.createEl("span", {
+      cls: "memochron-nav-link",
+      text: ">"
+    });
+    nextButton.addEventListener("click", () => this.navigate(1));
+
+    // Create calendar container
+    const calendarContainer = this.container.createEl("div", {
+      cls: "memochron-calendar"
+    });
+
+    // Fetch events
+    await this.plugin.calendarService.fetchCalendars(
+      this.plugin.settings.calendarUrls
+    );
+    const events = this.plugin.calendarService.getAllEvents();
+
+    // Render calendar grid
+    const options: RenderOptions = {
+      enableColors: this.plugin.settings.enableCalendarColors,
+      firstDayOfWeek: this.plugin.settings.firstDayOfWeek,
+      showDailyNote: this.plugin.settings.showDailyNoteInAgenda,
+      dailyNoteColor: this.plugin.settings.dailyNoteColor
+    };
+
+    renderCalendarGrid(
+      calendarContainer,
+      this.currentDate,
+      events,
+      options,
+      (date) => this.handleDateClick(date)
+    );
+  }
+
+  private async navigate(delta: number) {
+    this.currentDate.setMonth(this.currentDate.getMonth() + delta);
+    await this.render();
+  }
+
+  private async goToToday() {
+    this.currentDate = new Date();
+    await this.render();
+  }
+
+  private async handleDateClick(date: Date) {
+    // Show agenda for the clicked date in a notice
+    const events = this.plugin.calendarService.getEventsForDate(date);
+
+    if (events.length === 0) {
+      new (this.plugin.app as any).Notice(
+        `No events on ${date.toLocaleDateString()}`
+      );
+      return;
+    }
+
+    const eventList = events
+      .map(e => {
+        const time = e.isAllDay ? "All day" :
+          `${e.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        return `• ${time}: ${e.title}`;
+      })
+      .join("\n");
+
+    new (this.plugin.app as any).Notice(
+      `Events on ${date.toLocaleDateString()}:\n${eventList}`,
+      5000
+    );
+  }
+}
+
+export function parseCalendarCodeBlock(source: string): CalendarCodeBlockParams {
+  const params: CalendarCodeBlockParams = {};
+  const lines = source.trim().split("\n");
+
+  for (const line of lines) {
+    const [key, value] = line.split(":").map(s => s.trim());
+
+    switch (key.toLowerCase()) {
+      case "month":
+        params.month = value;
+        break;
+      case "year":
+        params.year = value;
+        break;
+      case "showdots":
+      case "show-dots":
+        params.showDots = value.toLowerCase() === "true";
+        break;
+    }
+  }
+
+  return params;
+}
