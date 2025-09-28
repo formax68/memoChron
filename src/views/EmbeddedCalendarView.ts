@@ -1,4 +1,4 @@
-import { MarkdownRenderChild } from "obsidian";
+import { MarkdownRenderChild, Notice } from "obsidian";
 import MemoChron from "../main";
 import {
   renderCalendarGrid,
@@ -154,9 +154,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
     const events = this.plugin.calendarService.getEventsForDate(date);
 
     if (events.length === 0) {
-      new (this.plugin.app as any).Notice(
-        `No events on ${date.toLocaleDateString()}`
-      );
+      new Notice(`No events on ${date.toLocaleDateString()}`);
       return;
     }
 
@@ -172,10 +170,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       })
       .join("\n");
 
-    new (this.plugin.app as any).Notice(
-      `Events on ${date.toLocaleDateString()}:\n${eventList}`,
-      5000
-    );
+    new Notice(`Events on ${date.toLocaleDateString()}:\n${eventList}`, 5000);
   }
 }
 
