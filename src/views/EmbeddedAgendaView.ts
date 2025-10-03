@@ -54,6 +54,16 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     if (this.days > 30) this.days = 30; // Reasonable limit
   }
 
+  /**
+   * Get the date for a specific day offset from the start date.
+   * Uses proper date arithmetic to avoid DST and month boundary issues.
+   */
+  private getDateForDay(dayOffset: number): Date {
+    const date = new Date(this.startDate);
+    date.setDate(date.getDate() + dayOffset);
+    return date;
+  }
+
   async onload() {
     await this.render();
   }
@@ -77,8 +87,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
         year: "numeric",
       });
     } else {
-      const endDate = new Date(this.startDate);
-      endDate.setDate(endDate.getDate() + this.days - 1);
+      const endDate = this.getDateForDay(this.days - 1);
       headerText = `${this.startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
     }
 
@@ -97,17 +106,21 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
       cls: "memochron-agenda memochron-embedded-content",
     });
 
-    // Collect all events for the date range
-    const allEvents = [];
+    // Pre-fetch all events for all days to avoid redundant calls
+    const dayEventsMap = new Map<number, any[]>();
+    let hasAnyEvents = false;
+
     for (let i = 0; i < this.days; i++) {
-      const currentDate = new Date(this.startDate);
-      currentDate.setDate(this.startDate.getDate() + i);
+      const currentDate = this.getDateForDay(i);
       const dayEvents =
         this.plugin.calendarService.getEventsForDate(currentDate);
-      allEvents.push(...dayEvents.map((e) => ({ ...e, date: currentDate })));
+      dayEventsMap.set(i, dayEvents);
+      if (dayEvents.length > 0) {
+        hasAnyEvents = true;
+      }
     }
 
-    if (allEvents.length === 0 && !this.params.showDailyNote) {
+    if (!hasAnyEvents && !this.params.showDailyNote) {
       agendaContainer.createEl("p", {
         cls: "memochron-no-events",
         text: "No events scheduled",
@@ -133,8 +146,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     const now = new Date();
 
     for (let i = 0; i < this.days; i++) {
-      const currentDate = new Date(this.startDate);
-      currentDate.setDate(this.startDate.getDate() + i);
+      const currentDate = this.getDateForDay(i);
 
       if (this.days > 1) {
         // Add date header for multi-day view
@@ -148,8 +160,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
         });
       }
 
-      const dayEvents =
-        this.plugin.calendarService.getEventsForDate(currentDate);
+      const dayEvents = dayEventsMap.get(i) || [];
 
       // Add daily note entry if enabled
       if (options.showDailyNote) {

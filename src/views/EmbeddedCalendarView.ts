@@ -52,13 +52,16 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       }
     }
 
-    // Fallback to separate year/month params
+    // Fallback to separate year/month params (only if month is a simple number)
     if (this.params.year && this.params.month) {
-      const year = parseInt(this.params.year);
-      const month = parseInt(this.params.month) - 1; // 0-indexed
-      if (!isNaN(year) && !isNaN(month) && month >= 0 && month < 12) {
-        this.currentDate = new Date(year, month, 1);
-        return;
+      // Only try numeric parsing if month is a simple number (1-12)
+      const monthNum = parseInt(this.params.month);
+      if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+        const year = parseInt(this.params.year);
+        if (!isNaN(year)) {
+          this.currentDate = new Date(year, monthNum - 1, 1); // Month is 0-indexed
+          return;
+        }
       }
     }
 
