@@ -805,3 +805,123 @@
 .modal-content .setting-item-description {
   margin-bottom: var(--memochron-padding-xs);
 }
+
+/* Embedded Views Styles */
+.memochron-embedded {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  margin: var(--memochron-padding-md) 0;
+  overflow: hidden;
+}
+
+.memochron-embedded-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--memochron-padding-md);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.memochron-embedded-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.memochron-embedded-nav {
+  display: flex;
+  gap: var(--memochron-gap);
+}
+
+.memochron-embedded-nav .memochron-nav-link {
+  padding: var(--memochron-padding-xs) var(--memochron-padding-sm);
+  border-radius: var(--radius-s);
+  transition: background-color 0.2s ease;
+}
+
+.memochron-embedded-nav .memochron-nav-link:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* Embedded Calendar Specific */
+.memochron-embedded-calendar .memochron-calendar {
+  padding: var(--memochron-padding-md);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.memochron-embedded-calendar .memochron-calendar-grid {
+  min-width: 350px;
+}
+
+.memochron-embedded-calendar .memochron-day.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.memochron-embedded-calendar .memochron-day.clickable:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* Embedded Agenda Specific */
+.memochron-embedded-agenda .memochron-agenda {
+  max-height: 500px;
+  overflow-y: auto;
+  border-top: none;
+}
+
+.memochron-embedded-content {
+  padding: var(--memochron-padding-md);
+}
+
+.memochron-agenda-date-header {
+  margin-top: var(--memochron-padding-md);
+  margin-bottom: var(--memochron-padding-sm);
+  padding-bottom: var(--memochron-padding-xs);
+  border-bottom: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.memochron-agenda-date-header:first-child {
+  margin-top: 0;
+}
+
+.memochron-no-events {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--memochron-padding-md);
+  text-align: center;
+}
+
+/* Mobile responsive for embedded views */
+@media screen and (max-width: 768px) {
+  .memochron-embedded {
+    margin: var(--memochron-padding-sm) -var(--memochron-padding-sm);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .memochron-embedded-header {
+    padding: var(--memochron-padding-sm);
+    flex-direction: column;
+    gap: var(--memochron-gap);
+  }
+
+  .memochron-embedded-title {
+    font-size: 1em;
+  }
+
+  .memochron-embedded-calendar .memochron-calendar {
+    padding: var(--memochron-padding-sm);
+  }
+
+  .memochron-embedded-agenda .memochron-agenda {
+    max-height: 400px;
+  }
+}
