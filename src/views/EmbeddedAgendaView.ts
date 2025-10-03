@@ -162,7 +162,17 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
           text: "No events scheduled",
         });
       } else {
-        dayEvents.forEach((event) => {
+        // Filter events based on showPast parameter
+        const filteredEvents = dayEvents.filter((event) => {
+          if (this.params.showPast === false) {
+            // If showPast is explicitly false, exclude past events
+            return event.end >= now;
+          }
+          // If showPast is true or undefined, show all events
+          return true;
+        });
+
+        filteredEvents.forEach((event) => {
           this.renderEventItem(list, event, now, options);
         });
       }
@@ -214,7 +224,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
   ) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
 
-    if (event.end < now && this.params.showPast) {
+    if (event.end < now) {
       eventEl.addClass("past-event");
     }
 
