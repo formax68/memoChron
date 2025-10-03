@@ -97,7 +97,8 @@ You can quickly create notes from individual meeting invites by dragging ICS fil
 
 - The calendar will appear in the right sidebar by default
 - Navigate between months using the arrows
-- Click on any day to see the agenda for that day
+- **Single-click** on any day to see the agenda for that day
+- **Double-click** on any day to open the daily note for that date
 - Hover over events to see more details
 
 ### Available Commands
@@ -214,6 +215,7 @@ month: 2025-02
 ````
 
 **Available Parameters:**
+
 - `month`: Display specific month (supports multiple formats)
   - `2025-02` (YYYY-MM format)
   - `2025/02` (YYYY/MM format)
@@ -222,9 +224,11 @@ month: 2025-02
   - `this.file.name` (extract date from current filename)
 
 **Features:**
+
 - Navigate between months with arrow buttons
 - "Today" button to jump to current month
-- Click dates to see event details in notifications
+- **Single-click** dates to see event details in notifications
+- **Double-click** dates to open the daily note for that date
 - Color-coded event indicators (if colors enabled)
 - Responsive design for all screen sizes
 
@@ -240,6 +244,7 @@ days: 7
 ````
 
 **Available Parameters:**
+
 - `date`: Starting date for the agenda
   - `today`, `tomorrow`, `yesterday`
   - `2025-01-15` (YYYY-MM-DD format)
@@ -250,6 +255,7 @@ days: 7
 - `show-past`: Include past events (`true`/`false`)
 
 **Features:**
+
 - Single or multi-day event lists
 - Click events to open/create notes
 - Daily note integration
@@ -261,6 +267,7 @@ days: 7
 Use `this.file.name` to automatically extract dates from your note filenames. Perfect for daily notes!
 
 **Supported Filename Formats:**
+
 - `2025-01-15.md` (YYYY-MM-DD)
 - `2025_01_15.md` (YYYY_MM_DD)
 - `2025.01.15.md` (YYYY.MM.DD)
@@ -274,11 +281,13 @@ Use `this.file.name` to automatically extract dates from your note filenames. Pe
 # Daily Note for {{date}}
 
 ## Today's Schedule
+
 ```memochron-agenda
 date: this.file.name
 ```
 
 ## This Month's Overview
+
 ```memochron-calendar
 month: this.file.name
 ```
@@ -287,6 +296,7 @@ month: this.file.name
 ### Use Cases
 
 **Project Management:**
+
 ````markdown
 ## Project Timeline
 
@@ -295,6 +305,7 @@ month: 2025-02
 ```
 
 ## Upcoming Deadlines
+
 ```memochron-agenda
 date: today
 days: 14
@@ -302,6 +313,7 @@ days: 14
 ````
 
 **Meeting Dashboard:**
+
 ````markdown
 ## Weekly Meetings
 
@@ -313,6 +325,7 @@ show-daily-note: true
 ````
 
 **Monthly Review:**
+
 ````markdown
 ## February 2025 Events
 
@@ -437,6 +450,11 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Responsive Design**: Mobile-optimized embedded views with theme support
 - **Interactive Navigation**: Navigate between months, click events to create notes
 - **Perfect for Daily Notes**: Automatically show today's agenda and current month calendar
+
+### 🖱️ Double-Click Daily Note Integration
+
+- **Quick Daily Note Access**: Double-click any day in calendar views to instantly open the daily note
+- **Automatic Creation**: Daily notes are created automatically if they don't exist
 
 ### 🎯 Use Cases
 

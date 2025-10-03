@@ -3,11 +3,11 @@ import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
 import { IcsImportService } from "../services/IcsImportService";
-import { 
-  createDailyNote, 
-  getDailyNote, 
+import {
+  createDailyNote,
+  getDailyNote,
   getAllDailyNotes,
-  appHasDailyNotesPluginLoaded 
+  appHasDailyNotesPluginLoaded,
 } from "obsidian-daily-notes-interface";
 
 interface DateElements {
@@ -23,10 +23,7 @@ export class CalendarView extends ItemView {
   private isViewEventsRegistered = false;
   private dailyNotes: Map<string, TFile> = new Map();
 
-  constructor(
-    leaf: WorkspaceLeaf, 
-    private plugin: MemoChron
-  ) {
+  constructor(leaf: WorkspaceLeaf, private plugin: MemoChron) {
     super(leaf);
     this.currentDate = new Date();
   }
@@ -48,7 +45,7 @@ export class CalendarView extends ItemView {
     this.registerViewEvents();
     this.loadDailyNotes();
     await this.refreshEvents();
-    
+
     // If calendar is hidden, show today's agenda
     if (this.plugin.settings.hideCalendar) {
       this.selectedDate = new Date();
@@ -63,15 +60,15 @@ export class CalendarView extends ItemView {
       this.plugin.settings.calendarUrls,
       forceRefresh
     );
-    
+
     // Reload daily notes
     this.loadDailyNotes();
-    
+
     this.renderMonth();
-    
+
     // Update calendar visibility based on current settings
     this.updateCalendarVisibility();
-    
+
     // Always show agenda for selected date or today
     const dateToShow = this.selectedDate || new Date();
     this.showDayAgenda(dateToShow);
@@ -80,10 +77,10 @@ export class CalendarView extends ItemView {
   updateColors() {
     // Update event colors in memory without fetching
     this.updateEventColors();
-    
+
     // Re-render the calendar view with new colors
     this.renderMonth();
-    
+
     // Re-render the agenda with new colors
     const dateToShow = this.selectedDate || new Date();
     this.showDayAgenda(dateToShow);
@@ -92,16 +89,16 @@ export class CalendarView extends ItemView {
   private loadDailyNotes() {
     // Clear existing daily notes
     this.dailyNotes.clear();
-    
+
     // Check if daily notes plugin is loaded
     if (!appHasDailyNotesPluginLoaded()) {
       return;
     }
-    
+
     try {
       // Get all daily notes
       const allDailyNotes = getAllDailyNotes();
-      
+
       // Store them in our map with date as key
       Object.entries(allDailyNotes).forEach(([dateStr, file]) => {
         this.dailyNotes.set(dateStr, file as TFile);
@@ -115,17 +112,17 @@ export class CalendarView extends ItemView {
     if (!appHasDailyNotesPluginLoaded()) {
       return false;
     }
-    
+
     try {
       const moment = (window as any).moment;
       if (!moment) {
         return false;
       }
-      
+
       const momentDate = moment(date);
       const allDailyNotes = getAllDailyNotes();
       const dailyNote = getDailyNote(momentDate, allDailyNotes);
-      
+
       return dailyNote !== null;
     } catch (error) {
       console.error("Error checking daily note:", error);
@@ -137,13 +134,15 @@ export class CalendarView extends ItemView {
     // Update colors for all cached events based on current settings
     const events = this.plugin.calendarService.getAllEvents();
     const calendarMap = new Map(
-      this.plugin.settings.calendarUrls.map(source => [source.url, source])
+      this.plugin.settings.calendarUrls.map((source) => [source.url, source])
     );
-    
-    events.forEach(event => {
+
+    events.forEach((event) => {
       const calendar = calendarMap.get(event.sourceId);
       if (calendar) {
-        event.color = this.plugin.settings.enableCalendarColors ? calendar.color : undefined;
+        event.color = this.plugin.settings.enableCalendarColors
+          ? calendar.color
+          : undefined;
       }
     });
   }
@@ -155,7 +154,7 @@ export class CalendarView extends ItemView {
     const controls = this.createControls(container);
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
-    
+
     this.updateCalendarVisibility();
     this.setupDragAndDrop();
   }
@@ -175,8 +174,8 @@ export class CalendarView extends ItemView {
   }
 
   private createNavButton(
-    parent: HTMLElement, 
-    text: string, 
+    parent: HTMLElement,
+    text: string,
     onClick: () => void
   ) {
     const button = parent.createEl("span", {
@@ -207,12 +206,12 @@ export class CalendarView extends ItemView {
 
   async goToToday() {
     const today = new Date();
-    
+
     if (!this.isSameMonth(this.currentDate, today)) {
       this.currentDate = today;
       await this.refreshEvents();
     }
-    
+
     this.selectDate(today);
   }
 
@@ -231,7 +230,9 @@ export class CalendarView extends ItemView {
 
   private updateSelectedDateUI(newDate: Date) {
     if (this.selectedDate) {
-      const prevEl = this.currentMonthDays.get(this.selectedDate.toDateString());
+      const prevEl = this.currentMonthDays.get(
+        this.selectedDate.toDateString()
+      );
       prevEl?.removeClass("selected");
     }
 
@@ -243,7 +244,7 @@ export class CalendarView extends ItemView {
     if (this.plugin.settings.hideCalendar) {
       return;
     }
-    
+
     this.calendar.empty();
     this.currentMonthDays.clear();
 
@@ -303,8 +304,9 @@ export class CalendarView extends ItemView {
   private getMonthInfo(year: number, month: number) {
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
-    
-    let firstDayOffset = firstDayOfMonth.getDay() - this.plugin.settings.firstDayOfWeek;
+
+    let firstDayOffset =
+      firstDayOfMonth.getDay() - this.plugin.settings.firstDayOfWeek;
     if (firstDayOffset < 0) firstDayOffset += 7;
 
     return {
@@ -320,9 +322,9 @@ export class CalendarView extends ItemView {
   }
 
   private renderDays(
-    grid: HTMLElement, 
-    year: number, 
-    month: number, 
+    grid: HTMLElement,
+    year: number,
+    month: number,
     daysInMonth: number
   ) {
     const today = new Date().toDateString();
@@ -336,9 +338,9 @@ export class CalendarView extends ItemView {
   private renderDay(grid: HTMLElement, date: Date, todayString: string) {
     const dateString = date.toDateString();
     const dayEl = this.createDayElement(grid, date, dateString === todayString);
-    
+
     this.currentMonthDays.set(dateString, dayEl);
-    
+
     if (this.selectedDate?.toDateString() === dateString) {
       dayEl.addClass("selected");
     }
@@ -348,12 +350,12 @@ export class CalendarView extends ItemView {
   }
 
   private createDayElement(
-    grid: HTMLElement, 
-    date: Date, 
+    grid: HTMLElement,
+    date: Date,
     isToday: boolean
   ): HTMLElement {
     const dayEl = grid.createEl("div", { cls: "memochron-day" });
-    
+
     if (isToday) {
       dayEl.addClass("today");
     }
@@ -369,39 +371,41 @@ export class CalendarView extends ItemView {
   private addDayEventIndicator(dayEl: HTMLElement, date: Date) {
     const events = this.plugin.calendarService.getEventsForDate(date);
     const hasDailyNote = this.checkDailyNoteForDate(date);
-    
+
     if (events.length > 0 || hasDailyNote) {
       dayEl.addClass("has-events");
-      
+
       if (this.plugin.settings.enableCalendarColors) {
         // Group events by calendar source to show one dot per calendar
         const eventsBySource = new Map<string, CalendarEvent>();
-        events.forEach(event => {
+        events.forEach((event) => {
           if (!eventsBySource.has(event.sourceId)) {
             eventsBySource.set(event.sourceId, event);
           }
         });
-        
+
         // Create a container for dots
         const dotsContainer = dayEl.createEl("div", {
-          cls: "memochron-event-dots-container"
+          cls: "memochron-event-dots-container",
         });
-        
+
         // Add daily note dot first if it exists (show on calendar even if not shown in agenda)
         if (hasDailyNote) {
           const dailyNoteDot = dotsContainer.createEl("div", {
             cls: "memochron-event-dot daily-note-dot colored",
             text: "•",
           });
-          const dailyNoteColor = this.plugin.settings.dailyNoteColor || 
+          const dailyNoteColor =
+            this.plugin.settings.dailyNoteColor ||
             getComputedStyle(document.documentElement)
-              .getPropertyValue('--interactive-accent')
-              .trim() || '#7c3aed';
+              .getPropertyValue("--interactive-accent")
+              .trim() ||
+            "#7c3aed";
           dailyNoteDot.style.color = dailyNoteColor;
         }
-        
+
         // Add a colored dot for each calendar that has events
-        eventsBySource.forEach(event => {
+        eventsBySource.forEach((event) => {
           const dot = dotsContainer.createEl("div", {
             cls: "memochron-event-dot colored",
             text: "•",
@@ -413,9 +417,9 @@ export class CalendarView extends ItemView {
       } else {
         // Create container for multiple dots even when colors are disabled
         const dotsContainer = dayEl.createEl("div", {
-          cls: "memochron-event-dots-container"
+          cls: "memochron-event-dots-container",
         });
-        
+
         // Add daily note dot if exists (show on calendar even if not shown in agenda)
         if (hasDailyNote) {
           dotsContainer.createEl("div", {
@@ -423,7 +427,7 @@ export class CalendarView extends ItemView {
             text: "•",
           });
         }
-        
+
         // Add event dot if there are events
         if (events.length > 0) {
           dotsContainer.createEl("div", {
@@ -438,29 +442,35 @@ export class CalendarView extends ItemView {
   private addDayClickHandler(dayEl: HTMLElement, date: Date) {
     dayEl.addEventListener("touchstart", () => {}, { passive: false });
     dayEl.addEventListener("click", () => this.selectDate(date));
+    dayEl.addEventListener("dblclick", () => this.handleDayDoubleClick(date));
+  }
+
+  private async handleDayDoubleClick(date: Date) {
+    // Open the daily note for the double-clicked date
+    await this.handleDailyNoteClick(date);
   }
 
   private async showDayAgenda(date: Date) {
     this.agenda.empty();
-    
+
     this.createAgendaHeader(date);
-    
+
     const events = this.plugin.calendarService.getEventsForDate(date);
     const hasEvents = events.length > 0;
     const showDailyNote = this.plugin.settings.showDailyNoteInAgenda;
-    
+
     if (!hasEvents && !showDailyNote) {
       this.agenda.createEl("p", { text: "No events scheduled" });
       return;
     }
 
     const list = this.agenda.createEl("div", { cls: "memochron-agenda-list" });
-    
+
     // Add daily note entry if enabled
     if (showDailyNote) {
       this.renderDailyNoteEntry(list, date);
     }
-    
+
     // Add events
     if (hasEvents) {
       const now = new Date();
@@ -481,33 +491,35 @@ export class CalendarView extends ItemView {
   }
 
   private renderDailyNoteEntry(list: HTMLElement, date: Date) {
-    const dailyNoteEl = list.createEl("div", { 
-      cls: "memochron-agenda-event memochron-daily-note" 
+    const dailyNoteEl = list.createEl("div", {
+      cls: "memochron-agenda-event memochron-daily-note",
     });
-    
+
     // Add a subtle accent color if calendar colors are enabled
     if (this.plugin.settings.enableCalendarColors) {
       dailyNoteEl.addClass("with-color");
       // Use the configured color or default to theme's accent color
-      const dailyNoteColor = this.plugin.settings.dailyNoteColor || 
+      const dailyNoteColor =
+        this.plugin.settings.dailyNoteColor ||
         getComputedStyle(document.documentElement)
-          .getPropertyValue('--interactive-accent')
-          .trim() || '#7c3aed';
+          .getPropertyValue("--interactive-accent")
+          .trim() ||
+        "#7c3aed";
       dailyNoteEl.style.setProperty("--event-color", dailyNoteColor);
     }
-    
+
     // Add title first
     dailyNoteEl.createEl("div", {
       cls: "memochron-event-title",
-      text: "Daily Note"
+      text: "Daily Note",
     });
-    
+
     // Add icon below like a location
     dailyNoteEl.createEl("div", {
       cls: "memochron-event-location",
-      text: "📝 Open daily note"
+      text: "📝 Open daily note",
     });
-    
+
     // Add click handler to open or create daily note
     dailyNoteEl.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -519,49 +531,48 @@ export class CalendarView extends ItemView {
     try {
       // Check if daily notes plugin is loaded
       if (!appHasDailyNotesPluginLoaded()) {
-        new Notice("Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins.");
+        new Notice(
+          "Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins."
+        );
         return;
       }
-      
+
       // Use moment for date handling (same as Obsidian's daily notes)
       const moment = (window as any).moment;
       if (!moment) {
         new Notice("Moment.js is not available");
         return;
       }
-      
+
       const momentDate = moment(date);
-      
+
       // Get all daily notes
       const allDailyNotes = getAllDailyNotes();
-      
+
       // Check if daily note already exists
       let dailyNote = getDailyNote(momentDate, allDailyNotes);
-      
+
       if (!dailyNote) {
         // Create the daily note if it doesn't exist
         dailyNote = await createDailyNote(momentDate);
       }
-      
+
       // Open the daily note
       if (dailyNote) {
         const leaf = this.app.workspace.getLeaf("tab");
         await leaf.openFile(dailyNote);
       }
-      
     } catch (error) {
       console.error("Failed to handle daily note:", error);
-      new Notice("Failed to open daily note. Make sure Daily Notes plugin is enabled and configured.");
+      new Notice(
+        "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
+      );
     }
   }
 
-  private renderEventItem(
-    list: HTMLElement, 
-    event: CalendarEvent, 
-    now: Date
-  ) {
+  private renderEventItem(list: HTMLElement, event: CalendarEvent, now: Date) {
     const eventEl = list.createEl("div", { cls: "memochron-agenda-event" });
-    
+
     if (event.end < now) {
       eventEl.addClass("past-event");
     }
@@ -586,15 +597,18 @@ export class CalendarView extends ItemView {
         text: "All day",
       });
     } else {
-      const timeFormat: Intl.DateTimeFormatOptions = { 
-        hour: "2-digit", 
+      const timeFormat: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
         minute: "2-digit",
-        hour12: this.plugin.settings.noteTimeFormat === '12h'
+        hour12: this.plugin.settings.noteTimeFormat === "12h",
       };
-      
+
       eventEl.createEl("div", {
         cls: "memochron-event-time",
-        text: `${event.start.toLocaleTimeString([], timeFormat)} - ${event.end.toLocaleTimeString([], timeFormat)}`,
+        text: `${event.start.toLocaleTimeString(
+          [],
+          timeFormat
+        )} - ${event.end.toLocaleTimeString([], timeFormat)}`,
       });
     }
   }
@@ -610,7 +624,7 @@ export class CalendarView extends ItemView {
     if (!event.location) return;
 
     const icon = this.getLocationIcon(event.location);
-    
+
     eventEl.createEl("div", {
       cls: "memochron-event-location",
       text: `${icon} ${event.location}`,
@@ -630,12 +644,12 @@ export class CalendarView extends ItemView {
   private isVirtualMeeting(location: string): boolean {
     const virtualKeywords = ["zoom", "meet.", "teams", "webex"];
     const lowerLocation = location.toLowerCase();
-    return virtualKeywords.some(keyword => lowerLocation.includes(keyword));
+    return virtualKeywords.some((keyword) => lowerLocation.includes(keyword));
   }
 
   private addEventClickHandler(eventEl: HTMLElement, event: CalendarEvent) {
     eventEl.addEventListener("touchstart", () => {}, { passive: false });
-    
+
     eventEl.addEventListener("click", async (e) => {
       e.stopPropagation();
       try {
@@ -655,7 +669,7 @@ export class CalendarView extends ItemView {
 
     let file = this.plugin.noteService.getExistingEventNote(event);
     const isNewNote = !file;
-    
+
     if (!file) {
       file = await this.plugin.noteService.createEventNote(event);
       if (!file) {
@@ -679,8 +693,10 @@ export class CalendarView extends ItemView {
   }
 
   private updateCalendarVisibility() {
-    const controls = this.containerEl.querySelector(".memochron-controls") as HTMLElement;
-    
+    const controls = this.containerEl.querySelector(
+      ".memochron-controls"
+    ) as HTMLElement;
+
     if (this.plugin.settings.hideCalendar) {
       this.calendar.style.display = "none";
       if (controls) {
@@ -725,7 +741,7 @@ export class CalendarView extends ItemView {
 
       // Handle only the first file
       const file = files[0];
-      
+
       // Check if it's an ICS file
       if (!file.name.endsWith(".ics")) {
         new Notice("Please drop an ICS calendar file");
@@ -735,13 +751,13 @@ export class CalendarView extends ItemView {
       try {
         // Read the file content
         const content = await this.readFile(file);
-        
+
         // Parse and validate single event
         const event = IcsImportService.parseSingleEvent(content);
-        
+
         // Create note from the event
         await this.createNoteFromImportedEvent(event);
-        
+
         new Notice(`Note created for: ${event.title}`);
       } catch (error) {
         console.error("Failed to import ICS file:", error);

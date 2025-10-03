@@ -6,7 +6,7 @@ import MemoChron from "../main";
 export interface RenderOptions {
   enableColors?: boolean;
   firstDayOfWeek?: number;
-  timeFormat?: '12h' | '24h';
+  timeFormat?: "12h" | "24h";
   showDailyNote?: boolean;
   dailyNoteColor?: string;
 }
@@ -16,7 +16,8 @@ export function renderCalendarGrid(
   currentDate: Date,
   events: CalendarEvent[],
   options: RenderOptions = {},
-  onDateClick?: (date: Date) => void
+  onDateClick?: (date: Date) => void,
+  onDateDoubleClick?: (date: Date) => void
 ): Map<string, HTMLElement> {
   const currentMonthDays = new Map<string, HTMLElement>();
 
@@ -36,7 +37,11 @@ export function renderCalendarGrid(
   // Render month days
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const { firstDayOffset, daysInMonth } = getMonthInfo(year, month, options.firstDayOfWeek || 0);
+  const { firstDayOffset, daysInMonth } = getMonthInfo(
+    year,
+    month,
+    options.firstDayOfWeek || 0
+  );
 
   // Empty days before month starts
   for (let i = 0; i < firstDayOffset; i++) {
@@ -62,6 +67,11 @@ export function renderCalendarGrid(
     if (onDateClick) {
       dayEl.addEventListener("click", () => onDateClick(date));
       dayEl.classList.add("clickable");
+    }
+
+    // Add double-click handler if provided
+    if (onDateDoubleClick) {
+      dayEl.addEventListener("dblclick", () => onDateDoubleClick(date));
     }
   }
 
@@ -104,7 +114,7 @@ export function renderAgendaList(
     if (dayEvents.length === 0 && !options.showDailyNote) {
       list.createEl("p", {
         cls: "memochron-no-events",
-        text: "No events scheduled"
+        text: "No events scheduled",
       });
     } else {
       const now = new Date();
@@ -122,26 +132,28 @@ function renderDailyNoteEntry(
   options: RenderOptions
 ) {
   const dailyNoteEl = list.createEl("div", {
-    cls: "memochron-agenda-event memochron-daily-note"
+    cls: "memochron-agenda-event memochron-daily-note",
   });
 
   if (options.enableColors) {
     dailyNoteEl.addClass("with-color");
-    const dailyNoteColor = options.dailyNoteColor ||
+    const dailyNoteColor =
+      options.dailyNoteColor ||
       getComputedStyle(document.documentElement)
-        .getPropertyValue('--interactive-accent')
-        .trim() || '#7c3aed';
+        .getPropertyValue("--interactive-accent")
+        .trim() ||
+      "#7c3aed";
     dailyNoteEl.style.setProperty("--event-color", dailyNoteColor);
   }
 
   dailyNoteEl.createEl("div", {
     cls: "memochron-event-title",
-    text: "Daily Note"
+    text: "Daily Note",
   });
 
   dailyNoteEl.createEl("div", {
     cls: "memochron-event-location",
-    text: "📝 Open daily note"
+    text: "📝 Open daily note",
   });
 
   // Note: Click handler should be added by the caller if needed
@@ -175,12 +187,15 @@ function renderEventItem(
     const timeFormat: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: options.timeFormat === '12h'
+      hour12: options.timeFormat === "12h",
     };
 
     eventEl.createEl("div", {
       cls: "memochron-event-time",
-      text: `${event.start.toLocaleTimeString([], timeFormat)} - ${event.end.toLocaleTimeString([], timeFormat)}`,
+      text: `${event.start.toLocaleTimeString(
+        [],
+        timeFormat
+      )} - ${event.end.toLocaleTimeString([], timeFormat)}`,
     });
   }
 
@@ -237,7 +252,10 @@ function createDayElement(
   return dayEl;
 }
 
-function getEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
+function getEventsForDate(
+  events: CalendarEvent[],
+  date: Date
+): CalendarEvent[] {
   const targetStartOfDay = new Date(date);
   targetStartOfDay.setHours(0, 0, 0, 0);
 
@@ -245,7 +263,9 @@ function getEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] 
   targetEndOfDay.setHours(23, 59, 59, 999);
 
   return events
-    .filter((event) => eventOccursOnDate(event, targetStartOfDay, targetEndOfDay))
+    .filter((event) =>
+      eventOccursOnDate(event, targetStartOfDay, targetEndOfDay)
+    )
     .sort((a, b) => a.start.getTime() - b.start.getTime());
 }
 
@@ -266,19 +286,19 @@ function addEventIndicators(
   dayEl.addClass("has-events");
 
   const dotsContainer = dayEl.createEl("div", {
-    cls: "memochron-event-dots-container"
+    cls: "memochron-event-dots-container",
   });
 
   if (options.enableColors) {
     // Group events by source for colored dots
     const eventsBySource = new Map<string, CalendarEvent>();
-    events.forEach(event => {
+    events.forEach((event) => {
       if (!eventsBySource.has(event.sourceId)) {
         eventsBySource.set(event.sourceId, event);
       }
     });
 
-    eventsBySource.forEach(event => {
+    eventsBySource.forEach((event) => {
       const dot = dotsContainer.createEl("div", {
         cls: "memochron-event-dot colored",
         text: "•",
@@ -305,12 +325,32 @@ function getLocationIcon(location: string): string {
 export function parseMonthYear(input: string): Date | null {
   // Support formats: "2025-01", "2025/01", "January 2025", "Jan 2025"
   const monthNames = [
-    "january", "february", "march", "april", "may", "june",
-    "july", "august", "september", "october", "november", "december"
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
   ];
   const monthAbbr = [
-    "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
   ];
 
   // Try YYYY-MM or YYYY/MM format
@@ -342,22 +382,25 @@ export function parseMonthYear(input: string): Date | null {
   return null;
 }
 
-export function parseDate(input: string, context?: { filename?: string }): Date | null {
+export function parseDate(
+  input: string,
+  context?: { filename?: string }
+): Date | null {
   // Handle dynamic properties
-  if (input === 'this.file.name' && context?.filename) {
+  if (input === "this.file.name" && context?.filename) {
     return parseDateFromFilename(context.filename);
   }
 
   // Support special keywords
-  if (input.toLowerCase() === 'today') {
+  if (input.toLowerCase() === "today") {
     return new Date();
   }
-  if (input.toLowerCase() === 'tomorrow') {
+  if (input.toLowerCase() === "tomorrow") {
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return date;
   }
-  if (input.toLowerCase() === 'yesterday') {
+  if (input.toLowerCase() === "yesterday") {
     const date = new Date();
     date.setDate(date.getDate() - 1);
     return date;
@@ -404,15 +447,15 @@ function parseDateFromFilename(filename: string): Date | null {
         if (!isNaN(date.getTime())) return date;
       } else if (/^\d{4}_\d{2}_\d{2}$/.test(dateStr)) {
         // YYYY_MM_DD
-        const date = new Date(dateStr.replace(/_/g, '-'));
+        const date = new Date(dateStr.replace(/_/g, "-"));
         if (!isNaN(date.getTime())) return date;
       } else if (/^\d{4}\.\d{2}\.\d{2}$/.test(dateStr)) {
         // YYYY.MM.DD
-        const date = new Date(dateStr.replace(/\./g, '-'));
+        const date = new Date(dateStr.replace(/\./g, "-"));
         if (!isNaN(date.getTime())) return date;
       } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
         // DD-MM-YYYY or MM-DD-YYYY - try both
-        const parts = dateStr.split('-');
+        const parts = dateStr.split("-");
         const date1 = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // DD-MM-YYYY
         const date2 = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`); // MM-DD-YYYY
 
