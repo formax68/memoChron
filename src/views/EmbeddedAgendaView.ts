@@ -11,6 +11,7 @@ import {
   getAllDailyNotes,
   appHasDailyNotesPluginLoaded,
 } from "obsidian-daily-notes-interface";
+import { CalendarEvent } from "../services/CalendarService";
 
 export interface AgendaCodeBlockParams {
   date?: string;
@@ -107,20 +108,61 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     });
 
     // Pre-fetch all events for all days to avoid redundant calls
-    const dayEventsMap = new Map<number, any[]>();
+    const dayEventsMap = new Map<number, CalendarEvent[]>();
     let hasAnyEvents = false;
 
-    for (let i = 0; i < this.days; i++) {
-      const currentDate = this.getDateForDay(i);
+    // For multi-day views, fetch all events once and filter locally for better performance
+    if (this.days > 1) {
+      const allEvents = this.plugin.calendarService.getAllEvents();
+      const startDate = this.getDateForDay(0);
+      const endDate = this.getDateForDay(this.days - 1);
+
+      // Set time boundaries for the entire range
+      const rangeStart = new Date(startDate);
+      rangeStart.setHours(0, 0, 0, 0);
+      const rangeEnd = new Date(endDate);
+      rangeEnd.setHours(23, 59, 59, 999);
+
+      // Filter events that occur within our date range
+      const eventsInRange = allEvents.filter(
+        (event) => event.start <= rangeEnd && event.end >= rangeStart
+      );
+
+      // Group events by day
+      for (let i = 0; i < this.days; i++) {
+        const currentDate = this.getDateForDay(i);
+        const dayStart = new Date(currentDate);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(currentDate);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const dayEvents = eventsInRange
+          .filter((event) => event.start <= dayEnd && event.end >= dayStart)
+          .sort((a, b) => a.start.getTime() - b.start.getTime());
+
+        dayEventsMap.set(i, dayEvents);
+        if (dayEvents.length > 0) {
+          hasAnyEvents = true;
+        }
+      }
+    } else {
+      // For single day, use the existing method
+      const currentDate = this.getDateForDay(0);
       const dayEvents =
         this.plugin.calendarService.getEventsForDate(currentDate);
-      dayEventsMap.set(i, dayEvents);
+      dayEventsMap.set(0, dayEvents);
       if (dayEvents.length > 0) {
         hasAnyEvents = true;
       }
     }
 
-    if (!hasAnyEvents && !this.params.showDailyNote) {
+    // Check if we should show "No events scheduled" message
+    const shouldShowDailyNote =
+      this.params.showDailyNote !== undefined
+        ? this.params.showDailyNote
+        : this.plugin.settings.showDailyNoteInAgenda;
+
+    if (!hasAnyEvents && !shouldShowDailyNote) {
       agendaContainer.createEl("p", {
         cls: "memochron-no-events",
         text: "No events scheduled",
@@ -229,7 +271,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
   private renderEventItem(
     list: HTMLElement,
-    event: any,
+    event: CalendarEvent,
     now: Date,
     options: RenderOptions
   ) {
@@ -329,7 +371,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     }
   }
 
-  private async handleEventClick(event: any) {
+  private async handleEventClick(event: CalendarEvent) {
     if (!this.plugin.settings.noteLocation) {
       new Notice("Please set a note location in settings first");
       return;
