@@ -12,6 +12,7 @@ export interface CalendarCodeBlockParams {
   month?: string;
   year?: string;
   showDots?: boolean;
+  title?: string;
 }
 
 export class EmbeddedCalendarView extends MarkdownRenderChild {
@@ -85,10 +86,12 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
 
     const title = header.createEl("h3", {
       cls: "memochron-embedded-title",
-      text: this.currentDate.toLocaleString("default", {
-        month: "long",
-        year: "numeric",
-      }),
+      text:
+        this.params.title ||
+        this.currentDate.toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        }),
     });
 
     // Create navigation
@@ -258,6 +261,9 @@ export function parseCalendarCodeBlock(
       case "showdots":
       case "show-dots":
         params.showDots = value.toLowerCase() === "true";
+        break;
+      case "title":
+        params.title = value;
         break;
     }
   }

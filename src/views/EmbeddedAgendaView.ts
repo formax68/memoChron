@@ -18,6 +18,7 @@ export interface AgendaCodeBlockParams {
   days?: number;
   showPast?: boolean;
   showDailyNote?: boolean;
+  title?: string;
 }
 
 export class EmbeddedAgendaView extends MarkdownRenderChild {
@@ -80,7 +81,9 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     });
 
     let headerText: string;
-    if (this.days === 1) {
+    if (this.params.title) {
+      headerText = this.params.title;
+    } else if (this.days === 1) {
       headerText = this.startDate.toLocaleDateString("default", {
         weekday: "long",
         month: "long",
@@ -422,6 +425,9 @@ export function parseAgendaCodeBlock(source: string): AgendaCodeBlockParams {
       case "showdailynote":
       case "show-daily-note":
         params.showDailyNote = value.toLowerCase() === "true";
+        break;
+      case "title":
+        params.title = value;
         break;
     }
   }
