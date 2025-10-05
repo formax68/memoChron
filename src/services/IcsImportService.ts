@@ -24,11 +24,25 @@ export class IcsImportService {
         try {
           TimezoneService.register(tz);
         } catch (error) {
-          // Ignore errors if timezone is already registered
-          console.debug(
-            "Timezone registration skipped (may already exist):",
-            error
-          );
+          // Only ignore errors if timezone is already registered; log others as warnings
+          if (
+            error instanceof Error &&
+            typeof error.message === "string" &&
+            (
+              error.message.includes("already registered") ||
+              error.message.includes("already exists")
+            )
+          ) {
+            console.debug(
+              "Timezone registration skipped (may already exist):",
+              error.message
+            );
+          } else {
+            console.warn(
+              "Unexpected error during timezone registration:",
+              error
+            );
+          }
         }
       });
 
