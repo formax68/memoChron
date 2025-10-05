@@ -223,7 +223,8 @@ export function convertIcalTimeToDate(
     console.error("Failed to convert ICAL time:", error, {
       icalTime,
       tzid: normalizedTzid,
-      mappedZone: zone,
+      mappedZone: mappedZone,
+      zoneUsed: zone,
     });
     // Fallback to simple date creation
     return new Date(year, month - 1, day, hour, minute, second);
