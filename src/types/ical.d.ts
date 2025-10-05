@@ -61,5 +61,12 @@ declare module "ical.js" {
     tzid: string;
   }
 
+  export class TimezoneService {
+    static register(timezone: Component | Timezone): void;
+    static has(tzid: string): boolean;
+    static get(tzid: string): Timezone | null;
+    static reset(): void;
+  }
+
   export function parse(input: string): any;
 }

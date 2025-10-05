@@ -1,4 +1,10 @@
-import { Component, Event as ICalEvent, parse, Property } from "ical.js";
+import {
+  Component,
+  Event as ICalEvent,
+  parse,
+  Property,
+  TimezoneService,
+} from "ical.js";
 import { CalendarEvent } from "./CalendarService";
 import { convertIcalTimeToDate } from "../utils/timezoneUtils";
 
@@ -11,6 +17,35 @@ export class IcsImportService {
     try {
       const jcalData = parse(icsContent);
       const comp = new Component(jcalData);
+
+      // Register any VTIMEZONE components so ical.js can apply their rules
+      const vtimezones = comp.getAllSubcomponents("vtimezone");
+      vtimezones.forEach((tz) => {
+        try {
+          TimezoneService.register(tz);
+        } catch (error) {
+          // Only ignore errors if timezone is already registered; log others as warnings
+          if (
+            error instanceof Error &&
+            typeof error.message === "string" &&
+            (
+              error.message.includes("already registered") ||
+              error.message.includes("already exists")
+            )
+          ) {
+            console.debug(
+              "Timezone registration skipped (may already exist):",
+              error.message
+            );
+          } else {
+            console.warn(
+              "Unexpected error during timezone registration:",
+              error
+            );
+          }
+        }
+      });
+
       const vevents = comp.getAllSubcomponents("vevent");
 
       if (vevents.length === 0) {
@@ -18,16 +53,18 @@ export class IcsImportService {
       }
 
       if (vevents.length > 1) {
-        throw new Error("Multiple events found. Only single event ICS files are supported for drag and drop");
+        throw new Error(
+          "Multiple events found. Only single event ICS files are supported for drag and drop"
+        );
       }
 
       const vevent = vevents[0];
       const event = new ICalEvent(vevent);
-      
+
       // Extract timezone if present
       const dtstart = vevent.getFirstProperty("dtstart");
       const tzid = dtstart ? dtstart.getParameter("tzid") : null;
-      
+
       // Check if it's an all-day event
       const isAllDay = IcsImportService.isAllDayEvent(vevent);
 
@@ -45,7 +82,7 @@ export class IcsImportService {
         location: event.location,
         attendees: IcsImportService.extractAttendees(vevent),
         source: "Imported",
-        sourceId: "imported" // Special source ID for imported events
+        sourceId: "imported", // Special source ID for imported events
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -54,36 +91,36 @@ export class IcsImportService {
       throw new Error("Failed to parse ICS file");
     }
   }
-  
+
   private static isAllDayEvent(vevent: Component): boolean {
     const dtstart = vevent.getFirstProperty("dtstart");
     if (!dtstart) return false;
-    
+
     // Check if the property has a VALUE=DATE parameter
     const valueParam = dtstart.getParameter("value");
     if (valueParam === "DATE") return true;
-    
+
     // Also check if the type is 'date' in the jCal representation
     // This handles cases where ical.js represents date-only values differently
     const jcal = (dtstart as any).jCal;
     if (jcal && jcal[2] === "date") return true;
-    
+
     return false;
   }
 
   private static extractAttendees(vevent: Component): string[] {
     const attendees: string[] = [];
-    
+
     if (!vevent.hasProperty("attendee")) {
       return attendees;
     }
-    
+
     const attendeeProps = vevent.getAllProperties("attendee");
-    
+
     for (const prop of attendeeProps) {
       const value = prop.getFirstValue();
       const cn = prop.getParameter("cn"); // Common Name parameter
-      
+
       if (cn) {
         attendees.push(cn);
       } else if (value) {
@@ -92,7 +129,7 @@ export class IcsImportService {
         attendees.push(email);
       }
     }
-    
+
     return attendees;
   }
 }
