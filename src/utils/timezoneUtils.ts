@@ -97,7 +97,8 @@ export const TIMEZONE_MAP: Record<string, string> = {
 
   // Common UTC offset formats
   "(UTC+02:00) Athens, Bucharest": "Europe/Athens",
-  "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna": "Europe/Berlin",
+  "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna":
+    "Europe/Berlin",
   "(UTC+00:00) Dublin, Edinburgh, Lisbon, London": "Europe/London",
   "(UTC-05:00) Eastern Time (US & Canada)": "America/New_York",
   "(UTC-06:00) Central Time (US & Canada)": "America/Chicago",
@@ -112,29 +113,29 @@ export const TIMEZONE_MAP: Record<string, string> = {
  */
 function normalizeTimezone(tzid: string): string {
   if (!tzid) return "UTC";
-  
+
   // Trim whitespace and handle empty strings
   const cleaned = tzid.trim();
   if (!cleaned) return "UTC";
-  
+
   // Handle Microsoft special timezone format
   if (cleaned.startsWith("tzone://Microsoft/")) {
     const extracted = cleaned.replace("tzone://Microsoft/", "");
     if (extracted.toLowerCase() === "utc") return "UTC";
   }
-  
+
   // Handle UTC offset formats like "(UTC+02:00) Athens, Bucharest"
   const utcOffsetMatch = cleaned.match(/^\(UTC[+-]\d{2}:\d{2}\)\s*(.+)$/);
   if (utcOffsetMatch) {
     // Return the full string as key since we have specific mappings for these
     return cleaned;
   }
-  
+
   // Handle other special cases
   if (cleaned.toLowerCase() === "customized time zone") {
     return "Customized Time Zone";
   }
-  
+
   return cleaned;
 }
 
@@ -145,7 +146,11 @@ function normalizeTimezone(tzid: string): string {
  * @param isAllDay Whether this is an all-day event (VALUE=DATE)
  * @returns Date object in local timezone
  */
-export function convertIcalTimeToDate(icalTime: Time, tzid: string | null, isAllDay: boolean = false): Date {
+export function convertIcalTimeToDate(
+  icalTime: Time,
+  tzid: string | null,
+  isAllDay: boolean = false
+): Date {
   // Get the time components from the ICAL Time object
   const year = icalTime.year;
   const month = icalTime.month;
@@ -170,7 +175,10 @@ export function convertIcalTimeToDate(icalTime: Time, tzid: string | null, isAll
     try {
       return icalTime.toJSDate();
     } catch (error) {
-      console.warn("Failed to use ical.js toJSDate(), falling back to manual construction:", error);
+      console.warn(
+        "Failed to use ical.js toJSDate(), falling back to manual construction:",
+        error
+      );
       // Fallback to original behavior for floating times
       return new Date(year, month - 1, day, hour, minute, second);
     }
@@ -180,12 +188,20 @@ export function convertIcalTimeToDate(icalTime: Time, tzid: string | null, isAll
   const normalizedTzid = normalizeTimezone(tzid);
   const mappedZone = TIMEZONE_MAP[normalizedTzid];
   const zone = mappedZone || normalizedTzid;
-  
+
   try {
-    // If tzid is not in our map (custom/unknown) but ical.js has timezone
-    // context (via VTIMEZONE), defer to ical.js conversion to respect rules
-    if (!mappedZone && (icalTime as any).zone) {
-      return icalTime.toJSDate();
+    // If tzid is not in our map (custom/unknown), defer to ical.js to respect VTIMEZONE
+    // This allows ical.js to apply any VTIMEZONE rules embedded in the ICS file
+    if (!mappedZone) {
+      try {
+        return icalTime.toJSDate();
+      } catch (error) {
+        console.warn(
+          "toJSDate failed for custom TZID, falling back to manual conversion:",
+          error
+        );
+        // Continue to Luxon fallback below
+      }
     }
 
     // Create a DateTime object in the specified timezone
@@ -195,14 +211,20 @@ export function convertIcalTimeToDate(icalTime: Time, tzid: string | null, isAll
     );
 
     if (!dt.isValid) {
-      console.warn(`Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), falling back to local time`);
+      console.warn(
+        `Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), falling back to local time`
+      );
       return new Date(year, month - 1, day, hour, minute, second);
     }
 
     // Convert to local timezone
     return dt.toLocal().toJSDate();
   } catch (error) {
-    console.error("Failed to convert ICAL time:", error, { icalTime, tzid: normalizedTzid, mappedZone: zone });
+    console.error("Failed to convert ICAL time:", error, {
+      icalTime,
+      tzid: normalizedTzid,
+      mappedZone: zone,
+    });
     // Fallback to simple date creation
     return new Date(year, month - 1, day, hour, minute, second);
   }
@@ -239,7 +261,9 @@ export function convertTimezone(date: Date, tzid: string | null): Date {
   );
 
   if (!dt.isValid) {
-    console.warn(`Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), using original date`);
+    console.warn(
+      `Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), using original date`
+    );
     return date;
   }
 
