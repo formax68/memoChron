@@ -92,7 +92,8 @@ export const TIMEZONE_MAP: Record<string, string> = {
   UTC: "UTC",
   "Coordinated Universal Time": "UTC",
   "tzone://Microsoft/Utc": "UTC",
-  "Customized Time Zone": "UTC", // Fallback for custom timezones
+  // Intentionally do not map "Customized Time Zone" so that VTIMEZONE rules
+  // embedded in the ICS are honored by ical.js for such custom tzids
 
   // Common UTC offset formats
   "(UTC+02:00) Athens, Bucharest": "Europe/Athens",
@@ -177,9 +178,16 @@ export function convertIcalTimeToDate(icalTime: Time, tzid: string | null, isAll
 
   // Map Windows timezone names to IANA timezone identifiers
   const normalizedTzid = normalizeTimezone(tzid);
-  const zone = TIMEZONE_MAP[normalizedTzid] || normalizedTzid;
+  const mappedZone = TIMEZONE_MAP[normalizedTzid];
+  const zone = mappedZone || normalizedTzid;
   
   try {
+    // If tzid is not in our map (custom/unknown) but ical.js has timezone
+    // context (via VTIMEZONE), defer to ical.js conversion to respect rules
+    if (!mappedZone && (icalTime as any).zone) {
+      return icalTime.toJSDate();
+    }
+
     // Create a DateTime object in the specified timezone
     const dt = DateTime.fromObject(
       { year, month, day, hour, minute, second },
