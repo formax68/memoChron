@@ -93,7 +93,12 @@ export class CalendarService {
   }
 
   private scheduleBackgroundRefresh(sources: CalendarSource[]) {
-    setTimeout(() => this.fetchCalendars(sources, true), 100);
+    // Only schedule a refresh if the cache has actually expired
+    // This respects the refresh interval setting
+    const enabledSources = sources.filter((source) => source.enabled);
+    if (this.needsRefresh(enabledSources, false)) {
+      setTimeout(() => this.fetchCalendars(sources, true), 100);
+    }
   }
 
   private needsRefresh(
