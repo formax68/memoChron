@@ -1,6 +1,6 @@
 {
   "name": "memochron",
-  "version": "1.8.0",
+  "version": "1.8.3",
   "description": "Calendar integration and note creation plugin for Obsidian",
   "main": "main.js",
   "scripts": {
