@@ -138,6 +138,7 @@ In the plugin settings, you can customize:
   - {{attendees_count}} - Number of attendees
   - {{attendees_links}} - Comma-separated wiki links (when enabled)
   - {{attendees_links_list}} - Bullet list of wiki links (when enabled)
+  - {{attendees_links_yaml}} - Quoted wiki links for YAML properties (when enabled)
 
 ### Multi-Day Event Support
 
@@ -345,14 +346,15 @@ MemoChron can extract attendee information from calendar events and optionally c
 - **{{attendees_count}}** - Shows the number of attendees
 - **{{attendees_links}}** - Creates wiki links for attendees (when enabled in settings)
 - **{{attendees_links_list}}** - Creates a bullet list of wiki links
+- **{{attendees_links_yaml}}** - Creates quoted wiki links for use in YAML properties (when enabled in settings)
 
 **Example Template with Attendees:**
 
 ```markdown
 # {{event_title}}
 
-**Date**: {{start_date}}  
-**Time**: {{start_time}} - {{end_time}}  
+**Date**: {{start_date}}
+**Time**: {{start_time}} - {{end_time}}
 **Location**: {{location}}
 
 ## Attendees ({{attendees_count}})
@@ -361,6 +363,33 @@ MemoChron can extract attendee information from calendar events and optionally c
 
 ## Notes
 ```
+
+**Example with YAML Properties:**
+
+To use attendee links in Obsidian properties (frontmatter), use the `{{attendees_links_yaml}}` variable:
+
+```markdown
+---
+meeting: {{event_title}}
+date: {{start_date-iso}}
+attendees:
+{{attendees_links_yaml}}
+---
+
+# {{event_title}}
+
+## Notes
+```
+
+This will create a frontmatter property like:
+```yaml
+attendees:
+  - "[[Alice]]"
+  - "[[Bob]]"
+  - "[[Charlie]]"
+```
+
+This format follows [Obsidian's list property requirements](https://help.obsidian.md/properties#List) where internal links in list properties must be surrounded with quotes.
 
 **Enabling Attendee Links:**
 
@@ -437,6 +466,28 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.8.4
+
+### 📋 YAML Properties Support for Attendees
+
+- **New Template Variable**: Added `{{attendees_links_yaml}}` for proper Obsidian properties integration
+- **YAML List Format**: Attendee links now format correctly for use in frontmatter properties
+- **Quoted Links**: Internal links are automatically quoted as required by Obsidian's property system
+- **Multi-line Format**: Generates clean, readable YAML list format for better compatibility
+
+Use the new variable in your templates to add attendee links directly to note properties:
+
+```markdown
+---
+meeting: {{event_title}}
+date: {{start_date-iso}}
+attendees:
+{{attendees_links_yaml}}
+---
+```
+
+This creates properly formatted properties that work seamlessly with Obsidian's property system, making it easy to query and filter notes by attendees.
 
 ## What's New in v1.8.0
 

@@ -20,6 +20,7 @@ interface EventTemplateVariables {
   attendees_list: string;
   attendees_links: string;
   attendees_links_list: string;
+  attendees_links_yaml: string;
   attendees_count: string;
 }
 
@@ -239,6 +240,7 @@ export class NoteService {
       attendees_list: attendeesList.map((a) => `- ${a}`).join("\n"),
       attendees_links: attendeeLinks.join(", "),
       attendees_links_list: attendeeLinks.map((link) => `- ${link}`).join("\n"),
+      attendees_links_yaml: this.formatAttendeesYaml(attendeeLinks),
       attendees_count: attendeesList.length.toString(),
     };
   }
@@ -508,6 +510,18 @@ export class NoteService {
       // Obsidian will find the note regardless of its location
       return `[[${attendee}]]`;
     });
+  }
+
+  private formatAttendeesYaml(attendeeLinks: string[]): string {
+    if (attendeeLinks.length === 0) {
+      return "";
+    }
+    // Format as YAML list with quoted links for Obsidian properties
+    // Each link is quoted as required by Obsidian for internal links in properties
+    // Example:
+    //   - "[[Person 1]]"
+    //   - "[[Person 2]]"
+    return attendeeLinks.map((link) => `  - "${link}"`).join("\n");
   }
 
   private getCalendarNotesSettings(source: string): CalendarNotesSettings {
