@@ -35,3 +35,14 @@ export const CALENDAR_COLOR_PALETTE = [
     'var(--color-pink)',
     'var(--color-cyan)',
 ];
+
+// RFC 5545 CUTYPE values
+export const CUTYPE_INDIVIDUAL = "INDIVIDUAL";
+export const CUTYPE_GROUP = "GROUP";
+export const CUTYPE_RESOURCE = "RESOURCE";
+export const CUTYPE_ROOM = "ROOM";
+export const CUTYPE_UNKNOWN = "UNKNOWN";
+
+// Default filtering: include individuals and unspecified
+// Per RFC 5545, INDIVIDUAL is the default when CUTYPE is not specified
+export const DEFAULT_FILTERED_CUTYPES: string[] = [CUTYPE_INDIVIDUAL, ""];

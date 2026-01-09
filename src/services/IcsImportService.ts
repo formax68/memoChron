@@ -13,7 +13,10 @@ export class IcsImportService {
    * Parse ICS file content and validate it contains exactly one event
    * @throws Error if the file contains no events or multiple events
    */
-  static parseSingleEvent(icsContent: string): CalendarEvent {
+  static parseSingleEvent(
+    icsContent: string,
+    filteredCuTypes?: string[]
+  ): CalendarEvent {
     try {
       const jcalData = parse(icsContent);
       const comp = new Component(jcalData);
@@ -80,7 +83,7 @@ export class IcsImportService {
         isAllDay: isAllDay,
         description: event.description,
         location: event.location,
-        attendees: IcsImportService.extractAttendees(vevent),
+        attendees: IcsImportService.extractAttendees(vevent, filteredCuTypes),
         source: "Imported",
         sourceId: "imported", // Special source ID for imported events
       };
@@ -108,8 +111,11 @@ export class IcsImportService {
     return false;
   }
 
-  private static extractAttendees(vevent: Component): string[] {
+  private static extractAttendees(vevent: Component, filteredCuTypes?: string[]): string[] {
     const attendees: string[] = [];
+
+    // Use default if not provided
+    const cuTypeFilter = filteredCuTypes || ["INDIVIDUAL", ""];
 
     if (!vevent.hasProperty("attendee")) {
       return attendees;
@@ -120,7 +126,18 @@ export class IcsImportService {
     for (const prop of attendeeProps) {
       const value = prop.getFirstValue();
       const cn = prop.getParameter("cn"); // Common Name parameter
+      const cutype = prop.getParameter("cutype"); // CUTYPE parameter
 
+      // Normalize CUTYPE: undefined/null/empty treated as "" (unspecified)
+      // RFC 5545: CUTYPE is case-insensitive, normalize to uppercase
+      const normalizedCuType = (cutype || "").toUpperCase();
+
+      // Filter based on CUTYPE - skip if not in allowed list
+      if (!cuTypeFilter.includes(normalizedCuType)) {
+        continue;
+      }
+
+      // Extract name or email
       if (cn) {
         attendees.push(cn);
       } else if (value) {

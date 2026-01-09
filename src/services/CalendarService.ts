@@ -611,7 +611,7 @@ export class CalendarService {
           isAllDay: isAllDay,
           description: event.description,
           location: event.location,
-          attendees: this.extractAttendees(vevent),
+          attendees: this.extractAttendees(vevent, source),
           source: source.name,
           sourceId: source.url,
           color: source.color,
@@ -644,7 +644,7 @@ export class CalendarService {
         isAllDay: isAllDay,
         description: event.description,
         location: event.location,
-        attendees: this.extractAttendees(event.component),
+        attendees: this.extractAttendees(event.component, source),
         source: source.name,
         sourceId: source.url,
         color: source.color,
@@ -697,19 +697,36 @@ export class CalendarService {
     );
   }
 
-  private extractAttendees(vevent: Component): string[] {
+  private extractAttendees(vevent: Component, source: CalendarSource): string[] {
     const attendees: string[] = [];
-    
+
     if (!vevent.hasProperty("attendee")) {
       return attendees;
     }
-    
+
     const attendeeProps = vevent.getAllProperties("attendee");
-    
+
+    // Get CUTYPE filter: calendar-specific override or global default
+    const calendarSettings = source.notesSettings;
+    const filteredCuTypes =
+      (calendarSettings?.filteredCuTypes) ||
+      this.plugin.settings.filteredCuTypes;
+
     for (const prop of attendeeProps) {
       const value = prop.getFirstValue();
       const cn = prop.getParameter("cn"); // Common Name parameter
-      
+      const cutype = prop.getParameter("cutype"); // CUTYPE parameter
+
+      // Normalize CUTYPE: undefined/null/empty treated as "" (unspecified)
+      // RFC 5545: CUTYPE is case-insensitive, normalize to uppercase
+      const normalizedCuType = (cutype || "").toUpperCase();
+
+      // Filter based on CUTYPE - skip if not in allowed list
+      if (!filteredCuTypes.includes(normalizedCuType)) {
+        continue;
+      }
+
+      // Extract name or email
       if (cn) {
         attendees.push(cn);
       } else if (value) {
@@ -718,7 +735,7 @@ export class CalendarService {
         attendees.push(email);
       }
     }
-    
+
     return attendees;
   }
 
@@ -749,7 +766,7 @@ export class CalendarService {
         isAllDay: isAllDay,
         description: exception.description,
         location: exception.location,
-        attendees: this.extractAttendees(exception.component),
+        attendees: this.extractAttendees(exception.component, source),
         source: source.name,
         sourceId: source.url,
         color: source.color,

@@ -22,6 +22,7 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - 🎨 **Customizable**: Configure note templates, locations, and naming conventions
 - 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with an advanced color picker
 - 👥 **Attendee Links**: Automatically create wiki links for event attendees
+- 🔍 **Attendee Filtering**: Filter attendees by type (CUTYPE) to exclude rooms, resources, and other non-person entities
 - ⚙️ **Calendar-Specific Configuration**: Override default settings for individual calendars
 - 📝 **Embedded Views**: Embed calendar and agenda views directly in your notes using dataview-like code blocks
 
@@ -397,6 +398,32 @@ This format follows [Obsidian's list property requirements](https://help.obsidia
 2. Enable "Create links for attendees"
 3. Links will be created as `[[Name]]` - Obsidian will find the notes regardless of their folder location
 
+#### Attendee Type Filtering (CUTYPE)
+
+Calendar files from companies often include non-person attendees like conference rooms, equipment, and resources. MemoChron can filter these out automatically based on the iCalendar CUTYPE parameter (RFC 5545).
+
+**Available Attendee Types:**
+
+- **Individual** - Actual people (included by default)
+- **Unspecified** - Attendees without a CUTYPE parameter, usually people (included by default)
+- **Group** - Distribution lists or groups (excluded by default)
+- **Resource** - Equipment or other resources (excluded by default)
+- **Room** - Conference rooms or meeting spaces (excluded by default)
+- **Unknown** - Unknown attendee types (excluded by default)
+
+**Configuring Attendee Filtering:**
+
+1. Go to Settings > MemoChron > Notes
+2. Find "Filter attendees by type" section
+3. Toggle each attendee type on/off based on what you want to include
+4. Calendar data refreshes automatically when you change settings
+
+**Default Behavior:**
+By default, only actual people (Individual and Unspecified) are included in your notes. Conference rooms, resources, and other non-person entities are automatically filtered out.
+
+**Calendar-Specific Filtering:**
+You can override the global attendee type filter for individual calendars. This is useful if some calendars need different filtering rules (e.g., including rooms for facility management calendars).
+
 ### Organizing Notes with Folder Templates
 
 MemoChron supports flexible folder organization using customizable templates. You can organize your event notes into date-based subfolders automatically.
@@ -451,6 +478,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Tags**: Set default tags for event notes
 - **Enable Calendar Colors**: Toggle color differentiation for calendar sources
 - **Create Links for Attendees**: Automatically create wiki links for event attendees
+- **Filter Attendees by Type**: Choose which attendee types to include (Individual, Group, Resource, Room, etc.)
   - When enabled, each calendar gets a customizable color
   - Colors appear as dots in the calendar view and left borders in the agenda view
   - Click the color button to open an advanced visual color picker featuring:
@@ -466,6 +494,24 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.8.5
+
+### 🔍 Attendee Type Filtering (CUTYPE)
+
+- **Smart Filtering**: Automatically filter attendees by type to exclude rooms, resources, and other non-person entities
+- **RFC 5545 Compliance**: Full support for iCalendar CUTYPE parameter (Individual, Group, Resource, Room, Unknown)
+- **Customizable Settings**: Choose which attendee types to include globally or per-calendar
+- **Default Behavior**: Only actual people are included by default (Individual and Unspecified types)
+- **Calendar-Specific Overrides**: Apply different filtering rules to individual calendars
+- **Automatic Refresh**: Calendar data refreshes automatically when you change filter settings
+
+**Why This Matters:**
+Corporate calendars often include conference rooms and equipment as attendees, cluttering your meeting notes with entries like "Conference Room A" and "Projector". Now you can filter these out automatically while keeping actual people in your attendee lists.
+
+**Example Use Case:**
+Before filtering: `Attendees: John Doe, Conference Room A, Jane Smith, Projector`
+After filtering: `Attendees: John Doe, Jane Smith`
 
 ## What's New in v1.8.4
 

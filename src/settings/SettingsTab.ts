@@ -66,6 +66,7 @@ export class SettingsTab extends PluginSettingTab {
     this.renderDefaultFrontmatter();
     this.renderNoteTemplate();
     this.renderAttendeeSettings();
+    this.renderAttendeeFiltering();
     this.renderDefaultTags();
   }
 
@@ -763,6 +764,51 @@ export class SettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+  }
+
+  private renderAttendeeFiltering(): void {
+    new Setting(this.containerEl)
+      .setName("Filter attendees by type")
+      .setDesc(
+        "Select which types of attendees to include in event notes. Most calendars only mark rooms/resources with CUTYPE, leaving people as 'Individual' or unspecified."
+      )
+      .setHeading();
+
+    const cuTypeOptions = [
+      { value: "INDIVIDUAL", label: "Individual (people)", description: "Actual people attending the event" },
+      { value: "", label: "Unspecified", description: "No CUTYPE parameter (usually people)" },
+      { value: "GROUP", label: "Group", description: "Distribution lists or groups" },
+      { value: "RESOURCE", label: "Resource", description: "Equipment or other resources" },
+      { value: "ROOM", label: "Room", description: "Conference rooms or meeting spaces" },
+      { value: "UNKNOWN", label: "Unknown", description: "Unknown attendee type" },
+    ];
+
+    cuTypeOptions.forEach(({ value, label, description }) => {
+      new Setting(this.containerEl)
+        .setName(label)
+        .setDesc(description)
+        .addToggle((toggle) => {
+          const isEnabled = this.plugin.settings.filteredCuTypes.includes(value);
+          toggle
+            .setValue(isEnabled)
+            .onChange(async (enabled) => {
+              if (enabled) {
+                // Add to filter list if not already present
+                if (!this.plugin.settings.filteredCuTypes.includes(value)) {
+                  this.plugin.settings.filteredCuTypes.push(value);
+                }
+              } else {
+                // Remove from filter list
+                this.plugin.settings.filteredCuTypes =
+                  this.plugin.settings.filteredCuTypes.filter(t => t !== value);
+              }
+              await this.plugin.saveSettings();
+
+              // Refresh calendar data to apply new filter
+              this.plugin.calendarView?.refreshEvents();
+            });
+        });
+    });
   }
 
   private renderFolderPathTemplate(): void {

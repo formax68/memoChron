@@ -10,6 +10,7 @@ import {
   DEFAULT_FRONTMATTER,
   DEFAULT_TAGS,
   DEFAULT_FIRST_DAY_OF_WEEK,
+  DEFAULT_FILTERED_CUTYPES,
 } from "../utils/constants";
 
 export interface CalendarNotesSettings {
@@ -23,6 +24,7 @@ export interface CalendarNotesSettings {
   noteTemplate?: string; // Override default template
   folderPathTemplate?: string; // Override default folder path template
   enableAttendeeLinks?: boolean; // Override default attendee links setting
+  filteredCuTypes?: string[]; // Override global CUTYPE filtering
 }
 
 export interface CalendarSource {
@@ -51,6 +53,7 @@ export interface MemoChronSettings {
   showDailyNoteInAgenda: boolean; // Show daily note as an entry in the agenda
   dailyNoteColor?: string; // Color for daily note entry when calendar colors are enabled
   enableAttendeeLinks: boolean; // Create wiki links for attendees
+  filteredCuTypes: string[]; // CUTYPE values to INCLUDE (default: ["INDIVIDUAL", ""])
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -81,4 +84,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   enableCalendarColors: false, // Disabled by default
   showDailyNoteInAgenda: false, // Disabled by default
   enableAttendeeLinks: false, // Disabled by default
+  filteredCuTypes: DEFAULT_FILTERED_CUTYPES, // Include individuals and unspecified
 };

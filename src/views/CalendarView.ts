@@ -753,7 +753,10 @@ export class CalendarView extends ItemView {
         const content = await this.readFile(file);
 
         // Parse and validate single event
-        const event = IcsImportService.parseSingleEvent(content);
+        const event = IcsImportService.parseSingleEvent(
+          content,
+          this.plugin.settings.filteredCuTypes
+        );
 
         // Create note from the event
         await this.createNoteFromImportedEvent(event);
