@@ -867,10 +867,40 @@
 }
 
 /* Embedded Agenda Specific */
+.memochron-embedded-agenda {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Keep for border radius, but allow agenda to scroll internally */
+}
+
 .memochron-embedded-agenda .memochron-agenda {
   max-height: 500px;
   overflow-y: auto;
+  overflow-x: hidden;
   border-top: none;
+  flex-shrink: 1;
+  min-height: 0;
+  /* Ensure scrollbar appears inside container */
+  scrollbar-width: thin;
+  scrollbar-color: var(--background-modifier-border) var(--background-secondary);
+}
+
+/* Webkit scrollbar styling for embedded agenda */
+.memochron-embedded-agenda .memochron-agenda::-webkit-scrollbar {
+  width: 8px;
+}
+
+.memochron-embedded-agenda .memochron-agenda::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+}
+
+.memochron-embedded-agenda .memochron-agenda::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.memochron-embedded-agenda .memochron-agenda::-webkit-scrollbar-thumb:hover {
+  background: var(--background-modifier-border-hover);
 }
 
 .memochron-embedded-content {
@@ -923,5 +953,7 @@
 
   .memochron-embedded-agenda .memochron-agenda {
     max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
