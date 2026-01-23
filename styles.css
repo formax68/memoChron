@@ -957,3 +957,28 @@
     overflow-x: hidden;
   }
 }
+
+/* Calendar visibility toggles */
+.memochron-visibility-toggles {
+  margin-left: 1em;
+  padding-left: 1em;
+  border-left: 2px solid var(--background-modifier-border);
+  margin-bottom: 0.5em;
+}
+
+.memochron-visibility-toggles .setting-item {
+  padding: 0.3em 0;
+  border: none;
+}
+
+.memochron-visibility-toggles .setting-item-info {
+  flex: 1;
+}
+
+.memochron-visibility-toggles .setting-item-name {
+  font-size: 0.9em;
+}
+
+.memochron-visibility-toggles .setting-item-description {
+  font-size: 0.8em;
+}
