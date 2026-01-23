@@ -15,6 +15,9 @@ import MemoChron from "../main";
 import { CalendarSource, CalendarNotesSettings } from "./types";
 
 export class SettingsTab extends PluginSettingTab {
+  private collapsedSections: Map<string, boolean> = new Map();
+  private collapsedCalendars: Map<number, boolean> = new Map();
+
   constructor(app: App, private plugin: MemoChron) {
     super(app, plugin);
   }
@@ -27,6 +30,47 @@ export class SettingsTab extends PluginSettingTab {
     this.renderGeneralSection();
     this.renderDailyNotesSection();
     this.renderNotesSection();
+  }
+
+  private renderCollapsibleSection(
+    name: string,
+    renderContent: (container: HTMLElement) => void,
+    defaultCollapsed: boolean = false
+  ): void {
+    const isCollapsed = this.collapsedSections.get(name) ?? defaultCollapsed;
+
+    // Header
+    const headerEl = this.containerEl.createDiv({
+      cls: "memochron-collapsible-header",
+    });
+
+    const chevron = headerEl.createSpan({
+      cls: `memochron-collapsible-chevron ${isCollapsed ? "collapsed" : ""}`,
+      text: "▼",
+    });
+
+    headerEl.createSpan({
+      cls: "setting-item-name",
+      text: name,
+    });
+
+    // Content container
+    const contentEl = this.containerEl.createDiv({
+      cls: `memochron-collapsible-content ${isCollapsed ? "collapsed" : "expanded"}`,
+    });
+
+    // Render the section content
+    renderContent(contentEl);
+
+    // Toggle handler
+    headerEl.addEventListener("click", () => {
+      const nowCollapsed = !this.collapsedSections.get(name) ?? !defaultCollapsed;
+      this.collapsedSections.set(name, nowCollapsed);
+
+      chevron.classList.toggle("collapsed", nowCollapsed);
+      contentEl.classList.toggle("collapsed", nowCollapsed);
+      contentEl.classList.toggle("expanded", !nowCollapsed);
+    });
   }
 
   private renderCalendarSection(): void {
