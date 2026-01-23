@@ -369,7 +369,7 @@ export class CalendarView extends ItemView {
   }
 
   private addDayEventIndicator(dayEl: HTMLElement, date: Date) {
-    const events = this.plugin.calendarService.getEventsForDate(date);
+    const events = this.plugin.calendarService.getEventsForWidget(date);
     const hasDailyNote = this.checkDailyNoteForDate(date);
 
     if (events.length > 0 || hasDailyNote) {
@@ -455,7 +455,7 @@ export class CalendarView extends ItemView {
 
     this.createAgendaHeader(date);
 
-    const events = this.plugin.calendarService.getEventsForDate(date);
+    const events = this.plugin.calendarService.getEventsForWidget(date);
     const hasEvents = events.length > 0;
     const showDailyNote = this.plugin.settings.showDailyNoteInAgenda;
 
