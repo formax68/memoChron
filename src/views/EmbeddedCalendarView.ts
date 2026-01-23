@@ -13,11 +13,13 @@ export interface CalendarCodeBlockParams {
   year?: string;
   showDots?: boolean;
   title?: string;
+  calendars?: string[];  // Filter to specific calendars
 }
 
 export class EmbeddedCalendarView extends MarkdownRenderChild {
   private currentDate: Date;
   private container: HTMLElement;
+  private calendarNames?: string[];
 
   constructor(
     containerEl: HTMLElement,
@@ -28,6 +30,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
     super(containerEl);
     this.container = containerEl;
     this.initializeDate();
+    this.calendarNames = this.params.calendars;
   }
 
   private initializeDate() {
@@ -126,7 +129,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
     await this.plugin.calendarService.fetchCalendars(
       this.plugin.settings.calendarUrls
     );
-    const events = this.plugin.calendarService.getAllEvents();
+    const events = this.plugin.calendarService.getAllEventsForEmbed(this.calendarNames);
 
     // Render calendar grid
     const options: RenderOptions = {
@@ -158,7 +161,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
 
   private async handleDateClick(date: Date) {
     // Show agenda for the clicked date in a notice
-    const events = this.plugin.calendarService.getEventsForDate(date);
+    const events = this.plugin.calendarService.getEventsForEmbed(date, this.calendarNames);
 
     if (events.length === 0) {
       new Notice(`No events on ${date.toLocaleDateString()}`);
@@ -264,6 +267,13 @@ export function parseCalendarCodeBlock(
         break;
       case "title":
         params.title = value;
+        break;
+      case "calendars":
+        // Parse comma-separated calendar names, trim whitespace
+        params.calendars = value
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         break;
     }
   }
