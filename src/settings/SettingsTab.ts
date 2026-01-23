@@ -26,10 +26,17 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    this.renderCalendarSection();
-    this.renderGeneralSection();
-    this.renderDailyNotesSection();
-    this.renderNotesSection();
+    this.renderCollapsibleSection("Calendars", (container) => {
+      this.renderCalendarsSection(container);
+    }, false);
+
+    this.renderCollapsibleSection("Notes", (container) => {
+      this.renderNotesSection(container);
+    }, false);
+
+    this.renderCollapsibleSection("Advanced", (container) => {
+      this.renderAdvancedSection(container);
+    }, true);
   }
 
   private renderCollapsibleSection(
@@ -84,6 +91,16 @@ export class SettingsTab extends PluginSettingTab {
     container.createEl("hr", { cls: "memochron-section-separator" });
   }
 
+  private renderCalendarsSection(container: HTMLElement): void {
+    // TODO: Implement in next task
+    new Setting(container).setName("Coming soon...");
+  }
+
+  private renderAdvancedSection(container: HTMLElement): void {
+    // TODO: Implement in later task
+    new Setting(container).setName("Coming soon...");
+  }
+
   private renderCalendarSection(): void {
     this.createHeading(
       "Calendar sources",
@@ -110,9 +127,7 @@ export class SettingsTab extends PluginSettingTab {
     this.renderRefreshInterval();
   }
 
-  private renderNotesSection(): void {
-    new Setting(this.containerEl).setName("Notes").setHeading();
-
+  private renderNotesSection(container: HTMLElement): void {
     this.renderNoteLocation();
     this.renderFolderPathTemplate();
     this.renderNoteTitleFormat();
@@ -121,8 +136,8 @@ export class SettingsTab extends PluginSettingTab {
     this.renderDefaultFrontmatter();
     this.renderNoteTemplate();
     this.renderAttendeeSettings();
-    this.renderAttendeeFiltering();
     this.renderDefaultTags();
+    this.renderShowDailyNoteInAgenda();
   }
 
   private renderDailyNotesSection(): void {
