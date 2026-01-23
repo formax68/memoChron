@@ -195,8 +195,209 @@ export class SettingsTab extends PluginSettingTab {
     source: CalendarSource,
     index: number
   ): void {
-    // TODO: Implement collapsible calendar item in next task
-    new Setting(container).setName(source.name);
+    const isCollapsed = this.collapsedCalendars.get(index) ?? true;
+
+    const itemEl = container.createDiv({
+      cls: `memochron-calendar-item ${source.enabled ? "" : "disabled"}`,
+    });
+
+    // Header row (always visible)
+    const headerEl = itemEl.createDiv({ cls: "memochron-calendar-header" });
+
+    // Color dot (if colors enabled)
+    if (this.plugin.settings.enableCalendarColors && source.color) {
+      const colorDot = headerEl.createDiv({ cls: "memochron-calendar-color-dot" });
+      colorDot.style.backgroundColor = source.color;
+    }
+
+    // Calendar name
+    headerEl.createSpan({
+      cls: "memochron-calendar-name",
+      text: source.name || "Unnamed calendar",
+    });
+
+    // Enabled toggle (stop propagation to prevent collapse toggle)
+    const toggleContainer = headerEl.createDiv();
+    const toggleEl = toggleContainer.createEl("input", { type: "checkbox" });
+    toggleEl.checked = source.enabled;
+    toggleEl.classList.add("checkbox-container");
+    toggleEl.addEventListener("click", (e) => e.stopPropagation());
+    toggleEl.addEventListener("change", async () => {
+      this.plugin.settings.calendarUrls[index].enabled = toggleEl.checked;
+      await this.plugin.saveSettings();
+      await this.plugin.refreshCalendarView();
+      itemEl.classList.toggle("disabled", !toggleEl.checked);
+    });
+
+    // Chevron
+    const chevron = headerEl.createSpan({
+      cls: `memochron-collapsible-chevron ${isCollapsed ? "collapsed" : ""}`,
+      text: "▼",
+    });
+
+    // Details section (collapsible)
+    const detailsEl = itemEl.createDiv({
+      cls: `memochron-calendar-details ${isCollapsed ? "collapsed" : ""}`,
+    });
+
+    this.renderCalendarDetails(detailsEl, source, index);
+
+    // Header click toggles collapse
+    headerEl.addEventListener("click", () => {
+      const nowCollapsed = !this.collapsedCalendars.get(index) ?? false;
+      this.collapsedCalendars.set(index, nowCollapsed);
+      chevron.classList.toggle("collapsed", nowCollapsed);
+      detailsEl.classList.toggle("collapsed", nowCollapsed);
+    });
+  }
+
+  private renderCalendarDetails(
+    container: HTMLElement,
+    source: CalendarSource,
+    index: number
+  ): void {
+    // URL input
+    new Setting(container)
+      .setName("URL or file path")
+      .addText((text) =>
+        text
+          .setPlaceholder("https://... or path/to/file.ics")
+          .setValue(source.url)
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].url = value;
+            await this.plugin.saveSettings();
+          })
+      )
+      .addButton((btn) =>
+        btn
+          .setIcon("folder-open")
+          .setTooltip("Choose ICS file from vault")
+          .onClick(async () => {
+            const files = this.app.vault
+              .getFiles()
+              .filter((f) => f.extension === "ics");
+            if (files.length === 0) {
+              new Notice("No ICS files found in vault");
+              return;
+            }
+            const modal = new FilePickerModal(this.app, files, async (file) => {
+              this.plugin.settings.calendarUrls[index].url = file.path;
+              await this.plugin.saveSettings();
+              this.display();
+            });
+            modal.open();
+          })
+      );
+
+    // Name input
+    new Setting(container)
+      .setName("Display name")
+      .addText((text) =>
+        text
+          .setPlaceholder("Calendar name")
+          .setValue(source.name)
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].name = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Tags input
+    new Setting(container)
+      .setName("Tags")
+      .setDesc("Comma-separated tags for event notes")
+      .addText((text) =>
+        text
+          .setPlaceholder("work, meetings")
+          .setValue(source.tags?.join(", ") || "")
+          .onChange(async (value) => {
+            this.plugin.settings.calendarUrls[index].tags = this.parseTags(value);
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Visibility toggles
+    if (source.enabled) {
+      const visibilitySetting = new Setting(container).setName("Visibility");
+
+      const visibilityRow = visibilitySetting.controlEl.createDiv({
+        cls: "memochron-visibility-row",
+      });
+
+      // Sidebar toggle
+      const sidebarLabel = visibilityRow.createEl("label");
+      const sidebarCheck = sidebarLabel.createEl("input", { type: "checkbox" });
+      sidebarCheck.checked = source.showInWidget !== false;
+      sidebarLabel.createSpan({ text: " Show in sidebar" });
+      sidebarCheck.addEventListener("change", async () => {
+        this.plugin.settings.calendarUrls[index].showInWidget = sidebarCheck.checked;
+        await this.plugin.saveSettings();
+        await this.plugin.refreshCalendarView();
+      });
+
+      // Embeds toggle
+      const embedsLabel = visibilityRow.createEl("label");
+      const embedsCheck = embedsLabel.createEl("input", { type: "checkbox" });
+      embedsCheck.checked = source.showInEmbeds !== false;
+      embedsLabel.createSpan({ text: " Show in embeds" });
+      embedsCheck.addEventListener("change", async () => {
+        this.plugin.settings.calendarUrls[index].showInEmbeds = embedsCheck.checked;
+        await this.plugin.saveSettings();
+      });
+    }
+
+    // Color picker (if colors enabled)
+    if (this.plugin.settings.enableCalendarColors) {
+      const colorSetting = new Setting(container).setName("Color");
+      const colorContainer = colorSetting.controlEl.createDiv({
+        cls: "memochron-inline-color-picker",
+      });
+      this.renderInlineColorPicker(colorContainer, source, index);
+    }
+
+    // Notes settings
+    const hasCustomSettings = source.notesSettings?.useCustomSettings || false;
+    new Setting(container)
+      .setName("Note settings")
+      .setDesc(hasCustomSettings ? "Using custom settings" : "Using defaults")
+      .addDropdown((dropdown) => {
+        dropdown.addOption("default", "Use defaults");
+        dropdown.addOption("custom", "Custom...");
+        dropdown
+          .setValue(hasCustomSettings ? "custom" : "default")
+          .onChange(async (value) => {
+            if (value === "custom") {
+              const modal = new CalendarNotesSettingsModal(
+                this.app,
+                this.plugin,
+                source,
+                index,
+                () => this.display()
+              );
+              modal.open();
+            } else {
+              if (source.notesSettings) {
+                source.notesSettings.useCustomSettings = false;
+              }
+              await this.plugin.saveSettings();
+              this.display();
+            }
+          });
+      });
+
+    // Remove button
+    new Setting(container)
+      .addButton((btn) =>
+        btn
+          .setButtonText("Remove calendar")
+          .setClass("memochron-remove-btn")
+          .onClick(async () => {
+            this.plugin.settings.calendarUrls.splice(index, 1);
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+            this.display();
+          })
+      );
   }
 
   private renderAdvancedSection(container: HTMLElement): void {
@@ -235,12 +436,16 @@ export class SettingsTab extends PluginSettingTab {
       tags: [],
     };
 
-    // Auto-assign color if colors are enabled
     if (this.plugin.settings.enableCalendarColors) {
       newCalendar.color = this.getNextAvailableColor();
     }
 
     this.plugin.settings.calendarUrls.push(newCalendar);
+
+    // Mark the new calendar as expanded
+    const newIndex = this.plugin.settings.calendarUrls.length - 1;
+    this.collapsedCalendars.set(newIndex, false);
+
     await this.plugin.saveSettings();
     this.display();
   }
@@ -250,203 +455,6 @@ export class SettingsTab extends PluginSettingTab {
     const usedColors = this.plugin.settings.calendarUrls.length;
     const hue = (usedColors * 137.5) % 360; // Golden angle for nice distribution
     return `hsl(${hue}, 70%, 50%)`;
-  }
-
-  private renderCalendarSource(
-    container: HTMLElement,
-    source: CalendarSource,
-    index: number
-  ): void {
-    const setting = new Setting(container)
-      .addText((text) => this.setupUrlInput(text, source, index))
-      .addButton((btn) => this.setupFilePickerButton(btn, index))
-      .addText((text) => this.setupNameInput(text, source, index))
-      .addText((text) => this.setupTagsInput(text, source, index));
-
-    // Inline color picker if colors are enabled
-    if (this.plugin.settings.enableCalendarColors) {
-      // Remove the button, add inline swatches
-      const colorContainer = setting.controlEl.createDiv({
-        cls: "memochron-inline-color-picker",
-      });
-      this.renderInlineColorPicker(colorContainer, source, index);
-    }
-
-    setting
-      .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index));
-
-    // Add visibility toggles when calendar is enabled
-    if (source.enabled) {
-      const visibilityContainer = container.createDiv({
-        cls: "memochron-visibility-toggles",
-      });
-
-      new Setting(visibilityContainer)
-        .setName("Show in sidebar")
-        .setDesc("Display this calendar in the sidebar widget")
-        .addToggle((toggle) =>
-          toggle
-            .setValue(source.showInWidget !== false)
-            .onChange(async (value) => {
-              this.plugin.settings.calendarUrls[index].showInWidget = value;
-              await this.plugin.saveSettings();
-              await this.plugin.refreshCalendarView();
-            })
-        );
-
-      new Setting(visibilityContainer)
-        .setName("Show in embedded views")
-        .setDesc("Display this calendar in code block embeds")
-        .addToggle((toggle) =>
-          toggle
-            .setValue(source.showInEmbeds !== false)
-            .onChange(async (value) => {
-              this.plugin.settings.calendarUrls[index].showInEmbeds = value;
-              await this.plugin.saveSettings();
-            })
-        );
-    }
-
-    setting.addButton((btn) => this.setupRemoveButton(btn, index));
-
-    // Add calendar-specific notes settings
-    this.renderCalendarNotesSettings(container, source, index);
-  }
-
-  private setupUrlInput(
-    text: TextComponent,
-    source: CalendarSource,
-    index: number
-  ): TextComponent {
-    return text
-      .setPlaceholder("Calendar URL or file path")
-      .setValue(source.url)
-      .onChange(async (value) => {
-        this.plugin.settings.calendarUrls[index].url = value;
-        await this.plugin.saveSettings();
-      });
-  }
-
-  private setupFilePickerButton(
-    btn: ButtonComponent,
-    index: number
-  ): ButtonComponent {
-    return btn
-      .setIcon("folder-open")
-      .setTooltip("Choose ICS file from vault")
-      .onClick(async () => {
-        const files = this.app.vault
-          .getFiles()
-          .filter((f) => f.extension === "ics");
-
-        if (files.length === 0) {
-          new Notice("No ICS files found in vault");
-          return;
-        }
-
-        // Create a simple file picker modal
-        const modal = new FilePickerModal(this.app, files, async (file) => {
-          this.plugin.settings.calendarUrls[index].url = file.path;
-          await this.plugin.saveSettings();
-          this.display();
-        });
-        modal.open();
-      });
-  }
-
-  private setupNameInput(
-    text: TextComponent,
-    source: CalendarSource,
-    index: number
-  ): TextComponent {
-    return text
-      .setPlaceholder("Calendar name")
-      .setValue(source.name)
-      .onChange(async (value) => {
-        this.plugin.settings.calendarUrls[index].name = value;
-        await this.plugin.saveSettings();
-      });
-  }
-
-  private setupTagsInput(
-    text: TextComponent,
-    source: CalendarSource,
-    index: number
-  ): TextComponent {
-    return text
-      .setPlaceholder("Tags (comma-separated)")
-      .setValue(source.tags?.join(", ") || "")
-      .onChange(async (value) => {
-        this.plugin.settings.calendarUrls[index].tags = this.parseTags(value);
-        await this.plugin.saveSettings();
-      });
-  }
-
-  private setupEnabledToggle(
-    toggle: any,
-    source: CalendarSource,
-    index: number
-  ): any {
-    return toggle.setValue(source.enabled).onChange(async (value: boolean) => {
-      this.plugin.settings.calendarUrls[index].enabled = value;
-      await this.plugin.saveSettings();
-      await this.plugin.refreshCalendarView();
-    });
-  }
-
-  private setupRemoveButton(btn: any, index: number): any {
-    return btn.setButtonText("Remove").onClick(async () => {
-      this.plugin.settings.calendarUrls.splice(index, 1);
-      await this.plugin.saveSettings();
-      await this.plugin.refreshCalendarView();
-      this.display();
-    });
-  }
-
-  private renderCalendarNotesSettings(
-    container: HTMLElement,
-    source: CalendarSource,
-    index: number
-  ): void {
-    const notesContainer = container.createDiv({
-      cls: "memochron-calendar-notes-settings",
-    });
-
-    const hasCustomSettings = source.notesSettings?.useCustomSettings || false;
-    const settingsButton = new Setting(notesContainer)
-      .setName("Notes settings")
-      .setDesc(
-        hasCustomSettings
-          ? "Custom notes settings enabled"
-          : "Use default notes settings"
-      )
-      .addButton((btn) => {
-        btn
-          .setButtonText(
-            hasCustomSettings
-              ? "Edit custom settings"
-              : "Configure custom settings"
-          )
-          .setIcon(hasCustomSettings ? "settings" : "gear")
-          .onClick(() => {
-            const modal = new CalendarNotesSettingsModal(
-              this.app,
-              this.plugin,
-              source,
-              index,
-              () => this.display() // Refresh the main settings page
-            );
-            modal.open();
-          });
-      });
-
-    // Add a small indicator if custom settings are enabled
-    if (hasCustomSettings) {
-      const indicator = settingsButton.descEl.createSpan({
-        cls: "memochron-custom-settings-indicator",
-        text: " ⚙️",
-      });
-    }
   }
 
   private renderInlineColorPicker(
