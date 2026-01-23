@@ -1052,3 +1052,97 @@
   border-top: 1px solid var(--background-modifier-border);
   margin: var(--size-4-4) 0;
 }
+
+/* Collapsible Calendar Items */
+.memochron-calendar-item {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  margin-bottom: var(--size-4-2);
+  overflow: hidden;
+}
+
+.memochron-calendar-item.disabled {
+  opacity: 0.6;
+}
+
+.memochron-calendar-header {
+  display: flex;
+  align-items: center;
+  padding: var(--size-4-2) var(--size-4-3);
+  cursor: pointer;
+  background: var(--background-secondary);
+  gap: var(--size-4-2);
+  transition: background-color 0.15s ease;
+}
+
+.memochron-calendar-header:hover {
+  background: var(--background-modifier-hover);
+}
+
+.memochron-calendar-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.memochron-calendar-name {
+  flex: 1;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memochron-calendar-header .checkbox-container {
+  flex-shrink: 0;
+}
+
+.memochron-calendar-header .memochron-collapsible-chevron {
+  margin-right: 0;
+}
+
+.memochron-calendar-details {
+  padding: var(--size-4-3);
+  background: var(--background-primary);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.memochron-calendar-details.collapsed {
+  display: none;
+}
+
+.memochron-calendar-details .setting-item {
+  border: none;
+  padding: var(--size-4-2) 0;
+}
+
+.memochron-calendar-details .setting-item:last-child {
+  padding-bottom: 0;
+}
+
+/* Visibility toggles row */
+.memochron-visibility-row {
+  display: flex;
+  gap: var(--size-4-4);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.memochron-visibility-row label {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-1);
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+/* Remove button styling */
+.memochron-remove-btn {
+  color: var(--text-muted);
+  margin-top: var(--size-4-2);
+}
+
+.memochron-remove-btn:hover {
+  color: var(--text-error);
+}
