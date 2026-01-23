@@ -126,8 +126,41 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     setting
-      .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index))
-      .addButton((btn) => this.setupRemoveButton(btn, index));
+      .addToggle((toggle) => this.setupEnabledToggle(toggle, source, index));
+
+    // Add visibility toggles when calendar is enabled
+    if (source.enabled) {
+      const visibilityContainer = container.createDiv({
+        cls: "memochron-visibility-toggles",
+      });
+
+      new Setting(visibilityContainer)
+        .setName("Show in sidebar")
+        .setDesc("Display this calendar in the sidebar widget")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(source.showInWidget !== false)
+            .onChange(async (value) => {
+              this.plugin.settings.calendarUrls[index].showInWidget = value;
+              await this.plugin.saveSettings();
+              await this.plugin.refreshCalendarView();
+            })
+        );
+
+      new Setting(visibilityContainer)
+        .setName("Show in embedded views")
+        .setDesc("Display this calendar in code block embeds")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(source.showInEmbeds !== false)
+            .onChange(async (value) => {
+              this.plugin.settings.calendarUrls[index].showInEmbeds = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
+    setting.addButton((btn) => this.setupRemoveButton(btn, index));
 
     // Add calendar-specific notes settings
     this.renderCalendarNotesSettings(container, source, index);
