@@ -401,8 +401,13 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderAdvancedSection(container: HTMLElement): void {
-    // TODO: Implement in later task
-    new Setting(container).setName("Coming soon...");
+    // Performance sub-group
+    this.renderSubgroupLabel(container, "Performance");
+    this.renderRefreshInterval(container);
+
+    // Attendee Filtering sub-group
+    this.renderSubgroupLabel(container, "Attendee Filtering");
+    this.renderAttendeeFiltering(container);
   }
 
   private renderNotesSection(container: HTMLElement): void {
@@ -720,10 +725,10 @@ export class SettingsTab extends PluginSettingTab {
     );
   }
 
-  private renderRefreshInterval(): void {
-    new Setting(this.containerEl)
+  private renderRefreshInterval(container: HTMLElement): void {
+    new Setting(container)
       .setName("Refresh interval")
-      .setDesc("How often to refresh calendar data (in minutes)")
+      .setDesc("Minutes between calendar data refreshes")
       .addText((text) =>
         text
           .setValue(String(this.plugin.settings.refreshInterval))
@@ -883,48 +888,47 @@ export class SettingsTab extends PluginSettingTab {
       );
   }
 
-  private renderAttendeeFiltering(): void {
-    new Setting(this.containerEl)
-      .setName("Filter attendees by type")
-      .setDesc(
-        "Select which types of attendees to include in event notes. Most calendars only mark rooms/resources with CUTYPE, leaving people as 'Individual' or unspecified."
-      )
-      .setHeading();
+  private renderAttendeeFiltering(container: HTMLElement): void {
+    container.createEl("p", {
+      text: "Filter which attendee types appear in event notes. Most calendars only mark rooms and resources explicitly.",
+      cls: "setting-item-description",
+    });
 
     const cuTypeOptions = [
-      { value: "INDIVIDUAL", label: "Individual (people)", description: "Actual people attending the event" },
-      { value: "", label: "Unspecified", description: "No CUTYPE parameter (usually people)" },
-      { value: "GROUP", label: "Group", description: "Distribution lists or groups" },
-      { value: "RESOURCE", label: "Resource", description: "Equipment or other resources" },
-      { value: "ROOM", label: "Room", description: "Conference rooms or meeting spaces" },
-      { value: "UNKNOWN", label: "Unknown", description: "Unknown attendee type" },
+      { value: "INDIVIDUAL", label: "Individual", desc: "(people)" },
+      { value: "", label: "Unspecified", desc: "(usually people)" },
+      { value: "GROUP", label: "Group", desc: "(distribution lists)" },
+      { value: "RESOURCE", label: "Resource", desc: "(equipment)" },
+      { value: "ROOM", label: "Room", desc: "(meeting spaces)" },
+      { value: "UNKNOWN", label: "Unknown", desc: "" },
     ];
 
-    cuTypeOptions.forEach(({ value, label, description }) => {
-      new Setting(this.containerEl)
-        .setName(label)
-        .setDesc(description)
-        .addToggle((toggle) => {
-          const isEnabled = this.plugin.settings.filteredCuTypes.includes(value);
-          toggle
-            .setValue(isEnabled)
-            .onChange(async (enabled) => {
-              if (enabled) {
-                // Add to filter list if not already present
-                if (!this.plugin.settings.filteredCuTypes.includes(value)) {
-                  this.plugin.settings.filteredCuTypes.push(value);
-                }
-              } else {
-                // Remove from filter list
-                this.plugin.settings.filteredCuTypes =
-                  this.plugin.settings.filteredCuTypes.filter(t => t !== value);
-              }
-              await this.plugin.saveSettings();
+    const listEl = container.createDiv({ cls: "memochron-checkbox-list" });
 
-              // Refresh calendar data to apply new filter
-              this.plugin.calendarView?.refreshEvents();
-            });
-        });
+    cuTypeOptions.forEach(({ value, label, desc }) => {
+      const itemEl = listEl.createDiv({ cls: "memochron-checkbox-item" });
+      const labelEl = itemEl.createEl("label");
+
+      const checkbox = labelEl.createEl("input", { type: "checkbox" });
+      checkbox.checked = this.plugin.settings.filteredCuTypes.includes(value);
+
+      labelEl.createSpan({ cls: "checkbox-label-main", text: label });
+      if (desc) {
+        labelEl.createSpan({ cls: "checkbox-label-desc", text: " " + desc });
+      }
+
+      checkbox.addEventListener("change", async () => {
+        if (checkbox.checked) {
+          if (!this.plugin.settings.filteredCuTypes.includes(value)) {
+            this.plugin.settings.filteredCuTypes.push(value);
+          }
+        } else {
+          this.plugin.settings.filteredCuTypes =
+            this.plugin.settings.filteredCuTypes.filter(t => t !== value);
+        }
+        await this.plugin.saveSettings();
+        this.plugin.calendarView?.refreshEvents();
+      });
     });
   }
 
