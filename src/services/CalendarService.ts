@@ -88,6 +88,90 @@ export class CalendarService {
     return this.events;
   }
 
+  /**
+   * Get events filtered for the sidebar widget.
+   * Only returns events from calendars where showInWidget !== false.
+   */
+  getEventsForWidget(date: Date): CalendarEvent[] {
+    const enabledSources = this.plugin.settings.calendarUrls.filter(
+      (source) => source.enabled && source.showInWidget !== false
+    );
+    const enabledSourceIds = new Set(enabledSources.map((s) => s.url));
+
+    return this.getEventsForDate(date).filter((event) =>
+      enabledSourceIds.has(event.sourceId)
+    );
+  }
+
+  /**
+   * Get all events filtered for the sidebar widget.
+   * Only returns events from calendars where showInWidget !== false.
+   */
+  getAllEventsForWidget(): CalendarEvent[] {
+    const enabledSources = this.plugin.settings.calendarUrls.filter(
+      (source) => source.enabled && source.showInWidget !== false
+    );
+    const enabledSourceIds = new Set(enabledSources.map((s) => s.url));
+
+    return this.events.filter((event) => enabledSourceIds.has(event.sourceId));
+  }
+
+  /**
+   * Get events filtered for embedded views.
+   * If calendarNames provided, filter to those calendars (case-insensitive).
+   * Otherwise, filter where showInEmbeds !== false.
+   */
+  getEventsForEmbed(date: Date, calendarNames?: string[]): CalendarEvent[] {
+    let filteredEvents = this.getEventsForDate(date);
+
+    if (calendarNames && calendarNames.length > 0) {
+      // Explicit calendar list - case-insensitive matching
+      const lowerNames = calendarNames.map((n) => n.toLowerCase());
+      filteredEvents = filteredEvents.filter((event) =>
+        lowerNames.includes(event.source.toLowerCase())
+      );
+    } else {
+      // Default filtering based on showInEmbeds setting
+      const enabledSources = this.plugin.settings.calendarUrls.filter(
+        (source) => source.enabled && source.showInEmbeds !== false
+      );
+      const enabledSourceIds = new Set(enabledSources.map((s) => s.url));
+      filteredEvents = filteredEvents.filter((event) =>
+        enabledSourceIds.has(event.sourceId)
+      );
+    }
+
+    return filteredEvents;
+  }
+
+  /**
+   * Get all events filtered for embedded views.
+   * If calendarNames provided, filter to those calendars (case-insensitive).
+   * Otherwise, filter where showInEmbeds !== false.
+   */
+  getAllEventsForEmbed(calendarNames?: string[]): CalendarEvent[] {
+    let filteredEvents = this.events;
+
+    if (calendarNames && calendarNames.length > 0) {
+      // Explicit calendar list - case-insensitive matching
+      const lowerNames = calendarNames.map((n) => n.toLowerCase());
+      filteredEvents = filteredEvents.filter((event) =>
+        lowerNames.includes(event.source.toLowerCase())
+      );
+    } else {
+      // Default filtering based on showInEmbeds setting
+      const enabledSources = this.plugin.settings.calendarUrls.filter(
+        (source) => source.enabled && source.showInEmbeds !== false
+      );
+      const enabledSourceIds = new Set(enabledSources.map((s) => s.url));
+      filteredEvents = filteredEvents.filter((event) =>
+        enabledSourceIds.has(event.sourceId)
+      );
+    }
+
+    return filteredEvents;
+  }
+
   private shouldLoadFromCache(forceRefresh: boolean): boolean {
     return this.events.length === 0 && !forceRefresh;
   }
