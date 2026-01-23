@@ -19,11 +19,13 @@ export interface AgendaCodeBlockParams {
   showPast?: boolean;
   showDailyNote?: boolean;
   title?: string;
+  calendars?: string[];  // Filter to specific calendars
 }
 
 export class EmbeddedAgendaView extends MarkdownRenderChild {
   private startDate: Date;
   private days: number;
+  private calendarNames?: string[];
   private container: HTMLElement;
 
   constructor(
@@ -54,6 +56,9 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     this.days = this.params.days || 1;
     if (this.days < 1) this.days = 1;
     if (this.days > 30) this.days = 30; // Reasonable limit
+
+    // Parse calendars filter
+    this.calendarNames = this.params.calendars;
   }
 
   /**
@@ -116,7 +121,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
     // For multi-day views, fetch all events once and filter locally for better performance
     if (this.days > 1) {
-      const allEvents = this.plugin.calendarService.getAllEvents();
+      const allEvents = this.plugin.calendarService.getAllEventsForEmbed(this.calendarNames);
       const startDate = this.getDateForDay(0);
       const endDate = this.getDateForDay(this.days - 1);
 
@@ -151,8 +156,10 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     } else {
       // For single day, use the existing method
       const currentDate = this.getDateForDay(0);
-      const dayEvents =
-        this.plugin.calendarService.getEventsForDate(currentDate);
+      const dayEvents = this.plugin.calendarService.getEventsForEmbed(
+        currentDate,
+        this.calendarNames
+      );
       dayEventsMap.set(0, dayEvents);
       if (dayEvents.length > 0) {
         hasAnyEvents = true;
@@ -428,6 +435,13 @@ export function parseAgendaCodeBlock(source: string): AgendaCodeBlockParams {
         break;
       case "title":
         params.title = value;
+        break;
+      case "calendars":
+        // Parse comma-separated calendar names, trim whitespace
+        params.calendars = value
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         break;
     }
   }
