@@ -73,6 +73,17 @@ export class SettingsTab extends PluginSettingTab {
     });
   }
 
+  private renderSubgroupLabel(container: HTMLElement, label: string): void {
+    container.createDiv({
+      cls: "memochron-subgroup-label",
+      text: label,
+    });
+  }
+
+  private renderSeparator(container: HTMLElement): void {
+    container.createEl("hr", { cls: "memochron-section-separator" });
+  }
+
   private renderCalendarSection(): void {
     this.createHeading(
       "Calendar sources",
