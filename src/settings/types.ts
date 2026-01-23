@@ -34,6 +34,8 @@ export interface CalendarSource {
   tags: string[];
   color?: string; // Optional color for this calendar
   notesSettings?: CalendarNotesSettings; // Optional custom notes settings
+  showInWidget?: boolean; // Show in sidebar widget (default: true)
+  showInEmbeds?: boolean; // Show in embedded code blocks (default: true)
 }
 
 export interface MemoChronSettings {
