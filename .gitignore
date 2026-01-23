@@ -22,8 +22,10 @@ data.json
 .DS_Store
 
 .projectDocs
+docs/plans
 *.ics
 test_updates.sh
 CLAUDE.md
 .claude
+.worktrees
 test_updates.sh
