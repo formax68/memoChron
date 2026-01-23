@@ -406,26 +406,34 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderNotesSection(container: HTMLElement): void {
-    this.renderNoteLocation();
-    this.renderFolderPathTemplate();
-    this.renderNoteTitleFormat();
-    this.renderNoteDateFormat();
-    this.renderNoteTimeFormat();
-    this.renderDefaultFrontmatter();
-    this.renderNoteTemplate();
-    this.renderAttendeeSettings();
-    this.renderDefaultTags();
-    this.renderShowDailyNoteInAgenda();
-  }
+    // Location sub-group
+    this.renderSubgroupLabel(container, "Location");
+    this.renderNoteLocation(container);
+    this.renderFolderPathTemplate(container);
 
-  private renderDailyNotesSection(): void {
-    new Setting(this.containerEl).setName("Daily notes").setHeading();
+    // Naming sub-group
+    this.renderSubgroupLabel(container, "Naming");
+    this.renderNoteTitleFormat(container);
+    this.renderNoteDateFormat(container);
+    this.renderNoteTimeFormat(container);
 
-    this.renderShowDailyNoteInAgenda();
-  }
+    // Content sub-group
+    this.renderSubgroupLabel(container, "Content");
+    this.renderDefaultFrontmatter(container);
+    this.renderNoteTemplate(container);
+    this.renderDefaultTags(container);
 
-  private createHeading(name: string, desc: string): void {
-    new Setting(this.containerEl).setName(name).setDesc(desc);
+    // Daily Notes sub-group
+    this.renderSubgroupLabel(container, "Daily Notes");
+    this.renderShowDailyNoteInAgenda(container);
+
+    // Attendees sub-group
+    this.renderSubgroupLabel(container, "Attendees");
+    this.renderAttendeeSettings(container);
+
+    // Link to Advanced for filtering
+    new Setting(container)
+      .setDesc("Configure attendee type filtering in the Advanced section below.");
   }
 
   private async addNewCalendar(): Promise<void> {
@@ -687,8 +695,8 @@ export class SettingsTab extends PluginSettingTab {
     ];
   }
 
-  private renderShowDailyNoteInAgenda(): void {
-    const dailyNoteSetting = new Setting(this.containerEl)
+  private renderShowDailyNoteInAgenda(container: HTMLElement): void {
+    const dailyNoteSetting = new Setting(container)
       .setName("Show daily note in agenda")
       .setDesc("Display the daily note as an entry in the agenda view");
 
@@ -729,8 +737,8 @@ export class SettingsTab extends PluginSettingTab {
       );
   }
 
-  private renderNoteLocation(): void {
-    const locationSetting = new Setting(this.containerEl)
+  private renderNoteLocation(container: HTMLElement): void {
+    const locationSetting = new Setting(container)
       .setName("Note location")
       .setDesc("Where to save new event notes");
 
@@ -757,8 +765,8 @@ export class SettingsTab extends PluginSettingTab {
     );
   }
 
-  private renderNoteTitleFormat(): void {
-    new Setting(this.containerEl)
+  private renderNoteTitleFormat(container: HTMLElement): void {
+    new Setting(container)
       .setName("Note title format")
       .setDesc(
         "Format for new note titles. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
@@ -774,7 +782,7 @@ export class SettingsTab extends PluginSettingTab {
       );
   }
 
-  private renderNoteDateFormat(): void {
+  private renderNoteDateFormat(container: HTMLElement): void {
     const dateFormats = [
       { value: "ISO", label: "ISO (YYYY-MM-DD)" },
       { value: "US", label: "US (MM/DD/YYYY)" },
@@ -782,7 +790,7 @@ export class SettingsTab extends PluginSettingTab {
       { value: "Long", label: "Long (Month DD, YYYY)" },
     ];
 
-    new Setting(this.containerEl)
+    new Setting(container)
       .setName("Note date format")
       .setDesc("Choose how dates appear in event notes")
       .addDropdown((dropdown) => {
@@ -799,13 +807,13 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  private renderNoteTimeFormat(): void {
+  private renderNoteTimeFormat(container: HTMLElement): void {
     const timeFormats = [
       { value: "24h", label: "24-hour (13:30)" },
       { value: "12h", label: "12-hour (1:30 PM)" },
     ];
 
-    new Setting(this.containerEl)
+    new Setting(container)
       .setName("Note time format")
       .setDesc("Choose how times appear in event notes and calendar view")
       .addDropdown((dropdown) => {
@@ -824,8 +832,8 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  private renderDefaultFrontmatter(): void {
-    new Setting(this.containerEl)
+  private renderDefaultFrontmatter(container: HTMLElement): void {
+    new Setting(container)
       .setName("Default frontmatter")
       .setDesc("YAML frontmatter to add at the top of each event note")
       .addTextArea((text) => {
@@ -841,8 +849,8 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  private renderNoteTemplate(): void {
-    new Setting(this.containerEl)
+  private renderNoteTemplate(container: HTMLElement): void {
+    new Setting(container)
       .setName("Note template")
       .setDesc(
         "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_links_list}}, {{attendees_count}}"
@@ -859,8 +867,8 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  private renderAttendeeSettings(): void {
-    new Setting(this.containerEl)
+  private renderAttendeeSettings(container: HTMLElement): void {
+    new Setting(container)
       .setName("Create links for attendees")
       .setDesc(
         "Automatically create wiki links [[Name]] for event attendees. Obsidian will find the notes regardless of their folder location."
@@ -920,8 +928,8 @@ export class SettingsTab extends PluginSettingTab {
     });
   }
 
-  private renderFolderPathTemplate(): void {
-    const templateSetting = new Setting(this.containerEl)
+  private renderFolderPathTemplate(container: HTMLElement): void {
+    const templateSetting = new Setting(container)
       .setName("Folder path template")
       .setDesc(
         "Organize notes in date-based subfolders. Leave empty to save all notes in the same folder."
@@ -1072,8 +1080,8 @@ export class SettingsTab extends PluginSettingTab {
     }, template);
   }
 
-  private renderDefaultTags(): void {
-    new Setting(this.containerEl)
+  private renderDefaultTags(container: HTMLElement): void {
+    new Setting(container)
       .setName("Default tags")
       .setDesc("Default tags for all event notes (comma-separated)")
       .addText((text) =>
