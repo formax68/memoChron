@@ -71,6 +71,43 @@ You can also use ICS files stored in your Obsidian vault or local file system:
 
 **Note**: Local ICS files are read-only. To update events, you'll need to export a new ICS file from your calendar application and replace the existing file.
 
+### Calendar Visibility Control
+
+You can control where each calendar appears:
+
+1. **Show in sidebar**: Toggle whether the calendar appears in the sidebar widget
+2. **Show in embedded views**: Toggle whether the calendar appears in code block embeds
+
+These settings allow you to:
+- Show work calendars only in the sidebar for meeting notes
+- Show personal calendars only in daily note embeds
+- Mix and match based on your workflow
+
+#### Filtering Calendars in Code Blocks
+
+You can also specify which calendars to show in individual code blocks using the `calendars` parameter:
+
+````markdown
+```memochron-agenda
+date: today
+days: 7
+calendars: Personal, Family
+```
+````
+
+````markdown
+```memochron-calendar
+month: 2025-02
+calendars: Work Calendar
+```
+````
+
+**Notes:**
+- Calendar names are case-insensitive
+- Comma-separated list of calendar names
+- When `calendars` is specified, only those calendars are shown (ignoring the "Show in embedded views" setting)
+- When `calendars` is not specified, the default visibility settings apply
+
 ### Drag & Drop ICS Files
 
 You can quickly create notes from individual meeting invites by dragging ICS files:
@@ -494,6 +531,15 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.9.0
+
+### Calendar Visibility Control
+
+- **Per-Calendar Visibility**: Control which calendars appear in the sidebar vs embedded views
+- **Code Block Filtering**: Use the new `calendars` parameter to show specific calendars in embeds
+- **Flexible Workflow**: Show work calendars in sidebar for meeting notes, personal calendars in daily notes
+- **Case-Insensitive Matching**: Calendar names in code blocks match regardless of capitalization
 
 ## What's New in v1.8.5
 
