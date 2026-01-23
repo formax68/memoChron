@@ -92,39 +92,116 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderCalendarsSection(container: HTMLElement): void {
-    // TODO: Implement in next task
-    new Setting(container).setName("Coming soon...");
+    // Display sub-group
+    this.renderSubgroupLabel(container, "Display");
+
+    // First day of week
+    const weekdays = [
+      { value: "0", label: "Sunday" },
+      { value: "1", label: "Monday" },
+      { value: "2", label: "Tuesday" },
+      { value: "3", label: "Wednesday" },
+      { value: "4", label: "Thursday" },
+      { value: "5", label: "Friday" },
+      { value: "6", label: "Saturday" },
+    ];
+
+    new Setting(container)
+      .setName("First day of week")
+      .setDesc("Which day the calendar week starts on")
+      .addDropdown((dropdown) => {
+        weekdays.forEach(({ value, label }) => {
+          dropdown.addOption(value, label);
+        });
+        dropdown
+          .setValue(String(this.plugin.settings.firstDayOfWeek))
+          .onChange(async (value) => {
+            this.plugin.settings.firstDayOfWeek = parseInt(value);
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          });
+      });
+
+    new Setting(container)
+      .setName("Hide calendar grid")
+      .setDesc("Show only the agenda view without the month calendar")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.hideCalendar)
+          .onChange(async (value) => {
+            this.plugin.settings.hideCalendar = value;
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          })
+      );
+
+    new Setting(container)
+      .setName("Enable calendar colors")
+      .setDesc("Color-code calendars for easy identification")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.enableCalendarColors)
+          .onChange(async (value) => {
+            this.plugin.settings.enableCalendarColors = value;
+            if (value) {
+              this.plugin.settings.calendarUrls.forEach((source, index) => {
+                if (!source.color) {
+                  const hue = (index * 137.5) % 360;
+                  source.color = `hsl(${hue}, 70%, 50%)`;
+                }
+              });
+              if (!this.plugin.settings.dailyNoteColor) {
+                this.plugin.settings.dailyNoteColor =
+                  getComputedStyle(document.documentElement)
+                    .getPropertyValue("--interactive-accent")
+                    .trim() || "#7c3aed";
+              }
+            }
+            await this.plugin.saveSettings();
+            this.plugin.updateCalendarColors();
+            this.display();
+          })
+      );
+
+    // Separator before calendar list
+    this.renderSeparator(container);
+
+    // Calendar list section
+    this.renderCalendarList(container);
+  }
+
+  private renderCalendarList(container: HTMLElement): void {
+    // Add calendar button
+    new Setting(container)
+      .addButton((btn) =>
+        btn
+          .setButtonText("Add calendar")
+          .setCta()
+          .onClick(() => this.addNewCalendar())
+      );
+
+    // Calendar items container
+    const listContainer = container.createDiv({
+      cls: "memochron-calendar-list",
+    });
+
+    this.plugin.settings.calendarUrls.forEach((source, index) => {
+      this.renderCalendarItem(listContainer, source, index);
+    });
+  }
+
+  private renderCalendarItem(
+    container: HTMLElement,
+    source: CalendarSource,
+    index: number
+  ): void {
+    // TODO: Implement collapsible calendar item in next task
+    new Setting(container).setName(source.name);
   }
 
   private renderAdvancedSection(container: HTMLElement): void {
     // TODO: Implement in later task
     new Setting(container).setName("Coming soon...");
-  }
-
-  private renderCalendarSection(): void {
-    this.createHeading(
-      "Calendar sources",
-      "Add and manage your iCalendar URLs"
-    );
-
-    new Setting(this.containerEl).addButton((btn) =>
-      btn.setButtonText("Add calendar").onClick(() => this.addNewCalendar())
-    );
-
-    const calendarContainer = this.containerEl.createEl("div", {
-      cls: "memochron-calendar-list",
-    });
-
-    this.plugin.settings.calendarUrls.forEach((source, index) => {
-      this.renderCalendarSource(calendarContainer, source, index);
-    });
-  }
-
-  private renderGeneralSection(): void {
-    this.renderFirstDayOfWeek();
-    this.renderHideCalendar();
-    this.renderEnableCalendarColors();
-    this.renderRefreshInterval();
   }
 
   private renderNotesSection(container: HTMLElement): void {
@@ -602,50 +679,6 @@ export class SettingsTab extends PluginSettingTab {
     ];
   }
 
-  private renderFirstDayOfWeek(): void {
-    const weekdays = [
-      { value: "0", label: "Sunday" },
-      { value: "1", label: "Monday" },
-      { value: "2", label: "Tuesday" },
-      { value: "3", label: "Wednesday" },
-      { value: "4", label: "Thursday" },
-      { value: "5", label: "Friday" },
-      { value: "6", label: "Saturday" },
-    ];
-
-    new Setting(this.containerEl)
-      .setName("First day of the week")
-      .setDesc("Choose which day the week starts on")
-      .addDropdown((dropdown) => {
-        weekdays.forEach(({ value, label }) => {
-          dropdown.addOption(value, label);
-        });
-
-        dropdown
-          .setValue(String(this.plugin.settings.firstDayOfWeek))
-          .onChange(async (value) => {
-            this.plugin.settings.firstDayOfWeek = parseInt(value);
-            await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView();
-          });
-      });
-  }
-
-  private renderHideCalendar(): void {
-    new Setting(this.containerEl)
-      .setName("Hide calendar")
-      .setDesc("Show only the agenda view without the month calendar grid")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.hideCalendar)
-          .onChange(async (value) => {
-            this.plugin.settings.hideCalendar = value;
-            await this.plugin.saveSettings();
-            await this.plugin.refreshCalendarView();
-          })
-      );
-  }
-
   private renderShowDailyNoteInAgenda(): void {
     const dailyNoteSetting = new Setting(this.containerEl)
       .setName("Show daily note in agenda")
@@ -669,41 +702,6 @@ export class SettingsTab extends PluginSettingTab {
           await this.plugin.refreshCalendarView();
         })
     );
-  }
-
-  private renderEnableCalendarColors(): void {
-    new Setting(this.containerEl)
-      .setName("Enable calendar colors")
-      .setDesc("Show calendars in different colors for easy identification")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.enableCalendarColors)
-          .onChange(async (value) => {
-            this.plugin.settings.enableCalendarColors = value;
-
-            // Auto-assign colors to existing calendars if enabling
-            if (value) {
-              this.plugin.settings.calendarUrls.forEach((source, index) => {
-                if (!source.color) {
-                  const hue = (index * 137.5) % 360;
-                  source.color = `hsl(${hue}, 70%, 50%)`;
-                }
-              });
-
-              // Set default daily note color if not set
-              if (!this.plugin.settings.dailyNoteColor) {
-                this.plugin.settings.dailyNoteColor =
-                  getComputedStyle(document.documentElement)
-                    .getPropertyValue("--interactive-accent")
-                    .trim() || "#7c3aed";
-              }
-            }
-
-            await this.plugin.saveSettings();
-            this.plugin.updateCalendarColors(); // Update colors visually without fetching
-            this.display(); // Refresh settings display to show/hide color pickers
-          })
-      );
   }
 
   private renderRefreshInterval(): void {
