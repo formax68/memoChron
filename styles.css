@@ -982,3 +982,73 @@
 .memochron-visibility-toggles .setting-item-description {
   font-size: 0.8em;
 }
+
+/* Collapsible Settings Sections */
+.memochron-collapsible-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: var(--size-4-2) 0;
+  border-left: 3px solid var(--interactive-accent);
+  padding-left: var(--size-4-3);
+  margin-left: calc(-1 * var(--size-4-3));
+  transition: background-color 0.15s ease;
+}
+
+.memochron-collapsible-header:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.memochron-collapsible-header .setting-item-name {
+  flex: 1;
+}
+
+.memochron-collapsible-chevron {
+  color: var(--text-muted);
+  font-size: 0.8em;
+  margin-right: var(--size-4-2);
+  transition: transform 0.2s ease;
+}
+
+.memochron-collapsible-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.memochron-collapsible-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.memochron-collapsible-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.memochron-collapsible-content.expanded {
+  max-height: none;
+  opacity: 1;
+}
+
+/* Sub-group labels */
+.memochron-subgroup-label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: var(--size-4-4);
+  margin-bottom: var(--size-4-2);
+  padding-bottom: var(--size-4-1);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.memochron-subgroup-label:first-child {
+  margin-top: 0;
+}
+
+/* Section separator */
+.memochron-section-separator {
+  border: none;
+  border-top: 1px solid var(--background-modifier-border);
+  margin: var(--size-4-4) 0;
+}
