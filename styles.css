@@ -569,96 +569,12 @@
 }
 
 /* Settings */
-.memochron-calendar-list {
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
-  padding: var(--memochron-padding-sm);
-  margin: var(--memochron-padding-lg) 0;
-}
-
 .memochron-file-picker-date {
   color: var(--text-muted);
   display: block;
   margin-top: var(--size-4-1);
 }
 
-.memochron-calendar-list .setting-item {
-  border-bottom: 1px solid var(--background-modifier-border);
-  padding: var(--memochron-padding-sm);
-}
-
-.memochron-calendar-list .setting-item:last-child {
-  border-bottom: none;
-}
-
-/* Improve calendar source settings layout */
-.memochron-calendar-list .setting-item {
-  min-height: auto;
-}
-
-.memochron-calendar-list .setting-item .setting-item-control {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--size-4-2);
-  align-items: flex-start;
-  min-height: 2.5rem;
-}
-
-.memochron-calendar-list .setting-item .setting-item-control > * {
-  margin: 0 !important;
-}
-
-/* URL input should be wider */
-.memochron-calendar-list .setting-item input[type="text"]:first-of-type {
-  min-width: 200px;
-  flex: 2;
-}
-
-/* Name input */
-.memochron-calendar-list .setting-item input[type="text"]:nth-of-type(2) {
-  min-width: 100px;
-  flex: 1;
-}
-
-/* Tags input */
-.memochron-calendar-list .setting-item input[type="text"]:nth-of-type(3) {
-  min-width: 80px;
-  flex: 1;
-}
-
-/* Color button styling */
-.memochron-color-button {
-  min-width: 85px;
-  flex-shrink: 0;
-}
-
-/* File picker button */
-.memochron-calendar-list .setting-item button[aria-label*="folder"] {
-  flex-shrink: 0;
-}
-
-/* Toggle and remove buttons */
-.memochron-calendar-list .setting-item .checkbox-container,
-.memochron-calendar-list .setting-item button:last-child {
-  flex-shrink: 0;
-}
-
-/* Force break to new line when needed */
-@media screen and (max-width: 1200px) {
-  .memochron-calendar-list .setting-item .setting-item-control {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .memochron-calendar-list .setting-item .setting-item-control > * {
-    width: 100%;
-    margin-bottom: var(--size-4-1) !important;
-  }
-
-  .memochron-calendar-list .setting-item input[type="text"] {
-    min-width: auto;
-  }
-}
 
 .memochron-setting-item-container {
   position: relative;
@@ -956,31 +872,6 @@
     overflow-y: auto;
     overflow-x: hidden;
   }
-}
-
-/* Calendar visibility toggles */
-.memochron-visibility-toggles {
-  margin-left: 1em;
-  padding-left: 1em;
-  border-left: 2px solid var(--background-modifier-border);
-  margin-bottom: 0.5em;
-}
-
-.memochron-visibility-toggles .setting-item {
-  padding: 0.3em 0;
-  border: none;
-}
-
-.memochron-visibility-toggles .setting-item-info {
-  flex: 1;
-}
-
-.memochron-visibility-toggles .setting-item-name {
-  font-size: 0.9em;
-}
-
-.memochron-visibility-toggles .setting-item-description {
-  font-size: 0.8em;
 }
 
 /* Collapsible Settings Sections */
