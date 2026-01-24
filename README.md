@@ -532,6 +532,25 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
 
+## What's New in v1.10.0
+
+### 🎨 Settings Page Redesign
+
+- **Collapsible Sections**: Major settings sections (Calendars, Notes, Advanced) now collapse/expand for better organization
+- **Collapsible Calendar Items**: Individual calendar entries collapse by default, showing only name and enabled toggle
+- **Improved Organization**: Settings grouped into logical sub-sections with clear labels
+- **Better Visual Hierarchy**: Sub-group labels, separators, and improved spacing throughout
+- **Advanced Section**: New collapsible Advanced section (collapsed by default) for performance and filtering settings
+- **Cleaner Calendar List**: Calendar items use card-style layout with expandable details
+- **Compact Checkbox Lists**: Attendee type filtering uses compact, readable checkbox layout
+
+**Benefits:**
+
+- Faster navigation through settings
+- Less visual clutter with collapsible sections
+- Easier to find specific settings with logical grouping
+- Better mobile experience with collapsible items
+
 ## What's New in v1.9.0
 
 ### Calendar Visibility Control
