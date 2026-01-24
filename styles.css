@@ -1029,9 +1029,13 @@
 }
 
 /* Remove button styling */
+.memochron-calendar-details .setting-item:has(.memochron-remove-btn) {
+  min-height: 3.5rem;
+  align-items: center;
+}
+
 .memochron-remove-btn {
   color: var(--text-muted);
-  margin-top: var(--size-4-2);
 }
 
 .memochron-remove-btn:hover {
