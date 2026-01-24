@@ -1005,7 +1005,7 @@
 
 .memochron-calendar-details .setting-item {
   border: none;
-  padding: var(--size-4-2) 0;
+  padding: var(--size-4-2) var(--size-4-3);
 }
 
 .memochron-calendar-details .setting-item:last-child {
