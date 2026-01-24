@@ -6,6 +6,7 @@ import {
   TextAreaComponent,
   DropdownComponent,
   ButtonComponent,
+  ToggleComponent,
   TFile,
   Notice,
   Modal,
@@ -70,7 +71,7 @@ export class SettingsTab extends PluginSettingTab {
     renderContent(contentEl);
 
     // Toggle handler
-    headerEl.addEventListener("click", () => {
+    this.plugin.registerDomEvent(headerEl, "click", () => {
       const nowCollapsed = !this.collapsedSections.get(name) ?? !defaultCollapsed;
       this.collapsedSections.set(name, nowCollapsed);
 
@@ -216,17 +217,17 @@ export class SettingsTab extends PluginSettingTab {
       text: source.name || "Unnamed calendar",
     });
 
-    // Enabled toggle (stop propagation to prevent collapse toggle)
+    // Enabled toggle using Obsidian's ToggleComponent
     const toggleContainer = headerEl.createDiv();
-    const toggleEl = toggleContainer.createEl("input", { type: "checkbox" });
-    toggleEl.checked = source.enabled;
-    toggleEl.classList.add("checkbox-container");
-    toggleEl.addEventListener("click", (e) => e.stopPropagation());
-    toggleEl.addEventListener("change", async () => {
-      this.plugin.settings.calendarUrls[index].enabled = toggleEl.checked;
+    const toggle = new ToggleComponent(toggleContainer);
+    toggle.setValue(source.enabled);
+    // Stop propagation to prevent collapse toggle when clicking the toggle
+    this.plugin.registerDomEvent(toggle.toggleEl, "click", (e) => e.stopPropagation());
+    toggle.onChange(async (value) => {
+      this.plugin.settings.calendarUrls[index].enabled = value;
       await this.plugin.saveSettings();
       await this.plugin.refreshCalendarView();
-      itemEl.classList.toggle("disabled", !toggleEl.checked);
+      itemEl.classList.toggle("disabled", !value);
     });
 
     // Chevron
@@ -243,7 +244,7 @@ export class SettingsTab extends PluginSettingTab {
     this.renderCalendarDetails(detailsEl, source, index);
 
     // Header click toggles collapse
-    headerEl.addEventListener("click", () => {
+    this.plugin.registerDomEvent(headerEl, "click", () => {
       const nowCollapsed = !this.collapsedCalendars.get(index) ?? false;
       this.collapsedCalendars.set(index, nowCollapsed);
       chevron.classList.toggle("collapsed", nowCollapsed);
@@ -257,17 +258,53 @@ export class SettingsTab extends PluginSettingTab {
     index: number
   ): void {
     // URL input
-    new Setting(container)
+    const urlSetting = new Setting(container)
       .setName("URL or file path")
-      .addText((text) =>
-        text
-          .setPlaceholder("https://... or path/to/file.ics")
-          .setValue(source.url)
-          .onChange(async (value) => {
-            this.plugin.settings.calendarUrls[index].url = value;
-            await this.plugin.saveSettings();
-          })
-      )
+      .setDesc("Enter a calendar URL (http:// or https://) or a vault-relative file path ending in .ics");
+
+    let errorEl: HTMLElement | null = null;
+
+    const urlInput = new TextComponent(urlSetting.controlEl);
+    urlInput
+      .setPlaceholder("https://... or path/to/file.ics")
+      .setValue(source.url);
+
+    // Validate on blur
+    this.plugin.registerDomEvent(urlInput.inputEl, "blur", async () => {
+      const value = urlInput.getValue();
+      const validation = this.validateCalendarUrl(value);
+      
+      // Remove existing error message
+      if (errorEl && errorEl.parentNode) {
+        errorEl.remove();
+        errorEl = null;
+      }
+
+      if (!validation.valid) {
+        errorEl = urlSetting.descEl.createDiv({
+          cls: "memochron-error-message",
+          text: validation.error,
+        });
+        errorEl.style.color = "var(--text-error, #c92424)";
+        errorEl.style.fontSize = "0.9em";
+        errorEl.style.marginTop = "0.5em";
+      } else {
+        // Save valid URL
+        this.plugin.settings.calendarUrls[index].url = value;
+        await this.plugin.saveSettings();
+      }
+    });
+
+    // Also save on change (for valid URLs)
+    urlInput.onChange(async (value) => {
+      const validation = this.validateCalendarUrl(value);
+      if (validation.valid) {
+        this.plugin.settings.calendarUrls[index].url = value;
+        await this.plugin.saveSettings();
+      }
+    });
+
+    urlSetting
       .addButton((btn) =>
         btn
           .setIcon("folder-open")
@@ -318,32 +355,32 @@ export class SettingsTab extends PluginSettingTab {
 
     // Visibility toggles
     if (source.enabled) {
-      const visibilitySetting = new Setting(container).setName("Visibility");
+      // Show in sidebar toggle
+      new Setting(container)
+        .setName("Show in sidebar")
+        .setDesc("Display this calendar in the sidebar widget")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(source.showInWidget !== false)
+            .onChange(async (value) => {
+              this.plugin.settings.calendarUrls[index].showInWidget = value;
+              await this.plugin.saveSettings();
+              await this.plugin.refreshCalendarView();
+            })
+        );
 
-      const visibilityRow = visibilitySetting.controlEl.createDiv({
-        cls: "memochron-visibility-row",
-      });
-
-      // Sidebar toggle
-      const sidebarLabel = visibilityRow.createEl("label");
-      const sidebarCheck = sidebarLabel.createEl("input", { type: "checkbox" });
-      sidebarCheck.checked = source.showInWidget !== false;
-      sidebarLabel.createSpan({ text: " Show in sidebar" });
-      sidebarCheck.addEventListener("change", async () => {
-        this.plugin.settings.calendarUrls[index].showInWidget = sidebarCheck.checked;
-        await this.plugin.saveSettings();
-        await this.plugin.refreshCalendarView();
-      });
-
-      // Embeds toggle
-      const embedsLabel = visibilityRow.createEl("label");
-      const embedsCheck = embedsLabel.createEl("input", { type: "checkbox" });
-      embedsCheck.checked = source.showInEmbeds !== false;
-      embedsLabel.createSpan({ text: " Show in embeds" });
-      embedsCheck.addEventListener("change", async () => {
-        this.plugin.settings.calendarUrls[index].showInEmbeds = embedsCheck.checked;
-        await this.plugin.saveSettings();
-      });
+      // Show in embeds toggle
+      new Setting(container)
+        .setName("Show in embeds")
+        .setDesc("Display this calendar in embedded code blocks")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(source.showInEmbeds !== false)
+            .onChange(async (value) => {
+              this.plugin.settings.calendarUrls[index].showInEmbeds = value;
+              await this.plugin.saveSettings();
+            })
+        );
     }
 
     // Color picker (if colors enabled)
@@ -359,7 +396,11 @@ export class SettingsTab extends PluginSettingTab {
     const hasCustomSettings = source.notesSettings?.useCustomSettings || false;
     new Setting(container)
       .setName("Note settings")
-      .setDesc(hasCustomSettings ? "Using custom settings" : "Using defaults")
+      .setDesc(
+        hasCustomSettings
+          ? "Using custom settings for this calendar"
+          : "Using default note settings. Select 'Custom...' to override defaults for this calendar."
+      )
       .addDropdown((dropdown) => {
         dropdown.addOption("default", "Use defaults");
         dropdown.addOption("custom", "Custom...");
@@ -492,7 +533,7 @@ export class SettingsTab extends PluginSettingTab {
       if (finalColor === currentColor) {
         swatch.classList.add("selected");
       }
-      swatch.addEventListener("click", async () => {
+      this.plugin.registerDomEvent(swatch, "click", async () => {
         this.plugin.settings.calendarUrls[index].color = finalColor;
         await this.plugin.saveSettings();
         this.plugin.updateCalendarColors();
@@ -541,7 +582,7 @@ export class SettingsTab extends PluginSettingTab {
     colorInput.style.padding = "0";
     colorInput.style.margin = "0";
     customLabel.appendChild(colorInput);
-    colorInput.addEventListener("change", async (e) => {
+    this.plugin.registerDomEvent(colorInput, "change", async (e) => {
       const hex = (e.target as HTMLInputElement).value;
       this.plugin.settings.calendarUrls[index].color = hex;
       await this.plugin.saveSettings();
@@ -578,7 +619,7 @@ export class SettingsTab extends PluginSettingTab {
       if (finalColor === currentColor) {
         swatch.classList.add("selected");
       }
-      swatch.addEventListener("click", async () => {
+      this.plugin.registerDomEvent(swatch, "click", async () => {
         this.plugin.settings.dailyNoteColor = finalColor;
         await this.plugin.saveSettings();
         this.plugin.updateCalendarColors();
@@ -627,7 +668,7 @@ export class SettingsTab extends PluginSettingTab {
     colorInput.style.padding = "0";
     colorInput.style.margin = "0";
     customLabel.appendChild(colorInput);
-    colorInput.addEventListener("change", async (e) => {
+    this.plugin.registerDomEvent(colorInput, "change", async (e) => {
       const hex = (e.target as HTMLInputElement).value;
       this.plugin.settings.dailyNoteColor = hex;
       await this.plugin.saveSettings();
@@ -726,20 +767,51 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderRefreshInterval(container: HTMLElement): void {
-    new Setting(container)
+    const intervalSetting = new Setting(container)
       .setName("Refresh interval")
-      .setDesc("Minutes between calendar data refreshes")
-      .addText((text) =>
-        text
-          .setValue(String(this.plugin.settings.refreshInterval))
-          .onChange(async (value) => {
-            const interval = parseInt(value);
-            if (!isNaN(interval) && interval > 0) {
-              this.plugin.settings.refreshInterval = interval;
-              await this.plugin.saveSettings();
-            }
-          })
-      );
+      .setDesc("Minutes between calendar data refreshes");
+
+    let errorEl: HTMLElement | null = null;
+
+    const intervalInput = new TextComponent(intervalSetting.controlEl);
+    intervalInput.setValue(String(this.plugin.settings.refreshInterval));
+
+    // Validate on blur
+    this.plugin.registerDomEvent(intervalInput.inputEl, "blur", async () => {
+      const value = intervalInput.getValue();
+      const interval = parseInt(value);
+      const validation = this.validateRefreshInterval(interval);
+
+      // Remove existing error message
+      if (errorEl && errorEl.parentNode) {
+        errorEl.remove();
+        errorEl = null;
+      }
+
+      if (!validation.valid) {
+        errorEl = intervalSetting.descEl.createDiv({
+          cls: "memochron-error-message",
+          text: validation.error,
+        });
+        errorEl.style.color = "var(--text-error, #c92424)";
+        errorEl.style.fontSize = "0.9em";
+        errorEl.style.marginTop = "0.5em";
+      } else {
+        // Save valid interval
+        this.plugin.settings.refreshInterval = interval;
+        await this.plugin.saveSettings();
+      }
+    });
+
+    // Also save on change (for valid intervals)
+    intervalInput.onChange(async (value) => {
+      const interval = parseInt(value);
+      const validation = this.validateRefreshInterval(interval);
+      if (validation.valid) {
+        this.plugin.settings.refreshInterval = interval;
+        await this.plugin.saveSettings();
+      }
+    });
   }
 
   private renderNoteLocation(container: HTMLElement): void {
@@ -917,7 +989,7 @@ export class SettingsTab extends PluginSettingTab {
         labelEl.createSpan({ cls: "checkbox-label-desc", text: " " + desc });
       }
 
-      checkbox.addEventListener("change", async () => {
+      this.plugin.registerDomEvent(checkbox, "change", async () => {
         if (checkbox.checked) {
           if (!this.plugin.settings.filteredCuTypes.includes(value)) {
             this.plugin.settings.filteredCuTypes.push(value);
@@ -972,7 +1044,7 @@ export class SettingsTab extends PluginSettingTab {
       "input"
     ) as HTMLInputElement;
     if (textInput) {
-      textInput.addEventListener("input", () => {
+      this.plugin.registerDomEvent(textInput, "input", () => {
         this.updateTemplatePreview(previewContainer, textInput.value);
       });
     }
@@ -1106,6 +1178,46 @@ export class SettingsTab extends PluginSettingTab {
       .filter((tag) => tag.length > 0);
   }
 
+  private validateCalendarUrl(url: string): { valid: boolean; error?: string } {
+    if (!url || url.trim() === "") {
+      return { valid: false, error: "URL or file path is required" };
+    }
+
+    const trimmedUrl = url.trim();
+
+    // Check for HTTP/HTTPS URLs
+    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+      try {
+        new URL(trimmedUrl);
+        return { valid: true };
+      } catch {
+        return { valid: false, error: "Invalid URL format" };
+      }
+    }
+
+    // Check for vault-relative file paths (should end in .ics)
+    if (trimmedUrl.endsWith(".ics")) {
+      // Basic validation - path should not contain invalid characters
+      if (/[<>:"|?*]/.test(trimmedUrl)) {
+        return { valid: false, error: "File path contains invalid characters" };
+      }
+      return { valid: true };
+    }
+
+    // Allow empty paths (will be validated when calendar is used)
+    return { valid: true };
+  }
+
+  private validateRefreshInterval(interval: number): { valid: boolean; error?: string } {
+    if (isNaN(interval)) {
+      return { valid: false, error: "Refresh interval must be a number" };
+    }
+    if (interval <= 0) {
+      return { valid: false, error: "Refresh interval must be greater than 0" };
+    }
+    return { valid: true };
+  }
+
   private setupPathSuggestions(
     input: TextComponent,
     suggestionContainer: HTMLElement,
@@ -1123,10 +1235,10 @@ export class SettingsTab extends PluginSettingTab {
       );
     };
 
-    input.inputEl.addEventListener("focus", showSuggestions);
-    input.inputEl.addEventListener("input", showSuggestions);
+    this.plugin.registerDomEvent(input.inputEl, "focus", showSuggestions);
+    this.plugin.registerDomEvent(input.inputEl, "input", showSuggestions);
 
-    input.inputEl.addEventListener("blur", () => {
+    this.plugin.registerDomEvent(input.inputEl, "blur", () => {
       setTimeout(() => {
         // Check if container still exists before manipulating
         if (suggestionContainer && suggestionContainer.parentNode) {
@@ -1159,7 +1271,7 @@ export class SettingsTab extends PluginSettingTab {
 
     matchingSuggestions.slice(0, 5).forEach((suggestion) => {
       const li = ul.createEl("li", { text: suggestion });
-      li.addEventListener("mousedown", async (e) => {
+      this.plugin.registerDomEvent(li, "mousedown", async (e) => {
         e.preventDefault();
         input.setValue(suggestion);
         await onSelect(suggestion);
@@ -1204,11 +1316,6 @@ class CalendarNotesSettingsModal extends Modal {
   private index: number;
   private plugin: MemoChron;
   private onSettingsChange?: () => void;
-  private eventListeners: Array<{
-    element: HTMLElement;
-    event: string;
-    handler: EventListener;
-  }> = [];
 
   constructor(
     app: App,
@@ -1526,10 +1633,11 @@ class CalendarNotesSettingsModal extends Modal {
       );
     };
 
-    input.inputEl.addEventListener("focus", showSuggestions);
-    input.inputEl.addEventListener("input", showSuggestions);
+    // Use plugin's registerDomEvent for proper cleanup
+    this.plugin.registerDomEvent(input.inputEl, "focus", showSuggestions);
+    this.plugin.registerDomEvent(input.inputEl, "input", showSuggestions);
 
-    input.inputEl.addEventListener("blur", () => {
+    this.plugin.registerDomEvent(input.inputEl, "blur", () => {
       setTimeout(() => {
         // Check if container still exists before manipulating
         if (suggestionContainer && suggestionContainer.parentNode) {
@@ -1562,7 +1670,8 @@ class CalendarNotesSettingsModal extends Modal {
 
     matchingSuggestions.slice(0, 5).forEach((suggestion) => {
       const li = ul.createEl("li", { text: suggestion });
-      li.addEventListener("mousedown", async (e) => {
+      // Use plugin's registerDomEvent for proper cleanup
+      this.plugin.registerDomEvent(li, "mousedown", async (e: MouseEvent) => {
         e.preventDefault();
         input.setValue(suggestion);
         await onSelect(suggestion);
@@ -1573,23 +1682,6 @@ class CalendarNotesSettingsModal extends Modal {
 
   onClose() {
     const { contentEl } = this;
-    this.cleanupEventListeners();
     contentEl.empty();
-  }
-
-  private addEventListener(
-    element: HTMLElement,
-    event: string,
-    handler: EventListener
-  ) {
-    element.addEventListener(event, handler);
-    this.eventListeners.push({ element, event, handler });
-  }
-
-  private cleanupEventListeners() {
-    this.eventListeners.forEach(({ element, event, handler }) => {
-      element.removeEventListener(event, handler);
-    });
-    this.eventListeners = [];
   }
 }
