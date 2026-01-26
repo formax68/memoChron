@@ -1002,6 +1002,21 @@ export class SettingsTab extends PluginSettingTab {
         this.plugin.calendarView?.refreshEvents();
       });
     });
+
+    // Filtered Attendees text input
+    new Setting(container)
+      .setName("Filtered attendees")
+      .setDesc("Comma-separated list of attendee names (CN) to exclude from event notes (case-insensitive)")
+      .addText((text) =>
+        text
+          .setPlaceholder("John Doe, Jane Smith")
+          .setValue(this.plugin.settings.filteredAttendees)
+          .onChange(async (value) => {
+            this.plugin.settings.filteredAttendees = value;
+            await this.plugin.saveSettings();
+            this.plugin.calendarView?.refreshEvents();
+          })
+      );
   }
 
   private renderFolderPathTemplate(container: HTMLElement): void {

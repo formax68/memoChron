@@ -796,6 +796,13 @@ export class CalendarService {
       (calendarSettings?.filteredCuTypes) ||
       this.plugin.settings.filteredCuTypes;
 
+    // Get filtered attendees list (comma-separated CN values to exclude)
+    const filteredAttendeesStr = this.plugin.settings.filteredAttendees || "";
+    const filteredAttendeesList = filteredAttendeesStr
+      .split(",")
+      .map((name) => name.trim().toLowerCase())
+      .filter((name) => name.length > 0);
+
     for (const prop of attendeeProps) {
       const value = prop.getFirstValue();
       const cn = prop.getParameter("cn"); // Common Name parameter
@@ -812,6 +819,10 @@ export class CalendarService {
 
       // Extract name or email
       if (cn) {
+        // Filter out attendees whose CN matches the filtered list (case-insensitive)
+        if (filteredAttendeesList.includes(cn.toLowerCase())) {
+          continue;
+        }
         attendees.push(cn);
       } else if (value) {
         // Extract email from mailto: format

@@ -56,6 +56,7 @@ export interface MemoChronSettings {
   dailyNoteColor?: string; // Color for daily note entry when calendar colors are enabled
   enableAttendeeLinks: boolean; // Create wiki links for attendees
   filteredCuTypes: string[]; // CUTYPE values to INCLUDE (default: ["INDIVIDUAL", ""])
+  filteredAttendees: string; // Comma-separated CN values to EXCLUDE from attendee lists
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -87,4 +88,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   showDailyNoteInAgenda: false, // Disabled by default
   enableAttendeeLinks: false, // Disabled by default
   filteredCuTypes: DEFAULT_FILTERED_CUTYPES, // Include individuals and unspecified
+  filteredAttendees: "", // No attendees filtered by default
 };
