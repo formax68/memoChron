@@ -824,10 +824,15 @@
 }
 
 .memochron-agenda-date-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   margin-top: var(--memochron-padding-md);
   margin-bottom: var(--memochron-padding-sm);
+  padding-top: var(--memochron-padding-sm);
   padding-bottom: var(--memochron-padding-xs);
   border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
   color: var(--text-muted);
   font-size: 0.95em;
   font-weight: 600;
