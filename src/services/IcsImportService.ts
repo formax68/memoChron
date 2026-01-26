@@ -15,7 +15,8 @@ export class IcsImportService {
    */
   static parseSingleEvent(
     icsContent: string,
-    filteredCuTypes?: string[]
+    filteredCuTypes?: string[],
+    filteredAttendees?: string[]
   ): CalendarEvent {
     try {
       const jcalData = parse(icsContent);
@@ -83,7 +84,7 @@ export class IcsImportService {
         isAllDay: isAllDay,
         description: event.description,
         location: event.location,
-        attendees: IcsImportService.extractAttendees(vevent, filteredCuTypes),
+        attendees: IcsImportService.extractAttendees(vevent, filteredCuTypes, filteredAttendees),
         source: "Imported",
         sourceId: "imported", // Special source ID for imported events
       };
@@ -111,11 +112,16 @@ export class IcsImportService {
     return false;
   }
 
-  private static extractAttendees(vevent: Component, filteredCuTypes?: string[]): string[] {
+  private static extractAttendees(
+    vevent: Component,
+    filteredCuTypes?: string[],
+    filteredAttendees?: string[]
+  ): string[] {
     const attendees: string[] = [];
 
     // Use default if not provided
     const cuTypeFilter = filteredCuTypes || ["INDIVIDUAL", ""];
+    const attendeeFilter = filteredAttendees || [];
 
     if (!vevent.hasProperty("attendee")) {
       return attendees;
@@ -139,6 +145,10 @@ export class IcsImportService {
 
       // Extract name or email
       if (cn) {
+        // Filter out attendees whose CN matches the filtered list (case-insensitive)
+        if (attendeeFilter.includes(cn.toLowerCase())) {
+          continue;
+        }
         attendees.push(cn);
       } else if (value) {
         // Extract email from mailto: format
