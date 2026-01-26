@@ -1006,7 +1006,7 @@ export class SettingsTab extends PluginSettingTab {
     // Filtered Attendees text input
     new Setting(container)
       .setName("Filtered attendees")
-      .setDesc("Comma-separated list of attendee names (CN) to exclude from event notes (case-insensitive)")
+      .setDesc("Comma-separated list of names or emails to exclude from event notes (case-insensitive)")
       .addText((text) =>
         text
           .setPlaceholder("John Doe, Jane Smith")

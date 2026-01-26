@@ -817,16 +817,21 @@ export class CalendarService {
         continue;
       }
 
-      // Extract name or email
+      // Extract email from mailto: format
+      const email = value ? value.replace(/^mailto:/i, "") : null;
+
+      // Filter out attendees whose CN or email matches the filtered list (case-insensitive)
+      if (cn && filteredAttendeesList.includes(cn.toLowerCase())) {
+        continue;
+      }
+      if (email && filteredAttendeesList.includes(email.toLowerCase())) {
+        continue;
+      }
+
+      // Use CN if available, otherwise email
       if (cn) {
-        // Filter out attendees whose CN matches the filtered list (case-insensitive)
-        if (filteredAttendeesList.includes(cn.toLowerCase())) {
-          continue;
-        }
         attendees.push(cn);
-      } else if (value) {
-        // Extract email from mailto: format
-        const email = value.replace(/^mailto:/i, "");
+      } else if (email) {
         attendees.push(email);
       }
     }
