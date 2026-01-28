@@ -52,13 +52,28 @@ export class CalendarView extends ItemView {
     this.createUI();
     this.registerViewEvents();
     this.loadDailyNotes();
-    await this.refreshEvents();
+
+    // If we have a saved height, we should try to determine the best view mode for it
+    if (this.plugin.settings.calendarHeight && !this.plugin.settings.hideCalendar) {
+      // Use efficient timeout to allow DOM to settle
+      setTimeout(() => {
+        const today = new Date();
+        this.selectedDate = today;
+        this.currentDate = today;
+        // Render first to ensure we can measure row heights
+        this.renderCalendar();
+        this.recalculateViewModeFromHeight(this.plugin.settings.calendarHeight);
+        this.refreshEvents();
+      }, 50);
+    } else {
+      await this.refreshEvents();
+    }
 
     // If calendar is hidden, show today's agenda
     if (this.plugin.settings.hideCalendar) {
       this.selectedDate = new Date();
       await this.showDayAgenda(this.selectedDate);
-    } else {
+    } else if (!this.plugin.settings.calendarHeight) {
       await this.goToToday();
     }
   }
@@ -164,7 +179,7 @@ export class CalendarView extends ItemView {
 
     // Apply saved height
     if (this.plugin.settings.calendarHeight) {
-      this.calendar.style.height = `${this.plugin.settings.calendarHeight} px`;
+      this.calendar.style.height = `${this.plugin.settings.calendarHeight}px`;
     }
 
     // Create resize handle
@@ -223,6 +238,7 @@ export class CalendarView extends ItemView {
             if (this.viewMode !== value) {
               this.viewMode = value;
               await this.refreshEvents();
+              await this.snapToCurrentViewMode();
             }
           });
       });
@@ -546,7 +562,7 @@ export class CalendarView extends ItemView {
         });
 
         // Add daily note dot first if it exists (show on calendar even if not shown in agenda)
-        if (hasDailyNote) {
+        if (hasDailyNote && this.plugin.settings.showDailyNoteInAgenda) {
           const dailyNoteDot = dotsContainer.createEl("div", {
             cls: "memochron-event-dot daily-note-dot colored",
           });
@@ -575,7 +591,7 @@ export class CalendarView extends ItemView {
         });
 
         // Add daily note dot if exists (show on calendar even if not shown in agenda)
-        if (hasDailyNote) {
+        if (hasDailyNote && this.plugin.settings.showDailyNoteInAgenda) {
           dotsContainer.createEl("div", {
             cls: "memochron-event-dot daily-note-dot",
           });
@@ -943,6 +959,93 @@ export class CalendarView extends ItemView {
     await this.showEventDetails(event);
   }
 
+  // --- Dynamic Resizing Methods ---
+
+  private measureRowHeight(): number {
+    const day = this.calendar.querySelector('.memochron-day');
+    return day ? (day as HTMLElement).offsetHeight : 0;
+  }
+
+  private measureHeaderHeight(): number {
+    // Header includes weekday headers + any padding/margins of the grid if relevant
+    const header = this.calendar.querySelector('.memochron-weekday');
+    return header ? (header as HTMLElement).offsetHeight : 0;
+  }
+
+  private measureTitleHeight(): number {
+    // If title is part of the measured height we care about
+    // But drag handle resizes this.calendar, which contains title inside? 
+    // Wait, createUI says: calendar = container.createEl("div", { cls: "memochron-calendar" });
+    // And renderCalendar empties this.calendar and adds title + grid.
+    // So title is inside.
+    const title = this.calendar.querySelector('.memochron-title'); // Assuming title is inside?
+    // Actually renderCalendar calls updateTitle which finds .memochron-title in containerEl, NOT in this.calendar
+    // Let's check createControls... nav has title. createControls is sibling to calendar.
+    // So this.calendar ONLY contains the grid.
+    // BUT renderCalendar implementation:
+    // this.calendar.empty(); ... this.updateTitle(); ... const grid = this.createCalendarGrid();
+    // updateTitle() looks for .memochron-title in containerEl.
+    // So this.calendar effectively only contains the grid (and maybe padding).
+
+    // Let's check CSS. .memochron-calendar has padding.
+    return 0;
+  }
+
+  private calculateWeeksThatFit(totalHeight: number): number {
+    // We need to account for calendar padding
+    const style = getComputedStyle(this.calendar);
+    const paddingTop = parseFloat(style.paddingTop) || 0;
+    const paddingBottom = parseFloat(style.paddingBottom) || 0;
+
+    const availableHeight = totalHeight - paddingTop - paddingBottom;
+    const headerHeight = this.measureHeaderHeight();
+    const rowHeight = this.measureRowHeight();
+
+    if (rowHeight === 0) return 4; // Fallback
+
+    const availableForRows = availableHeight - headerHeight;
+    // We can fit N rows
+    const weeks = Math.floor(availableForRows / rowHeight);
+
+    return Math.max(1, weeks);
+  }
+
+  private recalculateViewModeFromHeight(height: number) {
+    if (height < 100) return; // Ignore too small
+
+    // If we can't measure yet, assume default
+    if (this.measureRowHeight() === 0) return;
+
+    const weeksThatFit = this.calculateWeeksThatFit(height);
+
+    // Determine how many weeks are needed for the full month view
+    // A month can span 4, 5, or 6 weeks.
+    // Let's approximate: if it fits 6 weeks, it fits a month.
+    // Even 5 weeks often fits a month.
+
+    // Logic: If user drags such that we can show N weeks...
+    // If N >= weeks in current month, switch to month view.
+    // Else switch to N weeks view.
+
+    const { year, month } = this.getYearMonth();
+    const { firstDayOffset, daysInMonth } = this.getMonthInfo(year, month);
+    // Calculate exact weeks needed for THIS month
+    const days = firstDayOffset + daysInMonth;
+    const weeksNeededForMonth = Math.ceil(days / 7);
+
+    if (weeksThatFit >= weeksNeededForMonth) {
+      if (this.viewMode !== 'month') {
+        this.viewMode = 'month';
+        // We don't call render here, caller does
+      }
+    } else {
+      const newMode = Math.min(5, Math.max(1, weeksThatFit)) as CalendarViewMode;
+      if (this.viewMode !== newMode) {
+        this.viewMode = newMode;
+      }
+    }
+  }
+
   private handleDragStart(e: MouseEvent) {
     e.preventDefault();
     this.dragStartY = e.clientY;
@@ -955,8 +1058,20 @@ export class CalendarView extends ItemView {
 
   private handleDragMove(e: MouseEvent) {
     const deltaY = e.clientY - this.dragStartY;
-    const newHeight = Math.max(100, this.dragStartHeight + deltaY); // Min height 100px
+    const newHeight = Math.max(100, this.dragStartHeight + deltaY);
     this.calendar.style.height = `${newHeight}px`;
+
+    // Dynamic View Switching
+    // We only trigger if height changed significantly enough or periodically
+    // Simple approach: just recalculate. 
+    // To avoid flickering, maybe debounce or only change if different
+
+    const oldMode = this.viewMode;
+    this.recalculateViewModeFromHeight(newHeight);
+
+    if (this.viewMode !== oldMode) {
+      this.renderCalendar();
+    }
   }
 
   private async handleDragEnd(e: MouseEvent) {
@@ -964,8 +1079,32 @@ export class CalendarView extends ItemView {
     window.removeEventListener("mousemove", this.handleDragMoveBound);
     window.removeEventListener("mouseup", this.handleDragEndBound);
 
+    await this.snapToCurrentViewMode();
+  }
+
+  private async snapToCurrentViewMode() {
+    // Snap to nearest valid row height
+    const rowHeight = this.measureRowHeight();
+    const headerHeight = this.measureHeaderHeight();
+    const style = getComputedStyle(this.calendar);
+    const padding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+
+    let weeks: number;
+    if (this.viewMode === 'month') {
+      const { year, month } = this.getYearMonth();
+      const { firstDayOffset, daysInMonth } = this.getMonthInfo(year, month);
+      weeks = Math.ceil((firstDayOffset + daysInMonth) / 7);
+    } else {
+      weeks = this.viewMode as number;
+    }
+
+    const idealHeight = padding + headerHeight + (weeks * rowHeight);
+
+    // Animate snap if desired, or just set
+    this.calendar.style.height = `${idealHeight}px`;
+
     // Save height setting
-    this.plugin.settings.calendarHeight = this.calendar.offsetHeight;
+    this.plugin.settings.calendarHeight = idealHeight;
     await this.plugin.saveSettings();
   }
 
