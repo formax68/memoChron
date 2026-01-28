@@ -49,6 +49,7 @@ export interface MemoChronSettings {
   defaultTags: string[];
   noteTemplate: string;
   firstDayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
+  showWeekNumbers: boolean;
   hideCalendar: boolean;
   folderPathTemplate: string; // Template for organizing notes in date-based subfolders
   enableCalendarColors: boolean; // Global toggle for calendar colors feature
@@ -57,6 +58,7 @@ export interface MemoChronSettings {
   enableAttendeeLinks: boolean; // Create wiki links for attendees
   filteredCuTypes: string[]; // CUTYPE values to INCLUDE (default: ["INDIVIDUAL", ""])
   filteredAttendees: string; // Comma-separated CN values to EXCLUDE from attendee lists
+  calendarHeight: number;
 }
 
 export const DEFAULT_SETTINGS: MemoChronSettings = {
@@ -82,6 +84,7 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
 ## 📝 Notes
 `,
   firstDayOfWeek: DEFAULT_FIRST_DAY_OF_WEEK,
+  showWeekNumbers: false,
   hideCalendar: false,
   folderPathTemplate: "", // Empty by default for backwards compatibility
   enableCalendarColors: false, // Disabled by default
@@ -89,4 +92,5 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   enableAttendeeLinks: false, // Disabled by default
   filteredCuTypes: DEFAULT_FILTERED_CUTYPES, // Include individuals and unspecified
   filteredAttendees: "", // No attendees filtered by default
+  calendarHeight: 350, // Default calendar height in pixels
 };

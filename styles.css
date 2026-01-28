@@ -81,6 +81,26 @@
   font-size: 0.85em;
 }
 
+.memochron-calendar.show-week-numbers .memochron-calendar-grid {
+  grid-template-columns: 30px repeat(7, 1fr);
+}
+
+.memochron-week-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  color: var(--text-muted);
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-s);
+  margin: 1px;
+}
+
+.memochron-weekday.week-number-header {
+  color: var(--text-faint);
+  font-size: 0.8em;
+}
+
 .memochron-weekday {
   padding: var(--memochron-padding-xs);
   text-align: center;
@@ -121,9 +141,8 @@
 
 /* Important: Always ensure text is visible on selected days */
 .memochron-day.selected .memochron-day-header {
-  color: var(
-    --text-on-accent
-  ) !important; /* Use !important to override any theme styles */
+  color: var(--text-on-accent) !important;
+  /* Use !important to override any theme styles */
   font-weight: 600;
 }
 
@@ -150,40 +169,38 @@
 }
 
 .memochron-event-dot {
-  color: var(--interactive-accent);
-  font-size: 1.2em;
-  line-height: 1;
-  height: 8px;
-  margin-bottom: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--interactive-accent);
+  margin-bottom: 2px;
 }
 
 /* Colored dots container */
 .memochron-event-dots-container {
   display: flex;
-  gap: 2px;
+  gap: 3px;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
-  margin-top: 2px;
+  margin-top: 4px;
+  min-height: 8px;
 }
 
 .memochron-event-dot.colored {
-  font-size: 1em;
-  height: auto;
+  background-color: currentColor;
   margin-bottom: 0;
 }
 
 /* Daily note dot styling */
 .memochron-event-dot.daily-note-dot {
-  font-weight: bold;
-  position: relative;
+  /* Ensure it looks the same as others */
 }
 
 /* Make daily note dot slightly larger when it's the only dot */
-.memochron-event-dots-container:has(.daily-note-dot):not(
-    :has(.memochron-event-dot:not(.daily-note-dot))
-  )
-  .daily-note-dot {
-  font-size: 1.2em;
+.memochron-event-dots-container:has(.daily-note-dot):not( :has(.memochron-event-dot:not(.daily-note-dot))) .daily-note-dot {
+  width: 8px;
+  height: 8px;
 }
 
 /* Week View */
@@ -242,6 +259,27 @@
 /* Calendar Container */
 .memochron-calendar {
   padding: var(--memochron-padding-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.memochron-drag-handle {
+  height: 8px;
+  background-color: transparent;
+  width: 100%;
+  cursor: row-resize;
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+  margin-top: -4px;
+  /* Slightly overlap to make it easier to grab */
+  flex-shrink: 0;
+}
+
+.memochron-drag-handle:hover,
+.memochron-drag-handle.dragging {
+  background-color: var(--interactive-accent);
+  opacity: 0.5;
 }
 
 /* Agenda View */
@@ -280,7 +318,8 @@
 }
 
 .memochron-controls.calendar-hidden {
-  display: none;
+  /* display: none;  <-- We want to keep this visible for the toggle button */
+  display: flex;
 }
 
 .memochron-agenda h3 {
@@ -593,11 +632,13 @@
   width: var(--input-width);
   top: 100%;
   margin-top: 4px;
-  display: none; /* Hidden by default */
+  display: none;
+  /* Hidden by default */
 }
 
 .memochron-suggestion-container.is-visible {
-  display: block; /* Show when class is applied */
+  display: block;
+  /* Show when class is applied */
 }
 
 .memochron-suggestion-list {
@@ -667,7 +708,8 @@
 
   .setting-item-control input[type="text"],
   .setting-item-control button {
-    min-height: 36px; /* Better touch targets */
+    min-height: 36px;
+    /* Better touch targets */
   }
 }
 
@@ -787,7 +829,8 @@
 .memochron-embedded-agenda {
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Keep for border radius, but allow agenda to scroll internally */
+  overflow: hidden;
+  /* Keep for border radius, but allow agenda to scroll internally */
 }
 
 .memochron-embedded-agenda .memochron-agenda {
@@ -1087,4 +1130,17 @@
   border: none;
   padding: 0;
   margin: var(--size-4-3) 0;
+}
+
+/* Toggle Button */
+.memochron-toggle-btn {
+  font-weight: 500;
+  min-width: 60px;
+  /* Prevent layout jump */
+  justify-content: center;
+}
+
+.memochron-controls.calendar-hidden .memochron-nav {
+  justify-content: flex-start;
+  /* Align left when alone */
 }

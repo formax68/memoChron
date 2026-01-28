@@ -124,6 +124,19 @@ export class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(container)
+      .setName("Show week numbers")
+      .setDesc("Display week numbers in the calendar view")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showWeekNumbers)
+          .onChange(async (value) => {
+            this.plugin.settings.showWeekNumbers = value;
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          })
+      );
+
+    new Setting(container)
       .setName("Hide calendar grid")
       .setDesc("Show only the agenda view without the month calendar")
       .addToggle((toggle) =>
@@ -273,7 +286,7 @@ export class SettingsTab extends PluginSettingTab {
     this.plugin.registerDomEvent(urlInput.inputEl, "blur", async () => {
       const value = urlInput.getValue();
       const validation = this.validateCalendarUrl(value);
-      
+
       // Remove existing error message
       if (errorEl && errorEl.parentNode) {
         errorEl.remove();
@@ -526,8 +539,8 @@ export class SettingsTab extends PluginSettingTab {
       });
       const finalColor = color.cssVar
         ? getComputedStyle(document.documentElement)
-            .getPropertyValue(color.cssVar)
-            .trim() || color.fallback
+          .getPropertyValue(color.cssVar)
+          .trim() || color.fallback
         : color.fallback;
       swatch.style.backgroundColor = finalColor;
       if (finalColor === currentColor) {
@@ -550,8 +563,8 @@ export class SettingsTab extends PluginSettingTab {
     const isCustom = !baseColors.some((c) => {
       const col = c.cssVar
         ? getComputedStyle(document.documentElement)
-            .getPropertyValue(c.cssVar)
-            .trim() || c.fallback
+          .getPropertyValue(c.cssVar)
+          .trim() || c.fallback
         : c.fallback;
       return col === currentColor;
     });
@@ -612,8 +625,8 @@ export class SettingsTab extends PluginSettingTab {
       });
       const finalColor = color.cssVar
         ? getComputedStyle(document.documentElement)
-            .getPropertyValue(color.cssVar)
-            .trim() || color.fallback
+          .getPropertyValue(color.cssVar)
+          .trim() || color.fallback
         : color.fallback;
       swatch.style.backgroundColor = finalColor;
       if (finalColor === currentColor) {
@@ -636,8 +649,8 @@ export class SettingsTab extends PluginSettingTab {
     const isCustom = !baseColors.some((c) => {
       const col = c.cssVar
         ? getComputedStyle(document.documentElement)
-            .getPropertyValue(c.cssVar)
-            .trim() || c.fallback
+          .getPropertyValue(c.cssVar)
+          .trim() || c.fallback
         : c.fallback;
       return col === currentColor;
     });

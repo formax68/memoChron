@@ -105,7 +105,7 @@ export default class MemoChron extends Plugin {
     if (this.calendarService) {
       this.setupAutoRefresh();
     }
-    
+
     await this.refreshCalendarView();
   }
 
@@ -121,7 +121,7 @@ export default class MemoChron extends Plugin {
 
   private async createCalendarView() {
     const leaf = this.getOrCreateLeaf();
-    
+
     if (leaf) {
       await leaf.setViewState({
         type: MEMOCHRON_VIEW_TYPE,
@@ -153,7 +153,7 @@ export default class MemoChron extends Plugin {
     }
   }
 
-  private async toggleCalendar() {
+  async toggleCalendar() {
     this.settings.hideCalendar = !this.settings.hideCalendar;
     await this.saveSettings();
     if (this.calendarView) {
@@ -163,7 +163,7 @@ export default class MemoChron extends Plugin {
 
   private setupAutoRefresh() {
     this.clearRefreshTimer();
-    
+
     const intervalMs = this.settings.refreshInterval * 60 * 1000;
     this.refreshTimer = window.setInterval(
       () => this.refreshCalendarView(),

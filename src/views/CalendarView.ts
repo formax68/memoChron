@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, DropdownComponent } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
@@ -14,6 +14,8 @@ interface DateElements {
   [key: string]: HTMLElement;
 }
 
+type CalendarViewMode = 'month' | 1 | 2 | 3 | 4 | 5;
+
 export class CalendarView extends ItemView {
   private calendar: HTMLElement;
   private agenda: HTMLElement;
@@ -22,6 +24,12 @@ export class CalendarView extends ItemView {
   private currentMonthDays: Map<string, HTMLElement> = new Map();
   private isViewEventsRegistered = false;
   private dailyNotes: Map<string, TFile> = new Map();
+  private resizeHandle: HTMLElement;
+  private dragStartY: number;
+  private dragStartHeight: number;
+  private handleDragMoveBound: (e: MouseEvent) => void;
+  private handleDragEndBound: (e: MouseEvent) => void;
+  private viewMode: CalendarViewMode = 'month';
 
   constructor(leaf: WorkspaceLeaf, private plugin: MemoChron) {
     super(leaf);
@@ -64,7 +72,7 @@ export class CalendarView extends ItemView {
     // Reload daily notes
     this.loadDailyNotes();
 
-    this.renderMonth();
+    this.renderCalendar();
 
     // Update calendar visibility based on current settings
     this.updateCalendarVisibility();
@@ -79,7 +87,7 @@ export class CalendarView extends ItemView {
     this.updateEventColors();
 
     // Re-render the calendar view with new colors
-    this.renderMonth();
+    this.renderCalendar();
 
     // Re-render the agenda with new colors
     const dateToShow = this.selectedDate || new Date();
@@ -153,7 +161,24 @@ export class CalendarView extends ItemView {
 
     const controls = this.createControls(container);
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });
+
+    // Apply saved height
+    if (this.plugin.settings.calendarHeight) {
+      this.calendar.style.height = `${this.plugin.settings.calendarHeight}px`;
+    }
+
+    // Create resize handle
+    this.resizeHandle = container.createEl("div", {
+      cls: "memochron-drag-handle",
+    });
+    this.resizeHandle.addEventListener("mousedown", (e) =>
+      this.handleDragStart(e)
+    );
+
     this.agenda = container.createEl("div", { cls: "memochron-agenda" });
+
+    this.handleDragMoveBound = this.handleDragMove.bind(this);
+    this.handleDragEndBound = this.handleDragEnd.bind(this);
 
     this.updateCalendarVisibility();
     this.setupDragAndDrop();
@@ -161,9 +186,36 @@ export class CalendarView extends ItemView {
 
   private createControls(container: HTMLElement): HTMLElement {
     const controls = container.createEl("div", { cls: "memochron-controls" });
+
+    // Create navigation container
     const nav = controls.createEl("div", { cls: "memochron-nav" });
 
+    // Add toggle button at the start of nav
+    const toggleBtn = nav.createEl("div", {
+      cls: "memochron-nav-link memochron-toggle-btn",
+      attr: { "aria-label": "Toggle calendar" }
+    });
+    this.updateToggleButtonIcon(toggleBtn);
+
+    toggleBtn.onclick = async () => {
+      await this.plugin.toggleCalendar();
+      this.updateToggleButtonIcon(toggleBtn);
+    };
+
     nav.createEl("span", { cls: "memochron-title" });
+
+    new DropdownComponent(controls)
+      .addOption("month", "Month")
+      .addOption("1", "1 Week")
+      .addOption("2", "2 Weeks")
+      .addOption("3", "3 Weeks")
+      .addOption("4", "4 Weeks")
+      .addOption("5", "5 Weeks")
+      .setValue(String(this.viewMode))
+      .onChange(async (value) => {
+        this.viewMode = (value === 'month' ? 'month' : parseInt(value)) as CalendarViewMode;
+        await this.refreshEvents();
+      });
 
     const navButtons = nav.createEl("div", { cls: "memochron-nav-buttons" });
     this.createNavButton(navButtons, "<", () => this.navigate(-1));
@@ -171,6 +223,13 @@ export class CalendarView extends ItemView {
     this.createNavButton(navButtons, ">", () => this.navigate(1));
 
     return controls;
+  }
+
+  private updateToggleButtonIcon(btn: HTMLElement) {
+    const isHidden = this.plugin.settings.hideCalendar;
+    btn.textContent = isHidden ? "Show" : "Hide";
+    // You could use icons here if preferred, e.g.:
+    // setIcon(btn, isHidden ? "eye" : "eye-off"); 
   }
 
   private createNavButton(
@@ -200,7 +259,12 @@ export class CalendarView extends ItemView {
   }
 
   private async navigate(delta: number) {
-    this.currentDate.setMonth(this.currentDate.getMonth() + delta);
+    if (this.viewMode === 'month') {
+      this.currentDate.setMonth(this.currentDate.getMonth() + delta);
+    } else {
+      const weeks = this.viewMode as number;
+      this.currentDate.setDate(this.currentDate.getDate() + (weeks * 7 * delta));
+    }
     await this.refreshEvents();
   }
 
@@ -240,7 +304,7 @@ export class CalendarView extends ItemView {
     newEl?.addClass("selected");
   }
 
-  private renderMonth() {
+  private renderCalendar() {
     if (this.plugin.settings.hideCalendar) {
       return;
     }
@@ -249,9 +313,51 @@ export class CalendarView extends ItemView {
     this.currentMonthDays.clear();
 
     this.updateTitle();
+
+    // Add class for styling if week numbers are enabled
+    if (this.plugin.settings.showWeekNumbers) {
+      this.calendar.addClass("show-week-numbers");
+    } else {
+      this.calendar.removeClass("show-week-numbers");
+    }
+
     const grid = this.createCalendarGrid();
     this.renderWeekdayHeaders(grid);
-    this.renderMonthDays(grid);
+
+    if (this.viewMode === 'month') {
+      this.renderMonthDays(grid);
+    } else {
+      this.renderWeekDays(grid, this.viewMode as number);
+    }
+  }
+
+  private renderWeekDays(grid: HTMLElement, weeks: number) {
+    const startOfWeek = this.getStartOfWeek(this.currentDate);
+    const today = new Date().toDateString();
+    const showWeekNumbers = this.plugin.settings.showWeekNumbers;
+
+    for (let w = 0; w < weeks; w++) {
+      const weekStartDate = new Date(startOfWeek);
+      weekStartDate.setDate(weekStartDate.getDate() + (w * 7));
+
+      if (showWeekNumbers) {
+        this.renderWeekNumber(grid, weekStartDate);
+      }
+
+      for (let d = 0; d < 7; d++) {
+        const date = new Date(weekStartDate);
+        date.setDate(date.getDate() + d);
+        this.renderDay(grid, date, today);
+      }
+    }
+  }
+
+  private getStartOfWeek(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const firstDay = this.plugin.settings.firstDayOfWeek;
+    const diff = d.getDate() - day + (day < firstDay ? -7 : 0) + firstDay;
+    return new Date(d.setDate(diff));
   }
 
   private updateTitle() {
@@ -271,6 +377,13 @@ export class CalendarView extends ItemView {
   }
 
   private renderWeekdayHeaders(grid: HTMLElement) {
+    if (this.plugin.settings.showWeekNumbers) {
+      grid.createEl("div", {
+        cls: "memochron-weekday week-number-header",
+        text: "Wk",
+      });
+    }
+
     const weekdays = this.getReorderedWeekdays();
     weekdays.forEach((day) => {
       grid.createEl("div", {
@@ -289,9 +402,48 @@ export class CalendarView extends ItemView {
   private renderMonthDays(grid: HTMLElement) {
     const { year, month } = this.getYearMonth();
     const { firstDayOffset, daysInMonth } = this.getMonthInfo(year, month);
+    const showWeekNumbers = this.plugin.settings.showWeekNumbers;
+
+    let currentDayOfWeek = 0;
+
+    // Render first week number
+    if (showWeekNumbers) {
+      const firstDate = new Date(year, month, 1);
+      this.renderWeekNumber(grid, firstDate);
+    }
 
     this.renderEmptyDays(grid, firstDayOffset);
-    this.renderDays(grid, year, month, daysInMonth);
+    currentDayOfWeek += firstDayOffset;
+
+    const today = new Date().toDateString();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      if (currentDayOfWeek >= 7) {
+        currentDayOfWeek = 0;
+        if (showWeekNumbers) {
+          const currentDate = new Date(year, month, day);
+          this.renderWeekNumber(grid, currentDate);
+        }
+      }
+
+      const date = new Date(year, month, day);
+      this.renderDay(grid, date, today);
+      currentDayOfWeek++;
+    }
+  }
+
+  private renderWeekNumber(grid: HTMLElement, date: Date) {
+    const moment = (window as any).moment;
+    let weekNum = "?";
+
+    if (moment) {
+      weekNum = String(moment(date).week());
+    }
+
+    grid.createEl("div", {
+      cls: "memochron-week-number",
+      text: weekNum,
+    });
   }
 
   private getYearMonth() {
@@ -321,19 +473,6 @@ export class CalendarView extends ItemView {
     }
   }
 
-  private renderDays(
-    grid: HTMLElement,
-    year: number,
-    month: number,
-    daysInMonth: number
-  ) {
-    const today = new Date().toDateString();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      this.renderDay(grid, date, today);
-    }
-  }
 
   private renderDay(grid: HTMLElement, date: Date, todayString: string) {
     const dateString = date.toDateString();
@@ -393,7 +532,6 @@ export class CalendarView extends ItemView {
         if (hasDailyNote) {
           const dailyNoteDot = dotsContainer.createEl("div", {
             cls: "memochron-event-dot daily-note-dot colored",
-            text: "•",
           });
           const dailyNoteColor =
             this.plugin.settings.dailyNoteColor ||
@@ -408,7 +546,6 @@ export class CalendarView extends ItemView {
         eventsBySource.forEach((event) => {
           const dot = dotsContainer.createEl("div", {
             cls: "memochron-event-dot colored",
-            text: "•",
           });
           if (event.color) {
             dot.style.color = event.color;
@@ -424,7 +561,6 @@ export class CalendarView extends ItemView {
         if (hasDailyNote) {
           dotsContainer.createEl("div", {
             cls: "memochron-event-dot daily-note-dot",
-            text: "•",
           });
         }
 
@@ -432,7 +568,6 @@ export class CalendarView extends ItemView {
         if (events.length > 0) {
           dotsContainer.createEl("div", {
             cls: "memochron-event-dot",
-            text: "•",
           });
         }
       }
@@ -440,7 +575,7 @@ export class CalendarView extends ItemView {
   }
 
   private addDayClickHandler(dayEl: HTMLElement, date: Date) {
-    dayEl.addEventListener("touchstart", () => {}, { passive: false });
+    dayEl.addEventListener("touchstart", () => { }, { passive: false });
     dayEl.addEventListener("click", () => this.selectDate(date));
     dayEl.addEventListener("dblclick", () => this.handleDayDoubleClick(date));
   }
@@ -648,7 +783,7 @@ export class CalendarView extends ItemView {
   }
 
   private addEventClickHandler(eventEl: HTMLElement, event: CalendarEvent) {
-    eventEl.addEventListener("touchstart", () => {}, { passive: false });
+    eventEl.addEventListener("touchstart", () => { }, { passive: false });
 
     eventEl.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -696,19 +831,45 @@ export class CalendarView extends ItemView {
     const controls = this.containerEl.querySelector(
       ".memochron-controls"
     ) as HTMLElement;
+    const navTitle = controls?.querySelector(".memochron-title") as HTMLElement;
+    const navButtons = controls?.querySelector(".memochron-nav-buttons") as HTMLElement;
+    const toggleBtn = controls?.querySelector(".memochron-toggle-btn") as HTMLElement;
 
     if (this.plugin.settings.hideCalendar) {
       this.calendar.style.display = "none";
+      if (this.resizeHandle) this.resizeHandle.style.display = "none";
+
+      // Hide nav elements but keep the toggle button visible
+      if (navTitle) navTitle.style.display = "none";
+      if (navButtons) navButtons.style.display = "none";
       if (controls) {
-        controls.style.display = "none";
+        controls.style.display = ""; // Ensure controls container is visible
+        controls.classList.add("calendar-hidden");
+        const dropdown = controls.querySelector("select");
+        if (dropdown) dropdown.style.display = "none";
       }
+
       this.agenda.classList.add("agenda-only");
     } else {
       this.calendar.style.display = "";
+      if (this.resizeHandle) this.resizeHandle.style.display = "";
+
+      // Show nav elements
+      if (navTitle) navTitle.style.display = "";
+      if (navButtons) navButtons.style.display = "";
       if (controls) {
         controls.style.display = "";
+        controls.classList.remove("calendar-hidden");
+        const dropdown = controls.querySelector("select");
+        if (dropdown) dropdown.style.display = "";
       }
+
       this.agenda.classList.remove("agenda-only");
+    }
+
+    // Update the button text/state
+    if (toggleBtn) {
+      this.updateToggleButtonIcon(toggleBtn);
     }
   }
 
@@ -791,4 +952,31 @@ export class CalendarView extends ItemView {
     // Use the existing note creation logic
     await this.showEventDetails(event);
   }
+
+  private handleDragStart(e: MouseEvent) {
+    e.preventDefault();
+    this.dragStartY = e.clientY;
+    this.dragStartHeight = this.calendar.offsetHeight;
+    this.resizeHandle.addClass("dragging");
+
+    window.addEventListener("mousemove", this.handleDragMoveBound);
+    window.addEventListener("mouseup", this.handleDragEndBound);
+  }
+
+  private handleDragMove(e: MouseEvent) {
+    const deltaY = e.clientY - this.dragStartY;
+    const newHeight = Math.max(100, this.dragStartHeight + deltaY); // Min height 100px
+    this.calendar.style.height = `${newHeight}px`;
+  }
+
+  private async handleDragEnd(e: MouseEvent) {
+    this.resizeHandle.removeClass("dragging");
+    window.removeEventListener("mousemove", this.handleDragMoveBound);
+    window.removeEventListener("mouseup", this.handleDragEndBound);
+
+    // Save height setting
+    this.plugin.settings.calendarHeight = this.calendar.offsetHeight;
+    await this.plugin.saveSettings();
+  }
+
 }
