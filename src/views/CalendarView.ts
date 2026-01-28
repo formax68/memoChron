@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile, DropdownComponent } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, DropdownComponent, setIcon, Menu, MenuItem } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
@@ -164,7 +164,7 @@ export class CalendarView extends ItemView {
 
     // Apply saved height
     if (this.plugin.settings.calendarHeight) {
-      this.calendar.style.height = `${this.plugin.settings.calendarHeight}px`;
+      this.calendar.style.height = `${this.plugin.settings.calendarHeight} px`;
     }
 
     // Create resize handle
@@ -190,57 +190,74 @@ export class CalendarView extends ItemView {
     // Create navigation container
     const nav = controls.createEl("div", { cls: "memochron-nav" });
 
-    // Add toggle button at the start of nav
-    const toggleBtn = nav.createEl("div", {
-      cls: "memochron-nav-link memochron-toggle-btn",
-      attr: { "aria-label": "Toggle calendar" }
-    });
-    this.updateToggleButtonIcon(toggleBtn);
-
-    toggleBtn.onclick = async () => {
-      await this.plugin.toggleCalendar();
-      this.updateToggleButtonIcon(toggleBtn);
-    };
-
     nav.createEl("span", { cls: "memochron-title" });
 
-    new DropdownComponent(controls)
-      .addOption("month", "Month")
-      .addOption("1", "1 Week")
-      .addOption("2", "2 Weeks")
-      .addOption("3", "3 Weeks")
-      .addOption("4", "4 Weeks")
-      .addOption("5", "5 Weeks")
-      .setValue(String(this.viewMode))
-      .onChange(async (value) => {
-        this.viewMode = (value === 'month' ? 'month' : parseInt(value)) as CalendarViewMode;
-        await this.refreshEvents();
-      });
+    // View Options Button (Menu)
+    const viewOptionsBtn = controls.createEl("div", {
+      cls: "memochron-nav-link clickable-icon",
+      attr: { "aria-label": "View options" }
+    });
+    setIcon(viewOptionsBtn, "layout-grid");
+
+    viewOptionsBtn.onclick = (e: MouseEvent) => {
+      this.showViewMenu(e, viewOptionsBtn);
+    };
 
     const navButtons = nav.createEl("div", { cls: "memochron-nav-buttons" });
-    this.createNavButton(navButtons, "<", () => this.navigate(-1));
-    this.createNavButton(navButtons, "Today", () => this.goToToday());
-    this.createNavButton(navButtons, ">", () => this.navigate(1));
+    this.createNavButton(navButtons, "chevron-left", () => this.navigate(-1), true);
+    this.createNavButton(navButtons, "Today", () => this.goToToday(), false);
+    this.createNavButton(navButtons, "chevron-right", () => this.navigate(1), true);
 
     return controls;
   }
 
-  private updateToggleButtonIcon(btn: HTMLElement) {
-    const isHidden = this.plugin.settings.hideCalendar;
-    btn.textContent = isHidden ? "Show" : "Hide";
-    // You could use icons here if preferred, e.g.:
-    // setIcon(btn, isHidden ? "eye" : "eye-off"); 
+  private showViewMenu(event: MouseEvent, target: HTMLElement) {
+    const menu = new Menu();
+
+    const addOption = (label: string, value: CalendarViewMode) => {
+      menu.addItem((item: MenuItem) => {
+        item
+          .setTitle(label)
+          .setChecked(this.viewMode === value)
+          .onClick(async () => {
+            if (this.viewMode !== value) {
+              this.viewMode = value;
+              await this.refreshEvents();
+            }
+          });
+      });
+    };
+
+    addOption("Month", "month");
+    menu.addSeparator();
+    addOption("1 Week", 1);
+    addOption("2 Weeks", 2);
+    addOption("3 Weeks", 3);
+    addOption("4 Weeks", 4);
+    addOption("5 Weeks", 5);
+
+    menu.showAtMouseEvent(event);
   }
+
 
   private createNavButton(
     parent: HTMLElement,
-    text: string,
-    onClick: () => void
+    content: string,
+    onClick: () => void,
+    isIcon: boolean
   ) {
-    const button = parent.createEl("span", {
-      text,
-      cls: "memochron-nav-link",
+    const button = parent.createEl("div", {
+      cls: "memochron-nav-link clickable-icon", // clickable-icon gives standard Obsidian icon behavior
+      attr: { "aria-label": isIcon ? (content === "chevron-left" ? "Previous" : "Next") : content }
     });
+
+    if (isIcon) {
+      setIcon(button, content);
+    } else {
+      button.setText(content);
+      button.addClass("text-button"); // Helper class for text buttons
+    }
+
     button.onclick = onClick;
   }
 
@@ -740,10 +757,7 @@ export class CalendarView extends ItemView {
 
       eventEl.createEl("div", {
         cls: "memochron-event-time",
-        text: `${event.start.toLocaleTimeString(
-          [],
-          timeFormat
-        )} - ${event.end.toLocaleTimeString([], timeFormat)}`,
+        text: `${event.start.toLocaleTimeString([], timeFormat)} - ${event.end.toLocaleTimeString([], timeFormat)}`,
       });
     }
   }
@@ -831,45 +845,21 @@ export class CalendarView extends ItemView {
     const controls = this.containerEl.querySelector(
       ".memochron-controls"
     ) as HTMLElement;
-    const navTitle = controls?.querySelector(".memochron-title") as HTMLElement;
-    const navButtons = controls?.querySelector(".memochron-nav-buttons") as HTMLElement;
-    const toggleBtn = controls?.querySelector(".memochron-toggle-btn") as HTMLElement;
 
     if (this.plugin.settings.hideCalendar) {
       this.calendar.style.display = "none";
       if (this.resizeHandle) this.resizeHandle.style.display = "none";
-
-      // Hide nav elements but keep the toggle button visible
-      if (navTitle) navTitle.style.display = "none";
-      if (navButtons) navButtons.style.display = "none";
       if (controls) {
-        controls.style.display = ""; // Ensure controls container is visible
-        controls.classList.add("calendar-hidden");
-        const dropdown = controls.querySelector("select");
-        if (dropdown) dropdown.style.display = "none";
+        controls.style.display = "none";
       }
-
       this.agenda.classList.add("agenda-only");
     } else {
       this.calendar.style.display = "";
       if (this.resizeHandle) this.resizeHandle.style.display = "";
-
-      // Show nav elements
-      if (navTitle) navTitle.style.display = "";
-      if (navButtons) navButtons.style.display = "";
       if (controls) {
         controls.style.display = "";
-        controls.classList.remove("calendar-hidden");
-        const dropdown = controls.querySelector("select");
-        if (dropdown) dropdown.style.display = "";
       }
-
       this.agenda.classList.remove("agenda-only");
-    }
-
-    // Update the button text/state
-    if (toggleBtn) {
-      this.updateToggleButtonIcon(toggleBtn);
     }
   }
 

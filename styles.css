@@ -23,12 +23,13 @@
 }
 
 /* Controls */
+/* Controls */
 .memochron-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--memochron-padding-sm);
-  padding: var(--memochron-padding-sm);
+  margin-bottom: var(--size-4-1);
+  padding: var(--size-4-1);
 }
 
 .memochron-nav {
@@ -41,36 +42,44 @@
 .memochron-nav-buttons {
   display: flex;
   align-items: center;
-  gap: var(--memochron-gap);
+  gap: var(--size-4-1);
 }
 
+/* Ghost button base */
 .memochron-nav-link {
   cursor: pointer;
   color: var(--text-muted);
-  font-size: 0.9em;
-  padding: var(--memochron-padding-xs) var(--memochron-padding-sm);
   border-radius: var(--radius-s);
-  transition:
-    color 0.1s ease,
-    background-color 0.1s ease;
+  transition: all 0.1s ease;
   user-select: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  width: 28px;
+  /* Standard icon button size */
+  height: 28px;
+}
+
+/* Specifics for text buttons like "Today" */
+.memochron-nav-link.text-button {
+  width: auto;
+  padding: 0 var(--size-4-2);
+  font-size: 0.85em;
+  font-weight: 500;
 }
 
 .memochron-nav-link:hover,
 .memochron-nav-link:focus {
   color: var(--text-normal);
   background-color: var(--background-modifier-hover);
-  outline: 2px solid var(--interactive-accent);
-  outline-offset: 1px;
 }
 
 .memochron-title {
-  font-size: 0.9em;
+  font-size: 1em;
   color: var(--text-normal);
-  font-weight: 500;
-  margin: 0 var(--memochron-padding-sm);
+  font-weight: 600;
+  margin: 0 var(--size-4-2);
 }
 
 /* Month View */
@@ -89,28 +98,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8em;
-  color: var(--text-muted);
-  background-color: var(--background-secondary);
-  border-radius: var(--radius-s);
+  font-size: 0.75em;
+  color: var(--text-faint);
+  background-color: transparent;
   margin: 1px;
 }
 
 .memochron-weekday.week-number-header {
   color: var(--text-faint);
-  font-size: 0.8em;
+  font-size: 0.75em;
 }
 
 .memochron-weekday {
-  padding: var(--memochron-padding-xs);
+  padding: var(--size-4-1);
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.95em;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .memochron-day {
   min-height: 2rem;
-  padding: var(--memochron-padding-xs);
+  padding: var(--size-4-1);
   position: relative;
   cursor: pointer;
   border-radius: var(--radius-s);
@@ -118,14 +129,12 @@
   flex-direction: column;
   align-items: center;
   background-color: transparent;
-  transition:
-    background-color 0.1s ease-in,
-    color 0.1s ease-in;
+  transition: background-color 0.1s ease-in;
 }
 
 .memochron-day:hover,
 .memochron-day:focus {
-  background-color: var(--interactive-hover);
+  background-color: var(--background-modifier-hover);
   outline: none;
 }
 
@@ -136,44 +145,41 @@
 
 .memochron-day.selected {
   background-color: var(--interactive-accent);
-  box-shadow: inset 0 0 0 1px var(--background-modifier-border);
 }
 
 /* Important: Always ensure text is visible on selected days */
 .memochron-day.selected .memochron-day-header {
   color: var(--text-on-accent) !important;
-  /* Use !important to override any theme styles */
   font-weight: 600;
 }
 
 .memochron-day.selected .memochron-event-dot {
-  color: var(--text-on-accent);
-}
-
-.memochron-day.today {
-  border: 1px solid var(--interactive-accent);
+  opacity: 0.8;
+  /* Slight contrast on accent background */
 }
 
 .memochron-day.today .memochron-day-header {
-  color: var(--color-text-today);
+  color: var(--interactive-accent);
+  font-weight: 700;
 }
 
 .memochron-day-header {
-  font-size: 1em;
-  color: var(--text-muted);
+  font-size: 0.95em;
+  color: var(--text-normal);
   transition: color 0.1s ease-in;
 }
 
 .memochron-day.has-events .memochron-day-header {
-  color: var(--color-text-day);
+  color: var(--text-normal);
 }
 
 .memochron-event-dot {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background-color: var(--interactive-accent);
-  margin-bottom: 2px;
+  background-color: var(--text-muted);
+  /* Default to muted if no color */
+  margin-bottom: 1px;
 }
 
 /* Colored dots container */
@@ -192,10 +198,7 @@
   margin-bottom: 0;
 }
 
-/* Daily note dot styling */
-.memochron-event-dot.daily-note-dot {
-  /* Ensure it looks the same as others */
-}
+/* Daily note dot styling - inherits common dot styles */
 
 /* Make daily note dot slightly larger when it's the only dot */
 .memochron-event-dots-container:has(.daily-note-dot):not( :has(.memochron-event-dot:not(.daily-note-dot))) .daily-note-dot {
@@ -318,8 +321,7 @@
 }
 
 .memochron-controls.calendar-hidden {
-  /* display: none;  <-- We want to keep this visible for the toggle button */
-  display: flex;
+  display: none;
 }
 
 .memochron-agenda h3 {
@@ -372,10 +374,7 @@
   color: var(--text-muted);
 }
 
-/* Daily note entry styling */
-.memochron-agenda-event.memochron-daily-note {
-  /* Keep the same background as regular events */
-}
+
 
 /* Color picker styles */
 .memochron-color-button {
@@ -1130,14 +1129,6 @@
   border: none;
   padding: 0;
   margin: var(--size-4-3) 0;
-}
-
-/* Toggle Button */
-.memochron-toggle-btn {
-  font-weight: 500;
-  min-width: 60px;
-  /* Prevent layout jump */
-  justify-content: center;
 }
 
 .memochron-controls.calendar-hidden .memochron-nav {
