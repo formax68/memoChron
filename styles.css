@@ -1136,3 +1136,123 @@
   justify-content: flex-start;
   /* Align left when alone */
 }
+
+/* Inline color picker styles */
+.memochron-inline-color-picker {
+  display: flex;
+  gap: var(--size-4-1);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.memochron-inline-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  border: 2px solid var(--background-modifier-border);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.memochron-inline-color-swatch:hover {
+  transform: scale(1.1);
+  border-color: var(--interactive-accent);
+}
+
+.memochron-inline-color-swatch.selected {
+  border-color: var(--text-normal);
+  box-shadow: 0 0 0 2px var(--background-primary), 0 0 0 4px var(--text-normal);
+}
+
+.memochron-inline-color-custom-label {
+  cursor: pointer;
+}
+
+.memochron-inline-color-custom-label.selected svg circle {
+  stroke: var(--text-normal);
+  stroke-width: 3;
+}
+
+/* Help button styling */
+.memochron-help-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-s);
+  padding: var(--size-4-1) var(--size-4-2);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.memochron-help-btn:hover {
+  background: var(--interactive-accent-hover);
+}
+
+/* Help modal styling */
+.memochron-help-modal {
+  max-width: 600px;
+}
+
+.memochron-help-modal h2 {
+  margin-bottom: var(--size-4-4);
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: var(--size-4-2);
+}
+
+.memochron-help-modal h3 {
+  margin-top: var(--size-4-4);
+  margin-bottom: var(--size-4-2);
+  color: var(--text-normal);
+  font-size: 1.1em;
+}
+
+.memochron-help-section {
+  margin-bottom: var(--size-4-2);
+}
+
+.memochron-help-section ol,
+.memochron-help-section ul {
+  margin-left: var(--size-4-4);
+  margin-bottom: var(--size-4-2);
+}
+
+.memochron-help-section li {
+  margin-bottom: var(--size-4-1);
+  line-height: 1.5;
+}
+
+.memochron-help-note {
+  background: var(--background-secondary);
+  padding: var(--size-4-2) var(--size-4-3);
+  border-radius: var(--radius-s);
+  margin-top: var(--size-4-2);
+}
+
+.memochron-help-note code {
+  background: var(--background-modifier-hover);
+  padding: var(--size-4-1) var(--size-4-2);
+  border-radius: var(--radius-s);
+  font-size: 0.85em;
+  display: inline-block;
+  margin-top: var(--size-4-1);
+  word-break: break-all;
+}
+
+.memochron-help-doc-link {
+  text-align: center;
+}
+
+.memochron-help-doc-link a {
+  color: var(--interactive-accent);
+}
+
+.memochron-help-doc-link a:hover {
+  text-decoration: underline;
+}
+
+/* Error message styling */
+.memochron-error-message {
+  color: var(--text-error);
+  font-size: 0.9em;
+  margin-top: var(--size-4-2);
+}

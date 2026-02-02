@@ -45,9 +45,30 @@ MemoChron supports both remote calendar URLs and local ICS files.
 
 1. Go to Settings > MemoChron
 2. Click "Add Calendar"
-3. Enter your public iCalendar (ICS) URL (e.g., `https://calendar.google.com/calendar/ical/...`)
+3. Enter your public iCalendar (ICS) URL
 4. Give your calendar a name and optional tags
 5. Enable/disable calendars as needed
+
+##### Getting the Correct URL from Google Calendar
+
+**Important**: You need the iCal feed URL, not the public calendar link. The public link opens a webpage but doesn't provide the calendar data that MemoChron needs.
+
+To get the correct URL from Google Calendar:
+
+1. Open [Google Calendar](https://calendar.google.com) in your browser
+2. Click the gear icon (⚙️) → **Settings**
+3. In the left sidebar, click on the calendar you want to add
+4. Scroll down to **Integrate calendar**
+5. Copy the **Secret address in iCal format** (recommended) or **Public address in iCal format**
+
+![Google Calendar iCal URL](screenshots/gcal-ical-url.png)
+
+**Correct URL format**: `https://calendar.google.com/calendar/ical/.../basic.ics`
+
+**Incorrect URL formats** (these won't work):
+- `https://calendar.google.com/calendar/u/0?cid=...` (public link - opens a webpage)
+- `https://calendar.google.com/calendar/embed?src=...` (embed link - for websites)
+- `https://calendar.google.com/calendar/r/...` (calendar app link)
 
 #### Local ICS Files
 

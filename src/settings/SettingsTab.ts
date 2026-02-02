@@ -296,11 +296,27 @@ export class SettingsTab extends PluginSettingTab {
       if (!validation.valid) {
         errorEl = urlSetting.descEl.createDiv({
           cls: "memochron-error-message",
-          text: validation.error,
         });
         errorEl.style.color = "var(--text-error, #c92424)";
         errorEl.style.fontSize = "0.9em";
         errorEl.style.marginTop = "0.5em";
+
+        errorEl.createSpan({ text: validation.error });
+
+        // If it's a wrong URL type, show a help button
+        if (validation.isWrongUrlType) {
+          errorEl.createEl("br");
+          const helpBtn = errorEl.createEl("button", {
+            text: "How do I get the correct URL?",
+            cls: "memochron-help-btn",
+          });
+          helpBtn.style.marginTop = "0.5em";
+          helpBtn.style.fontSize = "0.85em";
+          this.plugin.registerDomEvent(helpBtn, "click", (e) => {
+            e.preventDefault();
+            new CalendarUrlHelpModal(this.app, this.plugin).open();
+          });
+        }
       } else {
         // Save valid URL
         this.plugin.settings.calendarUrls[index].url = value;
@@ -1206,17 +1222,75 @@ export class SettingsTab extends PluginSettingTab {
       .filter((tag) => tag.length > 0);
   }
 
-  private validateCalendarUrl(url: string): { valid: boolean; error?: string } {
+  private validateCalendarUrl(url: string): { valid: boolean; error?: string; warning?: string; isWrongUrlType?: boolean } {
     if (!url || url.trim() === "") {
       return { valid: false, error: "URL or file path is required" };
     }
 
-    const trimmedUrl = url.trim();
+    const trimmedUrl = url.trim().toLowerCase();
 
     // Check for HTTP/HTTPS URLs
     if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
       try {
-        new URL(trimmedUrl);
+        const parsedUrl = new URL(url.trim());
+
+        // Detect incorrect Google Calendar URL formats
+        if (parsedUrl.hostname.includes("calendar.google.com")) {
+          // Check for common wrong URL patterns
+
+          // Public link format: calendar.google.com/calendar/u/0?cid=...
+          if (parsedUrl.searchParams.has("cid") ||
+              parsedUrl.pathname.match(/\/calendar\/u\/\d+$/)) {
+            return {
+              valid: false,
+              error: "This is a Google Calendar public link, not an iCal feed URL.",
+              isWrongUrlType: true
+            };
+          }
+
+          // Embed format: calendar.google.com/calendar/embed?src=...
+          if (parsedUrl.pathname.includes("/embed")) {
+            return {
+              valid: false,
+              error: "This is a Google Calendar embed link, not an iCal feed URL.",
+              isWrongUrlType: true
+            };
+          }
+
+          // Calendar app link: calendar.google.com/calendar/r/...
+          if (parsedUrl.pathname.includes("/calendar/r")) {
+            return {
+              valid: false,
+              error: "This is a Google Calendar app link, not an iCal feed URL.",
+              isWrongUrlType: true
+            };
+          }
+
+          // Valid Google Calendar ICS URL should contain /ical/ and end with .ics
+          if (!parsedUrl.pathname.includes("/ical/") || !parsedUrl.pathname.endsWith(".ics")) {
+            return {
+              valid: false,
+              error: "This doesn't appear to be a valid Google Calendar iCal URL.",
+              isWrongUrlType: true
+            };
+          }
+        }
+
+        // Detect incorrect Outlook/Office365 URL formats
+        if (parsedUrl.hostname.includes("outlook.live.com") ||
+            parsedUrl.hostname.includes("outlook.office365.com") ||
+            parsedUrl.hostname.includes("outlook.office.com")) {
+          // Check if it's a calendar sharing link, not an ICS feed
+          if (parsedUrl.pathname.includes("/calendar/published/") &&
+              !parsedUrl.pathname.endsWith(".ics")) {
+            return {
+              valid: false,
+              error: "This appears to be an Outlook sharing link. Please use the ICS subscription URL instead.",
+              isWrongUrlType: true
+            };
+          }
+        }
+
         return { valid: true };
       } catch {
         return { valid: false, error: "Invalid URL format" };
@@ -1706,6 +1780,95 @@ class CalendarNotesSettingsModal extends Modal {
         container.classList.remove("is-visible");
       });
     });
+  }
+
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+}
+
+// Help modal for calendar URL setup
+class CalendarUrlHelpModal extends Modal {
+  constructor(app: App, private plugin: MemoChron) {
+    super(app);
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("memochron-help-modal");
+
+    contentEl.createEl("h2", { text: "How to Get the Correct Calendar URL" });
+
+    // Google Calendar section
+    const gcalSection = contentEl.createDiv({ cls: "memochron-help-section" });
+    gcalSection.createEl("h3", { text: "Google Calendar" });
+
+    const gcalSteps = gcalSection.createEl("ol");
+    gcalSteps.createEl("li", { text: "Open Google Calendar in your browser" });
+    gcalSteps.createEl("li", { text: "Click the gear icon (⚙️) → Settings" });
+    gcalSteps.createEl("li", { text: "In the left sidebar, click on the calendar you want to add" });
+    gcalSteps.createEl("li", { text: "Scroll down to \"Integrate calendar\"" });
+    gcalSteps.createEl("li").innerHTML = "Copy the <strong>Secret address in iCal format</strong>";
+
+    const gcalNote = gcalSection.createDiv({ cls: "memochron-help-note" });
+    gcalNote.createEl("strong", { text: "Correct URL looks like: " });
+    gcalNote.createEl("code", { text: "https://calendar.google.com/calendar/ical/.../basic.ics" });
+
+    gcalSection.createEl("hr");
+
+    // Outlook section
+    const outlookSection = contentEl.createDiv({ cls: "memochron-help-section" });
+    outlookSection.createEl("h3", { text: "Outlook / Microsoft 365" });
+
+    const outlookSteps = outlookSection.createEl("ol");
+    outlookSteps.createEl("li", { text: "Open Outlook calendar on the web (outlook.office.com)" });
+    outlookSteps.createEl("li", { text: "Click the gear icon → View all Outlook settings" });
+    outlookSteps.createEl("li", { text: "Go to Calendar → Shared calendars" });
+    outlookSteps.createEl("li", { text: "Under \"Publish a calendar\", select your calendar and permissions" });
+    outlookSteps.createEl("li").innerHTML = "Copy the <strong>ICS link</strong> (not the HTML link)";
+
+    outlookSection.createEl("hr");
+
+    // iCloud section
+    const icloudSection = contentEl.createDiv({ cls: "memochron-help-section" });
+    icloudSection.createEl("h3", { text: "Apple iCloud Calendar" });
+
+    const icloudSteps = icloudSection.createEl("ol");
+    icloudSteps.createEl("li", { text: "Open the Calendar app on your Mac" });
+    icloudSteps.createEl("li", { text: "Right-click on the calendar → Share Calendar" });
+    icloudSteps.createEl("li", { text: "Check \"Public Calendar\" to make it shareable" });
+    icloudSteps.createEl("li", { text: "Click \"Copy Link\" to get the subscription URL" });
+
+    contentEl.createEl("hr");
+
+    // Common mistakes
+    const mistakesSection = contentEl.createDiv({ cls: "memochron-help-section" });
+    mistakesSection.createEl("h3", { text: "Common Mistakes" });
+
+    const mistakesList = mistakesSection.createEl("ul");
+    mistakesList.createEl("li").innerHTML = "<strong>Using the public link</strong> - This opens a webpage, not calendar data";
+    mistakesList.createEl("li").innerHTML = "<strong>Using the embed link</strong> - This is for embedding in websites";
+    mistakesList.createEl("li").innerHTML = "<strong>Missing the .ics extension</strong> - The URL should end with .ics";
+
+    // Documentation link
+    const docLink = contentEl.createDiv({ cls: "memochron-help-doc-link" });
+    docLink.style.marginTop = "1em";
+    const link = docLink.createEl("a", {
+      text: "View full documentation on GitHub",
+      href: "https://github.com/formax68/memoChron#remote-calendars",
+    });
+    link.setAttr("target", "_blank");
+
+    // Close button
+    const buttonContainer = contentEl.createDiv({ cls: "memochron-help-buttons" });
+    buttonContainer.style.marginTop = "1.5em";
+    buttonContainer.style.textAlign = "right";
+
+    new ButtonComponent(buttonContainer)
+      .setButtonText("Close")
+      .onClick(() => this.close());
   }
 
   onClose() {
