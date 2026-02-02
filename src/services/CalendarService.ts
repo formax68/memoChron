@@ -47,7 +47,8 @@ export class CalendarService {
       return this.events;
     }
 
-    const enabledSources = sources.filter((source) => source.enabled);
+    // Filter to only enabled sources that have a URL configured
+    const enabledSources = sources.filter((source) => source.enabled && source.url?.trim());
 
     if (enabledSources.length === 0) {
       this.events = [];
@@ -179,7 +180,7 @@ export class CalendarService {
   private scheduleBackgroundRefresh(sources: CalendarSource[]) {
     // Only schedule a refresh if the cache has actually expired
     // This respects the refresh interval setting
-    const enabledSources = sources.filter((source) => source.enabled);
+    const enabledSources = sources.filter((source) => source.enabled && source.url?.trim());
     if (this.needsRefresh(enabledSources, false)) {
       setTimeout(() => this.fetchCalendars(sources, true), 100);
     }
