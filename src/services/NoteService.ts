@@ -323,18 +323,22 @@ export class NoteService {
 
     const formatters: Record<string, () => string> = {
       ISO: () => date.toISOString().split("T")[0],
-      US: () =>
-        date.toLocaleDateString("en-US", {
+      US: () => {
+        const s = date.toLocaleDateString("en-US", {
           month: "2-digit",
           day: "2-digit",
           year: "numeric",
-        }),
-      UK: () =>
-        date.toLocaleDateString("en-GB", {
+        });
+        return this.toFilenameSafeDate(s);
+      },
+      UK: () => {
+        const s = date.toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
-        }),
+        });
+        return this.toFilenameSafeDate(s);
+      },
       Long: () =>
         date.toLocaleDateString("en-US", {
           month: "long",
@@ -345,6 +349,11 @@ export class NoteService {
 
     const formatter = formatters[dateFormat];
     return formatter ? formatter() : formatters.ISO();
+  }
+
+  /** Replaces date separators (e.g. /) with hyphens so values are filename-safe and unambiguous when used in YAML/frontmatter. */
+  private toFilenameSafeDate(localeDateString: string): string {
+    return localeDateString.replace(/\//g, "-");
   }
 
   private formatTime(date: Date, source?: string): string {

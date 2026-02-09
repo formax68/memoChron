@@ -189,6 +189,8 @@ In the plugin settings, you can customize:
   - {{end_date-iso}} - The event end date in YYYY-MM-DD format
   - {{start_time}}
   - {{end_time}}
+
+  **Date format:** The "Note date format" setting (ISO, US, UK, Long) controls how {{date}}, {{start_date}}, and {{end_date}} appear. US and UK formats use **hyphens** (e.g. DD-MM-YYYY, MM-DD-YYYY), not slashes, so dates are safe for note filenames and for YAML properties (e.g. custom properties like "Data Evento"). This avoids parsing issues when Obsidian or other tools read the date.
   - {{description}}
   - {{location}}
   - {{source}}
@@ -239,7 +241,7 @@ Each calendar can have its own custom notes settings, allowing you to override t
 
 - **Note Location**: Override where notes for this calendar are saved
 - **Note Title Format**: Custom title format for this calendar's events
-- **Note Date Format**: Different date format for this calendar (ISO, US, UK, Long)
+- **Note Date Format**: Different date format for this calendar (ISO, US (MM-DD-YYYY), UK (DD-MM-YYYY), Long); dates use hyphens so they work in filenames and YAML
 - **Note Time Format**: 12-hour or 24-hour time format for this calendar
 - **Default Frontmatter**: Custom YAML frontmatter for this calendar's notes
 - **Default Tags**: Calendar-specific tags added to all notes from this calendar
@@ -530,7 +532,7 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - **Note Location**: Set the default folder for event notes
 - **Folder Path Template**: Organize notes in date-based subfolders with customizable patterns
 - **Note Title Format**: Customize how note titles are generated
-- **Note Date Format**: Choose how dates appear in notes (ISO, US, UK, or Long format)
+- **Note Date Format**: Choose how dates appear in notes (ISO, US (MM-DD-YYYY), UK (DD-MM-YYYY), or Long); hyphens are used so dates work in filenames and YAML properties
 - **Note Time Format**: Choose between 12-hour (1:30 PM) or 24-hour (13:30) time display
 - **Template**: Customize the default note template
 - **Tags**: Set default tags for event notes

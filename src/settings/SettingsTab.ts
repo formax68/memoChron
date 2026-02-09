@@ -891,14 +891,16 @@ export class SettingsTab extends PluginSettingTab {
   private renderNoteDateFormat(container: HTMLElement): void {
     const dateFormats = [
       { value: "ISO", label: "ISO (YYYY-MM-DD)" },
-      { value: "US", label: "US (MM/DD/YYYY)" },
-      { value: "UK", label: "UK (DD/MM/YYYY)" },
+      { value: "US", label: "US (MM-DD-YYYY)" },
+      { value: "UK", label: "UK (DD-MM-YYYY)" },
       { value: "Long", label: "Long (Month DD, YYYY)" },
     ];
 
     new Setting(container)
       .setName("Note date format")
-      .setDesc("Choose how dates appear in event notes")
+      .setDesc(
+        "Choose how dates appear in event notes. Hyphens are used (no slashes) so dates work in filenames and YAML properties."
+      )
       .addDropdown((dropdown) => {
         dateFormats.forEach(({ value, label }) => {
           dropdown.addOption(value, label);
@@ -1536,14 +1538,16 @@ class CalendarNotesSettingsModal extends Modal {
     // Note date format
     const dateFormats = [
       { value: "ISO", label: "ISO (YYYY-MM-DD)" },
-      { value: "US", label: "US (MM/DD/YYYY)" },
-      { value: "UK", label: "UK (DD/MM/YYYY)" },
+      { value: "US", label: "US (MM-DD-YYYY)" },
+      { value: "UK", label: "UK (DD-MM-YYYY)" },
       { value: "Long", label: "Long (Month DD, YYYY)" },
     ];
 
     new Setting(container)
       .setName("Note date format")
-      .setDesc("Date format for this calendar")
+      .setDesc(
+        "Date format for this calendar (hyphens, no slashes, for filenames and YAML)"
+      )
       .addDropdown((dropdown) => {
         dropdown.addOption(
           "",
