@@ -505,7 +505,7 @@ This is a pure code-change phase. No stored data, live service config, OS-regist
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **SettingsTab `setTimeout` calls (lines 1346, 1747) — in scope for TD-03?**
    - What we know: TD-03 scope is defined as `CalendarService.scheduleBackgroundRefresh` and `CalendarView.onOpen` only (per REQUIREMENTS.md).
