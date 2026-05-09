@@ -103,35 +103,33 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 
 ## Traceability
 
-Empty initially. Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUG-01 | TBD | Pending |
-| BUG-02 | TBD | Pending |
-| BUG-03 | TBD | Pending |
-| BUG-04 | TBD | Pending |
-| BUG-05 | TBD | Pending |
-| BUG-06 | TBD | Pending |
-| TD-01 | TBD | Pending |
-| TD-02 | TBD | Pending |
-| TD-03 | TBD | Pending |
-| TD-04 | TBD | Pending |
-| SEC-01 | TBD | Pending |
-| SEC-02 | TBD | Pending |
-| CLEAN-01 | TBD | Pending |
-| ENH-01 | TBD | Pending |
-| ENH-02 | TBD | Pending |
-| ENH-03 | TBD | Pending |
-| ENH-04 | TBD | Pending |
-| ENH-05 | TBD | Pending |
-| ENH-06 | TBD | Pending |
+| TD-01 | Phase 1 | Pending |
+| TD-02 | Phase 1 | Pending |
+| TD-03 | Phase 1 | Pending |
+| TD-04 | Phase 1 | Pending |
+| CLEAN-01 | Phase 1 | Pending |
+| SEC-01 | Phase 2 | Pending |
+| SEC-02 | Phase 2 | Pending |
+| BUG-05 | Phase 2 | Pending |
+| BUG-06 | Phase 2 | Pending |
+| BUG-01 | Phase 3 | Pending |
+| BUG-02 | Phase 3 | Pending |
+| BUG-03 | Phase 3 | Pending |
+| BUG-04 | Phase 3 | Pending |
+| ENH-01 | Phase 4 | Pending |
+| ENH-02 | Phase 4 | Pending |
+| ENH-03 | Phase 4 | Pending |
+| ENH-04 | Phase 4 | Pending |
+| ENH-05 | Phase 4 | Pending |
+| ENH-06 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 19 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 19 ⚠️ (will be resolved during roadmap creation)
+- Mapped to phases: 19 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-09*
-*Last updated: 2026-05-09 after initialization*
+*Last updated: 2026-05-09 after roadmap creation*
