@@ -31,10 +31,7 @@ export default class MemoChron extends Plugin {
   }
 
   private initializeServices() {
-    this.calendarService = new CalendarService(
-      this,
-      this.settings.refreshInterval
-    );
+    this.calendarService = new CalendarService(this);
     this.noteService = new NoteService(this.app, this.settings);
   }
 

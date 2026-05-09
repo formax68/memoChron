@@ -37,7 +37,7 @@ export class CalendarService {
   private isLoadingCache = false;
   private isFetchingCalendars = false;
 
-  constructor(private plugin: MemoChron, private refreshMinutes: number) {}
+  constructor(private plugin: MemoChron) {}
 
   async fetchCalendars(
     sources: CalendarSource[],
@@ -192,7 +192,7 @@ export class CalendarService {
   ): boolean {
     const now = Date.now();
     const cacheExpired =
-      now - this.lastFetch >= this.refreshMinutes * 60 * 1000;
+      now - this.lastFetch >= this.plugin.settings.refreshInterval * 60 * 1000;
 
     return (
       forceRefresh ||
