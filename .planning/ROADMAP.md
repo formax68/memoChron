@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The codebase contains no reference to `calculateEndDate`, `DEFAULT_TEMPLATE_PATH`, `TEMPLATE_VARIABLES`, the unused `App`/`TFile` imports, or the dead `renderAgendaList` import in embedded views
 **Plans**: 5 plans
 Plans:
-- [ ] 01-01-PLAN.md — TD-01: drop CalendarService refreshMinutes; read live refresh interval
+- [x] 01-01-PLAN.md — TD-01: drop CalendarService refreshMinutes; read live refresh interval
 - [ ] 01-02-PLAN.md — TD-02: NoteService reads live plugin settings via getter; constructor takes (plugin) only
 - [ ] 01-03-PLAN.md — TD-03: wrap setupAutoRefresh / scheduleBackgroundRefresh / onOpen timers in registerInterval; add detachLeavesOfType to onunload
 - [ ] 01-04-PLAN.md — TD-04: CalendarView isDragging flag and View.onClose override that removes orphan window drag listeners
