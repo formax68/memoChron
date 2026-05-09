@@ -1,7 +1,6 @@
-import { MarkdownRenderChild, Notice, TFile } from "obsidian";
+import { MarkdownRenderChild, Notice } from "obsidian";
 import MemoChron from "../main";
 import {
-  renderAgendaList,
   parseDate,
   RenderOptions,
 } from "../utils/viewRenderers";

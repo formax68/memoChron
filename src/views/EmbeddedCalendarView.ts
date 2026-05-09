@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, Notice, App } from "obsidian";
+import { MarkdownRenderChild, Notice } from "obsidian";
 import MemoChron from "../main";
 import {
   renderCalendarGrid,
