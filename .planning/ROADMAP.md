@@ -33,8 +33,8 @@ Plans:
 - [x] 01-01-PLAN.md — TD-01: drop CalendarService refreshMinutes; read live refresh interval
 - [x] 01-02-PLAN.md — TD-02: NoteService reads live plugin settings via getter; constructor takes (plugin) only
 - [x] 01-03-PLAN.md — TD-03: wrap setupAutoRefresh / scheduleBackgroundRefresh / onOpen timers in registerInterval; add detachLeavesOfType to onunload
-- [ ] 01-04-PLAN.md — TD-04: CalendarView isDragging flag and View.onClose override that removes orphan window drag listeners
-- [ ] 01-05-PLAN.md — CLEAN-01: remove calculateEndDate, DEFAULT_TEMPLATE_PATH, TEMPLATE_VARIABLES, and unused App/TFile/renderAgendaList imports
+- [x] 01-04-PLAN.md — TD-04: CalendarView isDragging flag and View.onClose override that removes orphan window drag listeners
+- [x] 01-05-PLAN.md — CLEAN-01: remove calculateEndDate, DEFAULT_TEMPLATE_PATH, TEMPLATE_VARIABLES, and unused App/TFile/renderAgendaList imports
 
 ### Phase 2: Security & Correctness
 **Goal**: Plugin loads cleanly even with corrupted or malicious color values in saved settings, every catch block emits a meaningful message, and the three small standalone bugs that do not depend on BUG-01 are resolved
