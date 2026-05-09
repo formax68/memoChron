@@ -89,6 +89,7 @@ export default class MemoChron extends Plugin {
   }
 
   onunload() {
+    this.app.workspace.detachLeavesOfType(MEMOCHRON_VIEW_TYPE);
     this.clearRefreshTimer();
   }
 
@@ -162,9 +163,11 @@ export default class MemoChron extends Plugin {
     this.clearRefreshTimer();
 
     const intervalMs = this.settings.refreshInterval * 60 * 1000;
-    this.refreshTimer = window.setInterval(
-      () => this.refreshCalendarView(),
-      intervalMs
+    this.refreshTimer = this.registerInterval(
+      window.setInterval(
+        () => this.refreshCalendarView(),
+        intervalMs
+      )
     );
   }
 
