@@ -1,4 +1,5 @@
-import { App, TFile, TFolder, normalizePath } from "obsidian";
+import { TFile, TFolder, normalizePath } from "obsidian";
+import MemoChron from "../main";
 import { MemoChronSettings, CalendarNotesSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
 
@@ -51,7 +52,11 @@ export class NoteService {
     PHYSICAL: "📍",
   };
 
-  constructor(private app: App, private settings: MemoChronSettings) {}
+  constructor(private plugin: MemoChron) {}
+
+  private get settings(): MemoChronSettings {
+    return this.plugin.settings;
+  }
 
   async createEventNote(event: CalendarEvent): Promise<TFile> {
     const filePath = this.buildFilePath(event);
@@ -59,13 +64,13 @@ export class NoteService {
     try {
       await this.ensureParentFolder(filePath);
 
-      const existingFile = this.app.vault.getAbstractFileByPath(filePath);
+      const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
       if (existingFile instanceof TFile) {
         return existingFile;
       }
 
       const content = this.generateNoteContent(event);
-      return await this.app.vault.create(filePath, content);
+      return await this.plugin.app.vault.create(filePath, content);
     } catch (error) {
       console.error("Error creating note:", error);
       throw error;
@@ -74,7 +79,7 @@ export class NoteService {
 
   getExistingEventNote(event: CalendarEvent): TFile | null {
     const filePath = this.buildFilePath(event);
-    const existingFile = this.app.vault.getAbstractFileByPath(filePath);
+    const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
     if (existingFile instanceof TFile) {
       return existingFile;
     }
@@ -84,7 +89,7 @@ export class NoteService {
   async getAllFolders(): Promise<string[]> {
     const folders = new Set<string>(["/"]);
 
-    this.app.vault.getAllLoadedFiles().forEach((file) => {
+    this.plugin.app.vault.getAllLoadedFiles().forEach((file) => {
       if (file instanceof TFolder) {
         this.collectFolderPaths(file, folders);
       }
@@ -396,7 +401,7 @@ export class NoteService {
 
     for (const folder of folders) {
       currentPath = currentPath ? `${currentPath}/${folder}` : folder;
-      const existing = this.app.vault.getAbstractFileByPath(currentPath);
+      const existing = this.plugin.app.vault.getAbstractFileByPath(currentPath);
 
       if (existing && !(existing instanceof TFolder)) {
         throw new Error(
@@ -406,7 +411,7 @@ export class NoteService {
 
       if (!existing) {
         try {
-          await this.app.vault.createFolder(currentPath);
+          await this.plugin.app.vault.createFolder(currentPath);
         } catch (error: any) {
           if (!error.message?.includes("already exists")) {
             throw error;
