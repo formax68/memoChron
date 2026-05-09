@@ -56,15 +56,17 @@ export class CalendarView extends ItemView {
     // If we have a saved height, we should try to determine the best view mode for it
     if (this.plugin.settings.calendarHeight && !this.plugin.settings.hideCalendar) {
       // Use efficient timeout to allow DOM to settle
-      setTimeout(() => {
-        const today = new Date();
-        this.selectedDate = today;
-        this.currentDate = today;
-        // Render first to ensure we can measure row heights
-        this.renderCalendar();
-        this.recalculateViewModeFromHeight(this.plugin.settings.calendarHeight);
-        this.refreshEvents();
-      }, 50);
+      this.registerInterval(
+        window.setTimeout(() => {
+          const today = new Date();
+          this.selectedDate = today;
+          this.currentDate = today;
+          // Render first to ensure we can measure row heights
+          this.renderCalendar();
+          this.recalculateViewModeFromHeight(this.plugin.settings.calendarHeight);
+          this.refreshEvents();
+        }, 50)
+      );
     } else {
       await this.refreshEvents();
     }
