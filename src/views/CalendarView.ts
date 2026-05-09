@@ -29,6 +29,7 @@ export class CalendarView extends ItemView {
   private dragStartHeight: number;
   private handleDragMoveBound: (e: MouseEvent) => void;
   private handleDragEndBound: (e: MouseEvent) => void;
+  private isDragging = false;
   private viewMode: CalendarViewMode = 'month';
 
   constructor(leaf: WorkspaceLeaf, private plugin: MemoChron) {
@@ -46,6 +47,14 @@ export class CalendarView extends ItemView {
 
   getIcon(): string {
     return "calendar-range";
+  }
+
+  protected async onClose(): Promise<void> {
+    if (this.isDragging) {
+      window.removeEventListener("mousemove", this.handleDragMoveBound);
+      window.removeEventListener("mouseup", this.handleDragEndBound);
+      this.isDragging = false;
+    }
   }
 
   async onOpen() {
@@ -1050,6 +1059,7 @@ export class CalendarView extends ItemView {
 
   private handleDragStart(e: MouseEvent) {
     e.preventDefault();
+    this.isDragging = true;
     this.dragStartY = e.clientY;
     this.dragStartHeight = this.calendar.offsetHeight;
     this.resizeHandle.addClass("dragging");
@@ -1077,6 +1087,7 @@ export class CalendarView extends ItemView {
   }
 
   private async handleDragEnd(e: MouseEvent) {
+    this.isDragging = false;
     this.resizeHandle.removeClass("dragging");
     window.removeEventListener("mousemove", this.handleDragMoveBound);
     window.removeEventListener("mouseup", this.handleDragEndBound);
