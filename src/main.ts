@@ -32,7 +32,7 @@ export default class MemoChron extends Plugin {
 
   private initializeServices() {
     this.calendarService = new CalendarService(this);
-    this.noteService = new NoteService(this.app, this.settings);
+    this.noteService = new NoteService(this);
   }
 
   private registerViews() {
