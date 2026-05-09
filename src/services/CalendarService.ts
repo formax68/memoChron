@@ -757,12 +757,6 @@ export class CalendarService {
     return excludedDates;
   }
 
-  private calculateEndDate(start: Time, duration: any): Date {
-    const end = start.clone();
-    end.addDuration(duration);
-    return end.toJSDate();
-  }
-
   private shouldSkipOccurrence(
     date: Date,
     excludedDates: Date[],
