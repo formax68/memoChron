@@ -165,11 +165,15 @@ export default class MemoChron extends Plugin {
     this.clearRefreshTimer();
 
     const intervalMs = this.settings.refreshInterval * 60 * 1000;
-    this.refreshTimer = this.registerInterval(
-      window.setInterval(
-        () => this.refreshCalendarView(),
-        intervalMs
-      )
+    // Do NOT use registerInterval here. registerInterval appends the ID to
+    // Plugin's internal cleanup list but never removes it — every settings
+    // save would leak one stale numeric ID. onunload already calls
+    // clearRefreshTimer (see line above), which covers shutdown. saveSettings
+    // calls clearRefreshTimer + setupAutoRefresh together, which covers reset.
+    // See WR-01 in 01-REVIEW.md.
+    this.refreshTimer = window.setInterval(
+      () => this.refreshCalendarView(),
+      intervalMs
     );
   }
 
