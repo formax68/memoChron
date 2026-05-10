@@ -6,6 +6,12 @@ import {
   parseDate,
   RenderOptions,
 } from "../utils/viewRenderers";
+import {
+  createDailyNote,
+  getDailyNote,
+  getAllDailyNotes,
+  appHasDailyNotesPluginLoaded,
+} from "obsidian-daily-notes-interface";
 import { CalendarEvent } from "../services/CalendarService";
 
 export interface CalendarCodeBlockParams {
@@ -190,14 +196,6 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
 
   private async handleDailyNoteClick(date: Date) {
     try {
-      // Import the daily notes interface functions
-      const {
-        createDailyNote,
-        getDailyNote,
-        getAllDailyNotes,
-        appHasDailyNotesPluginLoaded,
-      } = await import("obsidian-daily-notes-interface");
-
       // Check if daily notes plugin is loaded
       if (!appHasDailyNotesPluginLoaded()) {
         new Notice(
