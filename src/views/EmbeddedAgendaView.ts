@@ -409,10 +409,18 @@ export function parseAgendaCodeBlock(source: string): AgendaCodeBlockParams {
   const lines = source.trim().split("\n");
 
   for (const line of lines) {
-    const [key, value] = line.split(":").map((s) => s.trim());
+    // Split only on the first colon so values with colons (titles like
+    // "Project: Review", ISO datetimes like "2026-05-09T10:30") are
+    // preserved. See WR-02 in 01-REVIEW.md.
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) {
+      continue;
+    }
+    const key = line.substring(0, colonIndex).trim();
+    const value = line.substring(colonIndex + 1).trim();
 
-    // Skip lines without colons or empty keys
-    if (!key || value === undefined) {
+    // Skip lines with empty keys
+    if (!key) {
       continue;
     }
 
