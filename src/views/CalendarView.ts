@@ -27,8 +27,8 @@ export class CalendarView extends ItemView {
   private resizeHandle: HTMLElement;
   private dragStartY: number;
   private dragStartHeight: number;
-  private handleDragMoveBound: (e: MouseEvent) => void;
-  private handleDragEndBound: (e: MouseEvent) => void;
+  private handleDragMoveBound: ((e: MouseEvent) => void) | undefined = undefined;
+  private handleDragEndBound: ((e: MouseEvent) => void) | undefined = undefined;
   private isDragging = false;
   private startupTimer: number | null = null;
   private viewMode: CalendarViewMode = 'month';
@@ -51,7 +51,7 @@ export class CalendarView extends ItemView {
   }
 
   protected async onClose(): Promise<void> {
-    if (this.isDragging) {
+    if (this.isDragging && this.handleDragMoveBound && this.handleDragEndBound) {
       window.removeEventListener("mousemove", this.handleDragMoveBound);
       window.removeEventListener("mouseup", this.handleDragEndBound);
       this.isDragging = false;
@@ -1072,8 +1072,8 @@ export class CalendarView extends ItemView {
     this.dragStartHeight = this.calendar.offsetHeight;
     this.resizeHandle.addClass("dragging");
 
-    window.addEventListener("mousemove", this.handleDragMoveBound);
-    window.addEventListener("mouseup", this.handleDragEndBound);
+    window.addEventListener("mousemove", this.handleDragMoveBound!);
+    window.addEventListener("mouseup", this.handleDragEndBound!);
   }
 
   private handleDragMove(e: MouseEvent) {
@@ -1097,8 +1097,8 @@ export class CalendarView extends ItemView {
   private async handleDragEnd(e: MouseEvent) {
     this.isDragging = false;
     this.resizeHandle.removeClass("dragging");
-    window.removeEventListener("mousemove", this.handleDragMoveBound);
-    window.removeEventListener("mouseup", this.handleDragEndBound);
+    window.removeEventListener("mousemove", this.handleDragMoveBound!);
+    window.removeEventListener("mouseup", this.handleDragEndBound!);
 
     await this.snapToCurrentViewMode();
   }
