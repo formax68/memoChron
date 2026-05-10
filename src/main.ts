@@ -14,6 +14,7 @@ export default class MemoChron extends Plugin {
   noteService: NoteService;
   calendarView: CalendarView;
   private refreshTimer: number | null = null;
+  private backgroundRefreshTimer: number | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -91,6 +92,7 @@ export default class MemoChron extends Plugin {
   onunload() {
     this.app.workspace.detachLeavesOfType(MEMOCHRON_VIEW_TYPE);
     this.clearRefreshTimer();
+    this.clearBackgroundRefreshTimer();
   }
 
   async loadSettings() {
@@ -175,6 +177,31 @@ export default class MemoChron extends Plugin {
     if (this.refreshTimer !== null) {
       window.clearInterval(this.refreshTimer);
       this.refreshTimer = null;
+    }
+  }
+
+  /**
+   * Owned by MemoChron so the one-shot timer can be cancelled with
+   * window.clearTimeout in onunload. Plugin.registerInterval is NOT used
+   * here because it calls clearInterval at unload, which is the wrong
+   * cleanup API for a setTimeout handle on WKWebView (iOS) where the
+   * setTimeout and setInterval ID pools are not guaranteed to be shared.
+   * See CR-01.
+   */
+  setBackgroundRefreshTimer(callback: () => void, delayMs: number): void {
+    if (this.backgroundRefreshTimer !== null) {
+      window.clearTimeout(this.backgroundRefreshTimer);
+    }
+    this.backgroundRefreshTimer = window.setTimeout(() => {
+      this.backgroundRefreshTimer = null;
+      callback();
+    }, delayMs);
+  }
+
+  private clearBackgroundRefreshTimer(): void {
+    if (this.backgroundRefreshTimer !== null) {
+      window.clearTimeout(this.backgroundRefreshTimer);
+      this.backgroundRefreshTimer = null;
     }
   }
 }

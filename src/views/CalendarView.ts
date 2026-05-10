@@ -30,6 +30,7 @@ export class CalendarView extends ItemView {
   private handleDragMoveBound: (e: MouseEvent) => void;
   private handleDragEndBound: (e: MouseEvent) => void;
   private isDragging = false;
+  private startupTimer: number | null = null;
   private viewMode: CalendarViewMode = 'month';
 
   constructor(leaf: WorkspaceLeaf, private plugin: MemoChron) {
@@ -55,6 +56,10 @@ export class CalendarView extends ItemView {
       window.removeEventListener("mouseup", this.handleDragEndBound);
       this.isDragging = false;
     }
+    if (this.startupTimer !== null) {
+      window.clearTimeout(this.startupTimer);
+      this.startupTimer = null;
+    }
   }
 
   async onOpen() {
@@ -64,18 +69,21 @@ export class CalendarView extends ItemView {
 
     // If we have a saved height, we should try to determine the best view mode for it
     if (this.plugin.settings.calendarHeight && !this.plugin.settings.hideCalendar) {
-      // Use efficient timeout to allow DOM to settle
-      this.registerInterval(
-        window.setTimeout(() => {
-          const today = new Date();
-          this.selectedDate = today;
-          this.currentDate = today;
-          // Render first to ensure we can measure row heights
-          this.renderCalendar();
-          this.recalculateViewModeFromHeight(this.plugin.settings.calendarHeight);
-          this.refreshEvents();
-        }, 50)
-      );
+      // Use efficient timeout to allow DOM to settle.
+      // Owned-handle pattern (IN-02): View.registerInterval calls clearInterval
+      // at unload — on iOS WKWebView clearInterval on a setTimeout ID is
+      // implementation-defined. Store the handle, clear it with
+      // window.clearTimeout in onClose.
+      this.startupTimer = window.setTimeout(() => {
+        this.startupTimer = null;
+        const today = new Date();
+        this.selectedDate = today;
+        this.currentDate = today;
+        // Render first to ensure we can measure row heights
+        this.renderCalendar();
+        this.recalculateViewModeFromHeight(this.plugin.settings.calendarHeight);
+        this.refreshEvents();
+      }, 50);
     } else {
       await this.refreshEvents();
     }

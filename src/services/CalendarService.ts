@@ -182,8 +182,13 @@ export class CalendarService {
     // This respects the refresh interval setting
     const enabledSources = sources.filter((source) => source.enabled && source.url?.trim());
     if (this.needsRefresh(enabledSources, false)) {
-      this.plugin.registerInterval(
-        window.setTimeout(() => this.fetchCalendars(sources, true), 100)
+      // Delegate timer ownership to the plugin so the handle is cancelled
+      // with window.clearTimeout in onunload (CR-01). registerInterval is
+      // documented to call clearInterval at unload, which on iOS WKWebView
+      // is not guaranteed to cancel a setTimeout handle.
+      this.plugin.setBackgroundRefreshTimer(
+        () => this.fetchCalendars(sources, true),
+        100
       );
     }
   }
