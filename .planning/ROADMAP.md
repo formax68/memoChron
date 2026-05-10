@@ -12,7 +12,7 @@ This milestone takes MemoChron from its stable v1.13.1 base to a clean, submissi
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Lifecycle hygiene, settings propagation, and dead-code removal — no user-visible change; eliminates mobile crash risk
+- [x] **Phase 1: Foundation** - Lifecycle hygiene, settings propagation, and dead-code removal — no user-visible change; eliminates mobile crash risk
 - [ ] **Phase 2: Security & Correctness** - Color validation hardened at load time, consistent error handling, and three standalone bugs fixed
 - [ ] **Phase 3: Date Parsing & Navigation Bugs** - BUG-01 keystone date-fix plus related navigation, concurrency, and format-verification bugs
 - [ ] **Phase 4: UX Enhancements** - Today indicator, note-exists markers, NL date format, named template variables, and cursor placement — all built on the stable Phase 3 base
@@ -28,13 +28,18 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Disabling the MemoChron plugin on iOS (via fast enable/disable cycle) does not produce an "undefined is not an object" crash
   3. Dragging the calendar pane to resize it and then immediately closing the sidebar does not leave orphaned `mousemove`/`mouseup` listeners on `window`
   4. The codebase contains no reference to `calculateEndDate`, `DEFAULT_TEMPLATE_PATH`, `TEMPLATE_VARIABLES`, the unused `App`/`TFile` imports, or the dead `renderAgendaList` import in embedded views
-**Plans**: 5 plans
+**Plans**: 10 plans (5 original + 5 code-review gap closures)
 Plans:
 - [x] 01-01-PLAN.md — TD-01: drop CalendarService refreshMinutes; read live refresh interval
 - [x] 01-02-PLAN.md — TD-02: NoteService reads live plugin settings via getter; constructor takes (plugin) only
 - [x] 01-03-PLAN.md — TD-03: wrap setupAutoRefresh / scheduleBackgroundRefresh / onOpen timers in registerInterval; add detachLeavesOfType to onunload
 - [x] 01-04-PLAN.md — TD-04: CalendarView isDragging flag and View.onClose override that removes orphan window drag listeners
 - [x] 01-05-PLAN.md — CLEAN-01: remove calculateEndDate, DEFAULT_TEMPLATE_PATH, TEMPLATE_VARIABLES, and unused App/TFile/renderAgendaList imports
+- [x] 01-06-PLAN.md — CR-01 + IN-02: own setTimeout handles for plugin-level 100ms + view-level 50ms timers; clear with window.clearTimeout
+- [x] 01-07-PLAN.md — WR-01: drop redundant registerInterval wrap in setupAutoRefresh (no more accumulating stale interval IDs)
+- [x] 01-08-PLAN.md — WR-02: split code-block params on first colon (preserves titles/datetimes with embedded colons)
+- [x] 01-09-PLAN.md — WR-03: static import for obsidian-daily-notes-interface in EmbeddedCalendarView (matches sibling pattern)
+- [x] 01-10-PLAN.md — IN-01: type CalendarView drag-handler bindings as ((e: MouseEvent) =&gt; void) | undefined
 
 ### Phase 2: Security & Correctness
 **Goal**: Plugin loads cleanly even with corrupted or malicious color values in saved settings, every catch block emits a meaningful message, and the three small standalone bugs that do not depend on BUG-01 are resolved
@@ -82,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/5 | Not started | - |
+| 1. Foundation | 10/10 | Complete | 2026-05-10 |
 | 2. Security & Correctness | 0/TBD | Not started | - |
 | 3. Date Parsing & Navigation Bugs | 0/TBD | Not started | - |
 | 4. UX Enhancements | 0/TBD | Not started | - |
