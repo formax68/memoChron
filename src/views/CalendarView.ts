@@ -3,6 +3,7 @@ import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
 import { IcsImportService } from "../services/IcsImportService";
+import { errorMessage } from "../utils/errors";
 import {
   createDailyNote,
   getDailyNote,
@@ -146,7 +147,7 @@ export class CalendarView extends ItemView {
         this.dailyNotes.set(dateStr, file as TFile);
       });
     } catch (error) {
-      console.error("Failed to load daily notes:", error);
+      console.error("Failed to load daily notes:", errorMessage(error));
     }
   }
 
@@ -167,7 +168,7 @@ export class CalendarView extends ItemView {
 
       return dailyNote !== null;
     } catch (error) {
-      console.error("Error checking daily note:", error);
+      console.error("Error checking daily note:", errorMessage(error));
       return false;
     }
   }
@@ -767,7 +768,7 @@ export class CalendarView extends ItemView {
         await leaf.openFile(dailyNote);
       }
     } catch (error) {
-      console.error("Failed to handle daily note:", error);
+      console.error("Failed to handle daily note:", errorMessage(error));
       new Notice(
         "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
       );
@@ -856,7 +857,7 @@ export class CalendarView extends ItemView {
       try {
         await this.showEventDetails(event);
       } catch (error) {
-        console.error("Failed to create note:", error);
+        console.error("Failed to create note:", errorMessage(error));
         new Notice("Failed to create note. Check the console for details.");
       }
     });
@@ -971,8 +972,9 @@ export class CalendarView extends ItemView {
 
         new Notice(`Note created for: ${event.title}`);
       } catch (error) {
-        console.error("Failed to import ICS file:", error);
-        new Notice(`Failed to import: ${error.message}`);
+        const message = errorMessage(error);
+        console.error("Failed to import ICS file:", message);
+        new Notice(`Failed to import: ${message}`);
       }
     });
   }

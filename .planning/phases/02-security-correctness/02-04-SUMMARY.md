@@ -36,7 +36,7 @@ key-decisions:
 requirements-completed: [BUG-05, SEC-02]
 
 # Metrics
-duration: TBD
+duration: ~4min
 completed: 2026-05-11
 ---
 
@@ -174,3 +174,137 @@ $ grep -c "private getStartOfWeek" src/views/CalendarView.ts
 
 The plan's acceptance grep `grep -B1 -A8 "private getStartOfWeek" ... | grep -c "BUG-05"` reads only 1 line *before* the function — but the BUG-05 reference lives in the JSDoc block 16 lines above (a standard JSDoc preamble of the size the plan's `<action>` block explicitly prescribes). Running `grep -B16 -A8 "private getStartOfWeek" src/views/CalendarView.ts | grep -c "BUG-05"` returns 1. The spirit of the criterion (comment block references BUG-05) is fully satisfied; the `-B1` width in the criterion was an off-by-N relative to the JSDoc-block size the plan itself prescribed.
 
+## Task 3: Normalize 5 Catch Blocks Through `errorMessage()`
+
+Added `import { errorMessage } from "../utils/errors";` in the existing internal-imports group (matching the relative-path style already used elsewhere — e.g. `"../services/IcsImportService"`).
+
+**All 5 catch sites normalized:**
+
+1. **Site ~149 (`loadAllDailyNotes`)** — Pattern B (inline):
+   - `console.error("Failed to load daily notes:", errorMessage(error));`
+2. **Site ~170 (`checkDailyNoteForDate`)** — Pattern B (inline):
+   - `console.error("Error checking daily note:", errorMessage(error));`
+   - `return false;` preserved.
+3. **Site ~770 (`handleDailyNoteClick`)** — Pattern B (inline):
+   - `console.error("Failed to handle daily note:", errorMessage(error));`
+   - Static-text `Notice` preserved verbatim.
+4. **Site ~859 (event-click handler — note creation)** — Pattern B (inline):
+   - `console.error("Failed to create note:", errorMessage(error));`
+   - Static-text `Notice` preserved verbatim.
+5. **Site ~974 (ICS import drop handler — the user-visible fix)** — Pattern A (`const message`):
+   - `const message = errorMessage(error);`
+   - `console.error("Failed to import ICS file:", message);`
+   - `new Notice(`` `Failed to import: ${message}` ``);`
+   - **This is the most user-visible fix:** the previous `new Notice(`` `Failed to import: ${error.message}` ``)` produced `Failed to import: undefined` when `ical.js` (or any other library called by `parseSingleEvent`) threw a non-Error value (e.g. a plain string or a custom throwable). Now the Notice stringifies the thrown value via `errorMessage()` and shows it to the user.
+
+**Catch-site line numbers shift after Task 3** because of the JSDoc block added in Task 2 (lines ~410-425) plus the new import line (+1) — the underlying catch identities are unchanged from the plan's `<interfaces>` block.
+
+**Verification grep output:**
+
+```
+$ grep -c 'from "../utils/errors"' src/views/CalendarView.ts
+1
+
+$ grep -c "errorMessage" src/views/CalendarView.ts
+6                   # 1 import line + 5 use sites
+
+$ grep -c "errorMessage(" src/views/CalendarView.ts
+5                   # 4 inline + 1 inside `const message = errorMessage(error)`
+                    # (the import line contains the identifier but not the
+                    #  open-paren — grep -c "errorMessage(" does not match it)
+
+$ grep -E "error\.message" src/views/CalendarView.ts | grep -v errorMessage
+(no output — no unsafe error.message remains)
+
+$ grep -F 'Failed to import: ${message}' src/views/CalendarView.ts
+        new Notice(`Failed to import: ${message}`);
+
+$ grep -n "} catch" src/views/CalendarView.ts
+149:    } catch (error) {
+170:    } catch (error) {
+770:    } catch (error) {
+859:      } catch (error) {
+974:      } catch (error) {
+```
+
+**Worktree-safe build verification:**
+
+```
+$ node /Users/mike/code/memoChron/node_modules/typescript/bin/tsc -noEmit -skipLibCheck
+(no output — exit 0)
+
+$ NODE_PATH=/Users/mike/code/memoChron/node_modules node esbuild.config.mjs production
+(no output — exit 0; main.js produced)
+```
+
+`getStartOfWeek` state from Task 2 preserved verbatim (no further edits).
+
+## Deviations from Plan
+
+None - plan executed exactly as written. No Rule 1 (bug-fix), Rule 2 (missing-critical), or Rule 3 (blocking) deviations were needed.
+
+Two acceptance-criteria grep counts in the plan are mathematically slightly off — same class of off-by-one observed in plan 02-03's summary:
+
+- **Plan Task 3 criterion `grep -c "errorMessage(" ... returns >= 6`:** actual is 5. The plan's reasoning says "1 import + 5 catch sites" but `import { errorMessage } from "../utils/errors"` does not match `errorMessage(` (the regex requires the open-paren). The 5 use-site count is exactly correct per the `<action>` enumeration (4 inline + 1 inside `const message = errorMessage(error)`). All 5 catches got the helper; the spirit of the criterion is met.
+- **Plan Task 2 criterion `grep -B1 -A8 "private getStartOfWeek" ... | grep -c "BUG-05" returns >= 1`:** actual with `-B1` is 0 because the JSDoc block (which the plan's `<action>` prescribes verbatim) is more than 1 line tall. With `-B16` the grep returns 1. The JSDoc preamble follows the plan's `<action>` template letter-for-letter; the criterion under-specified the back-scan width.
+
+Both deviations are observed-against-criterion-arithmetic, not against the plan's prescribed code. No corrective action required.
+
+## Stub Tracking
+
+No new stubs introduced by this plan. No hardcoded empty values, placeholder text, or unwired data sources added.
+
+## Threat Surface Scan
+
+No new threat surface introduced — this plan operates entirely within the existing trust boundary identified in `<threat_model>` (catches at ~148, ~169, ~752, ~841, ~956 in CalendarView.ts; specifically the user-visible Notice at ~958). THREAT-2 (CalendarView arm) is now mitigated structurally: the Notice path at ~976 stringifies the thrown value through `errorMessage()` instead of accessing `.message` directly. Severity LOW (UX, not exploitable).
+
+## Files Modified
+
+- `src/views/CalendarView.ts` (Task 2 + Task 3):
+  - Added JSDoc preamble above `getStartOfWeek` referencing BUG-05 and the 49-cell trace (Task 2).
+  - Added `import { errorMessage } from "../utils/errors";` (Task 3).
+  - Normalized 5 catch sites through `errorMessage(error)` (Task 3).
+  - Fixed user-visible `error.message` access at the ICS-import drop handler (Task 3) — Notice now shows the stringified thrown value, never `undefined`.
+
+## Task Commits
+
+1. **Task 1: 49-cell trace + Path A decision** — `30cf769` (docs)
+2. **Task 2: JSDoc annotation for getStartOfWeek (BUG-05 closed via Path A)** — `901f7fe` (docs)
+3. **Task 3: Normalize 5 catch blocks via errorMessage — (will be committed after self-check)**
+
+## Requirements Closed
+
+- **BUG-05** — `getStartOfWeek` verified correct across all 49 (firstDayOfWeek, weekday) cells; JSDoc preamble preserves the audit trail.
+- **SEC-02 (CalendarView arm)** — Every catch in `CalendarView.ts` now extracts message via `errorMessage(error)`; the unsafe `error.message` access at the ICS-import Notice (previously producing `Failed to import: undefined` for non-Error throwables) is fixed.
+
+SEC-02 is now collectively closed across plans {02-03, 02-04, 02-05}; this plan owns the CalendarView arm. Plan 02-05 will own the CalendarService arm.
+
+## Self-Check
+
+Created/modified files exist:
+
+```
+$ [ -f src/views/CalendarView.ts ] && echo "FOUND: src/views/CalendarView.ts"
+FOUND: src/views/CalendarView.ts
+
+$ [ -f .planning/phases/02-security-correctness/02-04-SUMMARY.md ] && echo "FOUND: 02-04-SUMMARY.md"
+FOUND: 02-04-SUMMARY.md
+```
+
+Commits exist:
+
+```
+$ for h in 30cf769 901f7fe; do
+    git log --oneline --all | grep -q "$h" && echo "FOUND: $h" || echo "MISSING: $h"
+  done
+FOUND: 30cf769
+FOUND: 901f7fe
+```
+
+(Task 3's commit hash is recorded by the final commit that includes this Self-Check section.)
+
+## Self-Check: PASSED
+
+---
+*Phase: 02-security-correctness*
+*Completed: 2026-05-11*
