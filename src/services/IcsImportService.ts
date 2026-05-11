@@ -7,6 +7,7 @@ import {
 } from "ical.js";
 import { CalendarEvent } from "./CalendarService";
 import { convertIcalTimeToDate } from "../utils/timezoneUtils";
+import { errorMessage } from "../utils/errors";
 
 export class IcsImportService {
   /**
@@ -29,23 +30,14 @@ export class IcsImportService {
           TimezoneService.register(tz);
         } catch (error) {
           // Only ignore errors if timezone is already registered; log others as warnings
+          const message = errorMessage(error);
           if (
-            error instanceof Error &&
-            typeof error.message === "string" &&
-            (
-              error.message.includes("already registered") ||
-              error.message.includes("already exists")
-            )
+            message.includes("already registered") ||
+            message.includes("already exists")
           ) {
-            console.debug(
-              "Timezone registration skipped (may already exist):",
-              error.message
-            );
+            console.debug("Timezone registration skipped (may already exist):", message);
           } else {
-            console.warn(
-              "Unexpected error during timezone registration:",
-              error
-            );
+            console.warn("Unexpected error during timezone registration:", message);
           }
         }
       });
@@ -92,7 +84,7 @@ export class IcsImportService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to parse ICS file");
+      throw new Error(`Failed to parse ICS file: ${errorMessage(error)}`);
     }
   }
 
