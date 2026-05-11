@@ -7,6 +7,11 @@ import { MemoChronSettings, DEFAULT_SETTINGS } from "./settings/types";
 import { MEMOCHRON_VIEW_TYPE } from "./utils/constants";
 import { EmbeddedCalendarView, parseCalendarCodeBlock } from "./views/EmbeddedCalendarView";
 import { EmbeddedAgendaView, parseAgendaCodeBlock } from "./views/EmbeddedAgendaView";
+import {
+  isValidColor,
+  defaultColorForIndex,
+  defaultDailyNoteColor,
+} from "./utils/colorValidation";
 
 export default class MemoChron extends Plugin {
   settings: MemoChronSettings;
@@ -97,6 +102,29 @@ export default class MemoChron extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+    // SEC-01 (D-03, D-04): validate stored color values against the whitelist.
+    // A maliciously crafted data.json can contain a color string designed to
+    // break out of an SVG attribute context. Replace invalid values silently
+    // and warn for diagnostics; no Notice (typical user can't act on it).
+    this.settings.calendarUrls.forEach((source, index) => {
+      if (source.color && !isValidColor(source.color)) {
+        console.warn(
+          `MemoChron: Invalid color "${source.color}" on calendar "${source.name}" — replacing with default.`
+        );
+        source.color = defaultColorForIndex(index);
+      }
+    });
+
+    if (
+      this.settings.dailyNoteColor &&
+      !isValidColor(this.settings.dailyNoteColor)
+    ) {
+      console.warn(
+        `MemoChron: Invalid dailyNoteColor "${this.settings.dailyNoteColor}" — replacing with default.`
+      );
+      this.settings.dailyNoteColor = defaultDailyNoteColor();
+    }
   }
 
   async saveSettings() {
