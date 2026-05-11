@@ -14,6 +14,7 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource, CalendarNotesSettings } from "./types";
+import { isValidColor } from "../utils/colorValidation";
 
 export class SettingsTab extends PluginSettingTab {
   private collapsedSections: Map<string, boolean> = new Map();
@@ -538,6 +539,57 @@ export class SettingsTab extends PluginSettingTab {
     const usedColors = this.plugin.settings.calendarUrls.length;
     const hue = (usedColors * 137.5) % 360; // Golden angle for nice distribution
     return `hsl(${hue}, 70%, 50%)`;
+  }
+
+  /**
+   * Build an SVG color swatch using createElementNS — structurally immune to
+   * markup injection. setAttribute does not interpret HTML, so even an unsanitized
+   * fill value cannot escape the attribute context.
+   *
+   * Branch logic:
+   *  - color is non-null AND passes isValidColor → filled circle in `color`
+   *  - otherwise → empty circle with a "+" plus-icon (the original "no custom color" UI,
+   *    AND the render-time fallback for invalid colors per D-05)
+   *
+   * @param color CSS color string (null or invalid → plus-icon branch)
+   * @returns Detached SVGElement; caller appends it to the DOM
+   */
+  private buildColorSwatch(color: string | null): SVGElement {
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("viewBox", "0 0 24 24");
+
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", "12");
+    circle.setAttribute("cy", "12");
+    circle.setAttribute("r", "10");
+    circle.setAttribute("stroke", "#888");
+    circle.setAttribute("stroke-width", "2");
+
+    if (color && isValidColor(color)) {
+      // Filled-circle branch — current custom color.
+      circle.setAttribute("fill", color);
+      svg.appendChild(circle);
+    } else {
+      // Plus-icon branch — original "no custom color" path AND defensive
+      // render-time fallback for invalid colors (D-05). Silent fallback;
+      // load-time validator already warned (plan 02-01).
+      circle.setAttribute("fill", "none");
+      svg.appendChild(circle);
+
+      const text = document.createElementNS(SVG_NS, "text");
+      text.setAttribute("x", "12");
+      text.setAttribute("y", "17");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", "16");
+      text.setAttribute("fill", "#888");
+      text.textContent = "+";
+      svg.appendChild(text);
+    }
+
+    return svg;
   }
 
   private renderInlineColorPicker(
