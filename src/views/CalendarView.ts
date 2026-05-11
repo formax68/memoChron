@@ -3,6 +3,7 @@ import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
 import { IcsImportService } from "../services/IcsImportService";
+import { errorMessage } from "../utils/errors";
 import {
   createDailyNote,
   getDailyNote,
@@ -146,7 +147,7 @@ export class CalendarView extends ItemView {
         this.dailyNotes.set(dateStr, file as TFile);
       });
     } catch (error) {
-      console.error("Failed to load daily notes:", error);
+      console.error("Failed to load daily notes:", errorMessage(error));
     }
   }
 
@@ -167,7 +168,7 @@ export class CalendarView extends ItemView {
 
       return dailyNote !== null;
     } catch (error) {
-      console.error("Error checking daily note:", error);
+      console.error("Error checking daily note:", errorMessage(error));
       return false;
     }
   }
@@ -404,6 +405,23 @@ export class CalendarView extends ItemView {
     }
   }
 
+  /**
+   * Compute the start-of-week date for the given date, given the user's
+   * `firstDayOfWeek` setting (0 = Sunday ... 6 = Saturday).
+   *
+   * The formula `d.getDate() - day + (day < firstDay ? -7 : 0) + firstDay` is
+   * non-obvious but correct for all 49 (firstDay, day) cells. Verified by the
+   * 49-cell trace at .planning/phases/02-security-correctness/02-04-SUMMARY.md
+   * (BUG-05 — formula correct-but-non-obvious; see also CONCERNS.md "Known Bugs").
+   *
+   * Equivalent simpler form is `((day - firstDay + 7) % 7)`:
+   *   diff = d.getDate() - ((day - firstDay + 7) % 7)
+   * Kept the original formula to minimize diff; the simpler form would be a
+   * pure-style refactor for a future cleanup pass.
+   *
+   * @param date Reference date (not mutated)
+   * @returns Date object representing the start of the week containing `date`
+   */
   private getStartOfWeek(date: Date): Date {
     const d = new Date(date);
     const day = d.getDay();
@@ -750,7 +768,7 @@ export class CalendarView extends ItemView {
         await leaf.openFile(dailyNote);
       }
     } catch (error) {
-      console.error("Failed to handle daily note:", error);
+      console.error("Failed to handle daily note:", errorMessage(error));
       new Notice(
         "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
       );
@@ -839,7 +857,7 @@ export class CalendarView extends ItemView {
       try {
         await this.showEventDetails(event);
       } catch (error) {
-        console.error("Failed to create note:", error);
+        console.error("Failed to create note:", errorMessage(error));
         new Notice("Failed to create note. Check the console for details.");
       }
     });
@@ -954,8 +972,9 @@ export class CalendarView extends ItemView {
 
         new Notice(`Note created for: ${event.title}`);
       } catch (error) {
-        console.error("Failed to import ICS file:", error);
-        new Notice(`Failed to import: ${error.message}`);
+        const message = errorMessage(error);
+        console.error("Failed to import ICS file:", message);
+        new Notice(`Failed to import: ${message}`);
       }
     });
   }
