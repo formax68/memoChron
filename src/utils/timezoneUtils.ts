@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { Time } from "ical.js";
+import { errorMessage } from "./errors";
 
 // Single source of truth for timezone mappings
 // Comprehensive mapping of Windows/Exchange timezone names to IANA timezone identifiers
@@ -177,7 +178,7 @@ export function convertIcalTimeToDate(
     } catch (error) {
       console.warn(
         "Failed to use ical.js toJSDate(), falling back to manual construction:",
-        error
+        errorMessage(error)
       );
       // Fallback to original behavior for floating times
       return new Date(year, month - 1, day, hour, minute, second);
@@ -198,7 +199,7 @@ export function convertIcalTimeToDate(
       } catch (error) {
         console.warn(
           "toJSDate failed for custom TZID, falling back to manual conversion:",
-          error
+          errorMessage(error)
         );
         // Continue to Luxon fallback below
       }
@@ -220,7 +221,7 @@ export function convertIcalTimeToDate(
     // Convert to local timezone
     return dt.toLocal().toJSDate();
   } catch (error) {
-    console.error("Failed to convert ICAL time:", error, {
+    console.error("Failed to convert ICAL time:", errorMessage(error), {
       icalTime,
       tzid: normalizedTzid,
       mappedZone: mappedZone,
