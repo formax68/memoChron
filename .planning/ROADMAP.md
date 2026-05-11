@@ -51,8 +51,9 @@ Plans:
   3. Every visible error in the plugin (failed fetch, failed note creation, failed cache read) shows a specific message rather than `[object Object]` or `undefined`
   4. The `getStartOfWeek` function returns the correct week-start date for every `firstDayOfWeek` value (0–6), including Saturday-start (firstDayOfWeek = 6)
   5. A second background-refresh triggered while a fetch is in flight does not produce a double-render or duplicate event list
-**Plans**: TBD
+**Plans**: 5 (5 complete — 02-01 through 02-05)
 **UI hint**: yes
+**Status**: Complete (2026-05-11)
 
 ### Phase 3: Date Parsing & Navigation Bugs
 **Goal**: Daily-note filenames in non-UTC timezones map to the correct local calendar day, month/week navigation feels immediate, the drag-resize view-mode sync is correct, and the BUG-04 date-parsing edge case is confirmed closed — clearing the prerequisite for all Phase 4 enhancements
@@ -88,6 +89,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 10/10 | Complete | 2026-05-10 |
-| 2. Security & Correctness | 0/TBD | Not started | - |
+| 2. Security & Correctness | 5/5 | Complete | 2026-05-11 |
 | 3. Date Parsing & Navigation Bugs | 0/TBD | Not started | - |
 | 4. UX Enhancements | 0/TBD | Not started | - |
