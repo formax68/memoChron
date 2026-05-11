@@ -29,6 +29,10 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - ✓ **Date formats for note titles incl. US/UK hyphenated dates** — existing (fix #58, commit f31cc5b)
 - ✓ **URL validation guardrail for calendar URLs** — existing (commit 99d26a9)
 - ✓ **BRAT-compatible pre-release flow for beta testing** — existing
+- ✓ **Load-time + render-time defense against malicious color strings in `data.json`** — Phase 2 (SEC-01, `colorValidation.ts` + `buildColorSwatch` via `createElementNS`)
+- ✓ **Meaningful error messages in every catch block** — Phase 2 (SEC-02, `errors.ts errorMessage()` helper, 18 catch sites normalized)
+- ✓ **`getStartOfWeek` correctness verified for all `firstDayOfWeek` values (0–6)** — Phase 2 (BUG-05, 49-cell trace recorded)
+- ✓ **Concurrent-fetch deduplication via shared in-flight Promise** — Phase 2 (BUG-06, `fetchInFlight` field on `CalendarService`)
 
 ### Active
 
@@ -39,8 +43,6 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - [ ] **BUG-02**: Improve perceived performance of month/week navigation arrows (#54)
 - [ ] **BUG-03**: Sync the view-mode dropdown with manual drag-resize so the Today button navigates correctly (#54)
 - [ ] **BUG-04**: Verify the date-parsing bug from #56 (`29-01-2026` → `20/01/2029`) is resolved after fix #58, or close it out
-- [ ] **BUG-05**: Fix `getStartOfWeek` edge cases when first-day-of-week is Saturday
-- [ ] **BUG-06**: Resolve the background-refresh / concurrent-fetch race condition
 
 **Lifecycle and cleanup tech debt:**
 - [ ] **TD-01**: `CalendarService` cache-expiry uses live `refreshInterval` instead of a stale constructor copy
@@ -48,9 +50,7 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - [ ] **TD-03**: `onunload` cancels tracked timeouts (background-refresh, view-init) and disposes services/views cleanly
 - [ ] **TD-04**: Drag listeners on `window` are cleaned up if `CalendarView` is destroyed mid-drag
 
-**Security tech debt:**
-- [ ] **SEC-01**: Validate calendar color values against `/^#[0-9a-fA-F]{6}$/` before any `innerHTML` write (or build SVG via `createElementNS`)
-- [ ] **SEC-02**: Apply a consistent `error instanceof Error ? error.message : String(error)` pattern to every catch block in services and views
+**Security tech debt:** *(SEC-01 + SEC-02 closed in Phase 2 — see Validated)*
 
 **Dead-code cleanup:**
 - [ ] **CLEAN-01**: Remove unused private `calculateEndDate`, dead imports (`App`, `TFile`, `renderAgendaList`), and dead constants (`DEFAULT_TEMPLATE_PATH`, `TEMPLATE_VARIABLES`) — or annotate with explicit deprecation if intentional
@@ -130,4 +130,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-09 after initialization*
+*Last updated: 2026-05-11 after Phase 2 (Security & Correctness) completion*
