@@ -636,14 +636,11 @@ export class SettingsTab extends PluginSettingTab {
         : c.fallback;
       return col === currentColor;
     });
-    if (isCustom) {
-      // Show current color as a filled circle
-      customLabel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${currentColor}" stroke="#888" stroke-width="2"/></svg>`;
-    } else {
-      // Show + icon
-      customLabel.innerHTML =
-        '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#888" stroke-width="2"/><text x="12" y="17" text-anchor="middle" font-size="16" fill="#888">+</text></svg>';
-    }
+    // Render the swatch via createElementNS — see buildColorSwatch (SEC-01 D-06).
+    // Helper handles both branches: filled circle for custom colors, plus-icon
+    // when no color is set OR when isCustom is false. Pass null for the plus-icon path.
+    customLabel.empty();
+    customLabel.appendChild(this.buildColorSwatch(isCustom ? currentColor : null));
     customLabel.style.position = "relative";
     customLabel.style.display = "inline-block";
     customLabel.style.width = "24px";
@@ -722,14 +719,11 @@ export class SettingsTab extends PluginSettingTab {
         : c.fallback;
       return col === currentColor;
     });
-    if (isCustom) {
-      // Show current color as a filled circle
-      customLabel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${currentColor}" stroke="#888" stroke-width="2"/></svg>`;
-    } else {
-      // Show + icon
-      customLabel.innerHTML =
-        '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#888" stroke-width="2"/><text x="12" y="17" text-anchor="middle" font-size="16" fill="#888">+</text></svg>';
-    }
+    // Render the swatch via createElementNS — see buildColorSwatch (SEC-01 D-06).
+    // Helper handles both branches: filled circle for custom colors, plus-icon
+    // when no color is set OR when isCustom is false. Pass null for the plus-icon path.
+    customLabel.empty();
+    customLabel.appendChild(this.buildColorSwatch(isCustom ? currentColor : null));
     customLabel.style.position = "relative";
     customLabel.style.display = "inline-block";
     customLabel.style.width = "24px";
