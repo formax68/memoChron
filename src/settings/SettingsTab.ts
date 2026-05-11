@@ -14,6 +14,7 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource, CalendarNotesSettings } from "./types";
+import { isValidColor } from "../utils/colorValidation";
 
 export class SettingsTab extends PluginSettingTab {
   private collapsedSections: Map<string, boolean> = new Map();
@@ -540,6 +541,57 @@ export class SettingsTab extends PluginSettingTab {
     return `hsl(${hue}, 70%, 50%)`;
   }
 
+  /**
+   * Build an SVG color swatch using createElementNS — structurally immune to
+   * markup injection. setAttribute does not interpret HTML, so even an unsanitized
+   * fill value cannot escape the attribute context.
+   *
+   * Branch logic:
+   *  - color is non-null AND passes isValidColor → filled circle in `color`
+   *  - otherwise → empty circle with a "+" plus-icon (the original "no custom color" UI,
+   *    AND the render-time fallback for invalid colors per D-05)
+   *
+   * @param color CSS color string (null or invalid → plus-icon branch)
+   * @returns Detached SVGElement; caller appends it to the DOM
+   */
+  private buildColorSwatch(color: string | null): SVGElement {
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("viewBox", "0 0 24 24");
+
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", "12");
+    circle.setAttribute("cy", "12");
+    circle.setAttribute("r", "10");
+    circle.setAttribute("stroke", "#888");
+    circle.setAttribute("stroke-width", "2");
+
+    if (color && isValidColor(color)) {
+      // Filled-circle branch — current custom color.
+      circle.setAttribute("fill", color);
+      svg.appendChild(circle);
+    } else {
+      // Plus-icon branch — original "no custom color" path AND defensive
+      // render-time fallback for invalid colors (D-05). Silent fallback;
+      // load-time validator already warned (plan 02-01).
+      circle.setAttribute("fill", "none");
+      svg.appendChild(circle);
+
+      const text = document.createElementNS(SVG_NS, "text");
+      text.setAttribute("x", "12");
+      text.setAttribute("y", "17");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", "16");
+      text.setAttribute("fill", "#888");
+      text.textContent = "+";
+      svg.appendChild(text);
+    }
+
+    return svg;
+  }
+
   private renderInlineColorPicker(
     container: HTMLElement,
     source: CalendarSource,
@@ -584,14 +636,11 @@ export class SettingsTab extends PluginSettingTab {
         : c.fallback;
       return col === currentColor;
     });
-    if (isCustom) {
-      // Show current color as a filled circle
-      customLabel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${currentColor}" stroke="#888" stroke-width="2"/></svg>`;
-    } else {
-      // Show + icon
-      customLabel.innerHTML =
-        '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#888" stroke-width="2"/><text x="12" y="17" text-anchor="middle" font-size="16" fill="#888">+</text></svg>';
-    }
+    // Render the swatch via createElementNS — see buildColorSwatch (SEC-01 D-06).
+    // Helper handles both branches: filled circle for custom colors, plus-icon
+    // when no color is set OR when isCustom is false. Pass null for the plus-icon path.
+    customLabel.empty();
+    customLabel.appendChild(this.buildColorSwatch(isCustom ? currentColor : null));
     customLabel.style.position = "relative";
     customLabel.style.display = "inline-block";
     customLabel.style.width = "24px";
@@ -670,14 +719,11 @@ export class SettingsTab extends PluginSettingTab {
         : c.fallback;
       return col === currentColor;
     });
-    if (isCustom) {
-      // Show current color as a filled circle
-      customLabel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${currentColor}" stroke="#888" stroke-width="2"/></svg>`;
-    } else {
-      // Show + icon
-      customLabel.innerHTML =
-        '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#888" stroke-width="2"/><text x="12" y="17" text-anchor="middle" font-size="16" fill="#888">+</text></svg>';
-    }
+    // Render the swatch via createElementNS — see buildColorSwatch (SEC-01 D-06).
+    // Helper handles both branches: filled circle for custom colors, plus-icon
+    // when no color is set OR when isCustom is false. Pass null for the plus-icon path.
+    customLabel.empty();
+    customLabel.appendChild(this.buildColorSwatch(isCustom ? currentColor : null));
     customLabel.style.position = "relative";
     customLabel.style.display = "inline-block";
     customLabel.style.width = "24px";
