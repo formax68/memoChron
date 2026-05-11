@@ -2,6 +2,7 @@ import { TFile, TFolder, normalizePath } from "obsidian";
 import MemoChron from "../main";
 import { MemoChronSettings, CalendarNotesSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
+import { errorMessage } from "../utils/errors";
 
 interface EventTemplateVariables {
   event_title: string;
@@ -72,7 +73,7 @@ export class NoteService {
       const content = this.generateNoteContent(event);
       return await this.plugin.app.vault.create(filePath, content);
     } catch (error) {
-      console.error("Error creating note:", error);
+      console.error("Error creating note:", errorMessage(error));
       throw error;
     }
   }
@@ -124,7 +125,7 @@ export class NoteService {
       const subfolderPath = this.applyFolderTemplate(folderPathTemplate, event);
       return normalizePath(`${normalizedPath}/${subfolderPath}/${title}.md`);
     } catch (error) {
-      console.error("Error building file path:", error);
+      console.error("Error building file path:", errorMessage(error));
       // Fallback to basic path structure
       const fallbackPath = this.settings.noteLocation || "calendar-notes";
       const fallbackTitle = this.formatTitle(
@@ -162,7 +163,7 @@ export class NoteService {
 
       return `${frontmatter}\n${content}`;
     } catch (error) {
-      console.error("Error generating note content:", error);
+      console.error("Error generating note content:", errorMessage(error));
       // Fallback to basic content
       return `# ${
         event.title
@@ -265,7 +266,7 @@ export class NoteService {
         template
       );
     } catch (error) {
-      console.error("Error applying template variables:", error);
+      console.error("Error applying template variables:", errorMessage(error));
       return template;
     }
   }
@@ -287,7 +288,7 @@ export class NoteService {
         );
       }, format);
     } catch (error) {
-      console.error("Error formatting title:", error);
+      console.error("Error formatting title:", errorMessage(error));
       return event.title || "Untitled Event";
     }
   }
@@ -412,8 +413,8 @@ export class NoteService {
       if (!existing) {
         try {
           await this.plugin.app.vault.createFolder(currentPath);
-        } catch (error: any) {
-          if (!error.message?.includes("already exists")) {
+        } catch (error) {
+          if (!errorMessage(error).includes("already exists")) {
             throw error;
           }
         }

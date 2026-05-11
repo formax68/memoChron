@@ -13,6 +13,7 @@ import {
   appHasDailyNotesPluginLoaded,
 } from "obsidian-daily-notes-interface";
 import { CalendarEvent } from "../services/CalendarService";
+import { errorMessage } from "../utils/errors";
 
 export interface CalendarCodeBlockParams {
   month?: string;
@@ -230,7 +231,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
         await leaf.openFile(dailyNote);
       }
     } catch (error) {
-      console.error("Failed to handle daily note:", error);
+      console.error("Failed to handle daily note:", errorMessage(error));
       new Notice(
         "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
       );
