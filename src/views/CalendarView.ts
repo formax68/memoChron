@@ -404,6 +404,23 @@ export class CalendarView extends ItemView {
     }
   }
 
+  /**
+   * Compute the start-of-week date for the given date, given the user's
+   * `firstDayOfWeek` setting (0 = Sunday ... 6 = Saturday).
+   *
+   * The formula `d.getDate() - day + (day < firstDay ? -7 : 0) + firstDay` is
+   * non-obvious but correct for all 49 (firstDay, day) cells. Verified by the
+   * 49-cell trace at .planning/phases/02-security-correctness/02-04-SUMMARY.md
+   * (BUG-05 — formula correct-but-non-obvious; see also CONCERNS.md "Known Bugs").
+   *
+   * Equivalent simpler form is `((day - firstDay + 7) % 7)`:
+   *   diff = d.getDate() - ((day - firstDay + 7) % 7)
+   * Kept the original formula to minimize diff; the simpler form would be a
+   * pure-style refactor for a future cleanup pass.
+   *
+   * @param date Reference date (not mutated)
+   * @returns Date object representing the start of the week containing `date`
+   */
   private getStartOfWeek(date: Date): Date {
     const d = new Date(date);
     const day = d.getDay();

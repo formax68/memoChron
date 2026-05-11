@@ -120,4 +120,57 @@ function expected(refDate, firstDay) {
 
 This reconciles the contradiction between REQUIREMENTS.md (which claimed BUG-05 was "currently broken" for Saturday-start) and CONCERNS.md (which traced the formula and called it correct-but-non-obvious). The trace settles the disagreement on the side of CONCERNS.md: the formula handles all 7 `firstDayOfWeek` values including 6 (Saturday-start) correctly, and the previous "currently broken" label was a folkloric mis-read of the non-obvious arithmetic.
 
-</content>
+## Task 2: Path A Applied — JSDoc Annotation, Formula Preserved
+
+Per the Task 1 decision (49/49 ✓ → Path A), the function body at `src/views/CalendarView.ts:407-413` is **unchanged**. A JSDoc preamble was added directly above the function that:
+
+- Names the `firstDayOfWeek` convention (0 = Sunday ... 6 = Saturday).
+- Calls out the formula as "non-obvious but correct for all 49 cells".
+- Links to this SUMMARY.md as the verification trace.
+- References BUG-05 and CONCERNS.md "Known Bugs" so future readers find the audit trail.
+- Notes the equivalent simpler form `((day - firstDay + 7) % 7)` for anyone tempted to refactor — explicitly marked as a future cleanup, not a fix.
+
+**Function state after Task 2:**
+
+```typescript
+/**
+ * Compute the start-of-week date for the given date, given the user's
+ * `firstDayOfWeek` setting (0 = Sunday ... 6 = Saturday).
+ *
+ * The formula `d.getDate() - day + (day < firstDay ? -7 : 0) + firstDay` is
+ * non-obvious but correct for all 49 (firstDay, day) cells. Verified by the
+ * 49-cell trace at .planning/phases/02-security-correctness/02-04-SUMMARY.md
+ * (BUG-05 — formula correct-but-non-obvious; see also CONCERNS.md "Known Bugs").
+ *
+ * Equivalent simpler form is `((day - firstDay + 7) % 7)`:
+ *   diff = d.getDate() - ((day - firstDay + 7) % 7)
+ * Kept the original formula to minimize diff; the simpler form would be a
+ * pure-style refactor for a future cleanup pass.
+ *
+ * @param date Reference date (not mutated)
+ * @returns Date object representing the start of the week containing `date`
+ */
+private getStartOfWeek(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const firstDay = this.plugin.settings.firstDayOfWeek;
+  const diff = d.getDate() - day + (day < firstDay ? -7 : 0) + firstDay;
+  return new Date(d.setDate(diff));
+}
+```
+
+**Verification of Task 2 (worktree-safe tooling):**
+
+```
+$ node /Users/mike/code/memoChron/node_modules/typescript/bin/tsc -noEmit -skipLibCheck
+(no output — exit 0)
+
+$ NODE_PATH=/Users/mike/code/memoChron/node_modules node esbuild.config.mjs production
+(no output — exit 0; main.js produced at 261280 bytes)
+
+$ grep -c "private getStartOfWeek" src/views/CalendarView.ts
+1
+```
+
+The plan's acceptance grep `grep -B1 -A8 "private getStartOfWeek" ... | grep -c "BUG-05"` reads only 1 line *before* the function — but the BUG-05 reference lives in the JSDoc block 16 lines above (a standard JSDoc preamble of the size the plan's `<action>` block explicitly prescribes). Running `grep -B16 -A8 "private getStartOfWeek" src/views/CalendarView.ts | grep -c "BUG-05"` returns 1. The spirit of the criterion (comment block references BUG-05) is fully satisfied; the `-B1` width in the criterion was an off-by-N relative to the JSDoc-block size the plan itself prescribed.
+
