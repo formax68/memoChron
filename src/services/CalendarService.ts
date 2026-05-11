@@ -10,6 +10,7 @@ import {
   PathInfo,
 } from "../utils/pathUtils";
 import { convertIcalTimeToDate, convertTimezone } from "../utils/timezoneUtils";
+import { errorMessage } from "../utils/errors";
 
 export interface CalendarEvent {
   id: string;
@@ -242,7 +243,7 @@ export class CalendarService {
 
       return this.events;
     } catch (error) {
-      console.error("Error fetching calendars:", error);
+      console.error("Error fetching calendars:", errorMessage(error));
       this.showErrorNotification(forceRefresh);
 
       return this.events;
@@ -286,7 +287,7 @@ export class CalendarService {
         return cacheData.events;
       }
     } catch (error) {
-      console.log("MemoChron: No cache found or cache invalid", error);
+      console.log("MemoChron: No cache found or cache invalid", errorMessage(error));
     } finally {
       this.isLoadingCache = false;
     }
@@ -330,7 +331,7 @@ export class CalendarService {
       await this.writeCacheFile(cacheData);
       console.log("MemoChron: Calendar cache saved");
     } catch (error) {
-      console.error("MemoChron: Failed to save calendar cache:", error);
+      console.error("MemoChron: Failed to save calendar cache:", errorMessage(error));
     }
   }
 
@@ -389,16 +390,17 @@ export class CalendarService {
 
       return this.parseCalendarData(response.text, source);
     } catch (error) {
-      console.error(`Error fetching calendar ${source.name}:`, error);
+      const message = errorMessage(error);
+      console.error(`Error fetching calendar ${source.name}:`, message);
       this.logPlatformInfo();
-      
+
       // Check for specific error types
-      if (error.message && error.message.includes('CORS')) {
+      if (message.includes('CORS')) {
         new Notice(`MemoChron: Calendar "${source.name}" blocked by CORS policy.`);
-      } else if (error.message && error.message.includes('network')) {
+      } else if (message.includes('network')) {
         new Notice(`MemoChron: Network error fetching calendar "${source.name}".`);
       }
-      
+
       return [];
     }
   }
@@ -526,10 +528,11 @@ export class CalendarService {
         text: content,
       };
     } catch (error) {
-      console.error("Error reading local calendar file:", error);
+      const message = errorMessage(error);
+      console.error("Error reading local calendar file:", message);
       return {
         status: 500,
-        text: `Error reading file: ${error.message}`,
+        text: `Error reading file: ${message}`,
       };
     }
   }
