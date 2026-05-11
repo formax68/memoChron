@@ -36,7 +36,9 @@ export class CalendarService {
   private events: CalendarEvent[] = [];
   private lastFetch = 0;
   private isLoadingCache = false;
-  private isFetchingCalendars = false;
+  // BUG-06 (D-12): a single in-flight Promise deduplicates concurrent callers.
+  // The Promise's non-null state IS the "fetch in flight" signal.
+  private fetchInFlight: Promise<CalendarEvent[]> | null = null;
 
   constructor(private plugin: MemoChron) {}
 
@@ -44,8 +46,10 @@ export class CalendarService {
     sources: CalendarSource[],
     forceRefresh = false
   ): Promise<CalendarEvent[]> {
-    if (this.isFetchingCalendars) {
-      return this.events;
+    // BUG-06 (D-12): concurrent callers receive the in-flight promise.
+    // Eliminates the double-render race where two callers each kick off a fetch.
+    if (this.fetchInFlight) {
+      return this.fetchInFlight;
     }
 
     // Filter to only enabled sources that have a URL configured
@@ -69,7 +73,14 @@ export class CalendarService {
       return this.events;
     }
 
-    return this.performFetch(enabledSources, forceRefresh);
+    // BUG-06 (D-12): hold the in-flight promise so concurrent callers see it.
+    // Cleared in finally so a future caller can start a fresh fetch (also clears
+    // on rejection; performFetch swallows its errors and returns this.events,
+    // so .finally always runs after the promise resolves).
+    this.fetchInFlight = this.performFetch(enabledSources, forceRefresh).finally(() => {
+      this.fetchInFlight = null;
+    });
+    return this.fetchInFlight;
   }
 
   getEventsForDate(date: Date): CalendarEvent[] {
@@ -227,7 +238,6 @@ export class CalendarService {
     forceRefresh: boolean
   ): Promise<CalendarEvent[]> {
     try {
-      this.isFetchingCalendars = true;
       this.showFetchNotification(forceRefresh);
 
       const fetchPromises = enabledSources.map((source) =>
@@ -247,9 +257,9 @@ export class CalendarService {
       this.showErrorNotification(forceRefresh);
 
       return this.events;
-    } finally {
-      this.isFetchingCalendars = false;
     }
+    // No finally block — the wrapping .finally() in fetchCalendars now handles
+    // clearing fetchInFlight after the promise settles.
   }
 
   private showFetchNotification(forceRefresh: boolean) {
