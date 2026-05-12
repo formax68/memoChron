@@ -33,16 +33,20 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - ✓ **Meaningful error messages in every catch block** — Phase 2 (SEC-02, `errors.ts errorMessage()` helper, 18 catch sites normalized)
 - ✓ **`getStartOfWeek` correctness verified for all `firstDayOfWeek` values (0–6)** — Phase 2 (BUG-05, 49-cell trace recorded)
 - ✓ **Concurrent-fetch deduplication via shared in-flight Promise** — Phase 2 (BUG-06, `fetchInFlight` field on `CalendarService`)
+- ✓ **Daily-note filename parses to the local calendar day in non-UTC timezones** — Phase 3 (BUG-01, `parseLocalDate` helper in `viewRenderers.ts` with month/day range guard)
+- ✓ **`navigate(delta)` synchronous render path decoupled from network fetch** — Phase 3 (BUG-02, `maybeBackgroundRefresh` fire-and-forget helper on `CalendarView`)
+- ✓ **`goToToday()` unconditional recenter; view-mode preserved across drag-resize** — Phase 3 (BUG-03, `isSameMonth` short-circuit removed)
+- ✓ **`29-01-2026` parses to 29 January 2026 under DD-MM-YYYY; BUG-04 closure documented in source** — Phase 3 (BUG-04, greppable closure comment at `viewRenderers.ts` `formats` array)
 
 ### Active
 
 <!-- Stabilization milestone — bug fixes, critical tech debt, small UX enhancements. -->
 
 **Bug fixes (open GitHub issues + known bugs in CONCERNS.md):**
-- [ ] **BUG-01**: Fix off-by-one date when reading event date from filename in non-UTC timezones (#59)
-- [ ] **BUG-02**: Improve perceived performance of month/week navigation arrows (#54)
-- [ ] **BUG-03**: Sync the view-mode dropdown with manual drag-resize so the Today button navigates correctly (#54)
-- [ ] **BUG-04**: Verify the date-parsing bug from #56 (`29-01-2026` → `20/01/2029`) is resolved after fix #58, or close it out
+- [x] **BUG-01**: Fix off-by-one date when reading event date from filename in non-UTC timezones (#59) — Phase 3
+- [x] **BUG-02**: Improve perceived performance of month/week navigation arrows (#54) — Phase 3
+- [x] **BUG-03**: Sync the view-mode dropdown with manual drag-resize so the Today button navigates correctly (#54) — Phase 3
+- [x] **BUG-04**: Verify the date-parsing bug from #56 (`29-01-2026` → `20/01/2029`) is resolved after fix #58, or close it out — Phase 3
 
 **Lifecycle and cleanup tech debt:**
 - [ ] **TD-01**: `CalendarService` cache-expiry uses live `refreshInterval` instead of a stale constructor copy
@@ -130,4 +134,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-11 after Phase 2 (Security & Correctness) completion*
+*Last updated: 2026-05-12 after Phase 3 (Date Parsing & Navigation Bugs) completion*
