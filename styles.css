@@ -631,11 +631,13 @@
   color: var(--text-muted);
 }
 
-/* ENH-02: note-exists icon at trailing end of agenda event rows */
+/* ENH-02: note-exists icon — absolute-positioned at the top-right of each .memochron-agenda-event (parent has position: relative) */
 .memochron-event-note-indicator {
   display: inline-flex;
   align-items: center;
-  margin-left: auto;
+  position: absolute;
+  top: var(--size-4-2);
+  right: var(--size-4-2);
   padding-left: var(--size-4-2);
   color: var(--text-muted);
 }
