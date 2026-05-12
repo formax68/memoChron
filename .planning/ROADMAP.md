@@ -68,7 +68,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md — BUG-01: parseDateFromFilename — convert six format branches to local-day numeric Date constructor
 - [x] 03-02-PLAN.md — BUG-02 + BUG-03: decouple navigate() and goToToday() from fetch; add maybeBackgroundRefresh helper
-- [ ] 03-03-PLAN.md — BUG-04: closure comment + remove unreachable duplicate regex; create 03-HUMAN-UAT.md
+- [x] 03-03-PLAN.md — BUG-04: closure comment + remove unreachable duplicate regex; create 03-HUMAN-UAT.md
 **UI hint**: yes
 
 ### Phase 4: UX Enhancements
