@@ -938,7 +938,7 @@ export class SettingsTab extends PluginSettingTab {
     const dateFormats = [
       { value: "ISO", label: "ISO (YYYY-MM-DD)" },
       { value: "US", label: "US (MM-DD-YYYY)" },
-      { value: "UK", label: "UK (DD-MM-YYYY)" },
+      { value: "UK", label: "UK/EU (DD-MM-YYYY)" },
       { value: "Long", label: "Long (Month DD, YYYY)" },
     ];
 
@@ -1585,7 +1585,7 @@ class CalendarNotesSettingsModal extends Modal {
     const dateFormats = [
       { value: "ISO", label: "ISO (YYYY-MM-DD)" },
       { value: "US", label: "US (MM-DD-YYYY)" },
-      { value: "UK", label: "UK (DD-MM-YYYY)" },
+      { value: "UK", label: "UK/EU (DD-MM-YYYY)" },
       { value: "Long", label: "Long (Month DD, YYYY)" },
     ];
 
