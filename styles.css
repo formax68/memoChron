@@ -229,6 +229,11 @@
   pointer-events: none;
 }
 
+/* ENH-03: contrasting indicator when the day is also selected — survives the accent background */
+.memochron-day.selected .memochron-note-indicator {
+  background-color: var(--text-on-accent);
+}
+
 /* Week View */
 .memochron-week-grid {
   display: grid;
