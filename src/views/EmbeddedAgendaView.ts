@@ -415,11 +415,13 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     await leaf.openFile(file);
 
     if (isNewNote) {
-      if (cursorPos !== null) {
+      const createdFile = file;
+      if (cursorPos !== null && createdFile) {
         const pos = cursorPos;
+        const file = createdFile;
         requestAnimationFrame(() => {
           const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-          if (view?.editor) {
+          if (view?.editor && view.file?.path === file.path) {
             view.editor.setCursor(pos);
             view.editor.focus();
           }
