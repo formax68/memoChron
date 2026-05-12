@@ -415,6 +415,16 @@ export function parseDate(
   return null;
 }
 
+// Construct a local-day Date from 1-indexed year/month/day integers.
+// Uses the numeric Date constructor (not the string form) so the result
+// lands on the correct local calendar day regardless of the host timezone.
+// `new Date("YYYY-MM-DD")` is UTC midnight and would return the previous
+// day in any timezone west of UTC — this helper avoids that bug (BUG-01).
+function parseLocalDate(year: number, month: number, day: number): Date | null {
+  const date = new Date(year, month - 1, day);
+  return isNaN(date.getTime()) ? null : date;
+}
+
 function parseDateFromFilename(filename: string): Date | null {
   // Remove file extension
   const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
@@ -443,32 +453,39 @@ function parseDateFromFilename(filename: string): Date | null {
       // Handle different formats
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         // YYYY-MM-DD
-        const date = new Date(dateStr);
-        if (!isNaN(date.getTime())) return date;
+        const parts = dateStr.split("-");
+        const date = parseLocalDate(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+        if (date) return date;
       } else if (/^\d{4}_\d{2}_\d{2}$/.test(dateStr)) {
         // YYYY_MM_DD
-        const date = new Date(dateStr.replace(/_/g, "-"));
-        if (!isNaN(date.getTime())) return date;
+        const parts = dateStr.split("_");
+        const date = parseLocalDate(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+        if (date) return date;
       } else if (/^\d{4}\.\d{2}\.\d{2}$/.test(dateStr)) {
         // YYYY.MM.DD
-        const date = new Date(dateStr.replace(/\./g, "-"));
-        if (!isNaN(date.getTime())) return date;
+        const parts = dateStr.split(".");
+        const date = parseLocalDate(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+        if (date) return date;
       } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
-        // DD-MM-YYYY or MM-DD-YYYY - try both
+        // DD-MM-YYYY or MM-DD-YYYY - try both interpretations
+        // #56 regression closed post-#58 (and BUG-01 fix in Phase 3 — local-day construction). 29-01-2026 → 2026-01-29 local.
         const parts = dateStr.split("-");
-        const date1 = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // DD-MM-YYYY
-        const date2 = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`); // MM-DD-YYYY
+        const year = Number(parts[2]);
+        // DD-MM-YYYY interpretation: parts[1] is month, parts[0] is day
+        const date1 = parseLocalDate(year, Number(parts[1]), Number(parts[0]));
+        // MM-DD-YYYY interpretation: parts[0] is month, parts[1] is day
+        const date2 = parseLocalDate(year, Number(parts[0]), Number(parts[1]));
 
         // Return the first valid date
-        if (!isNaN(date1.getTime())) return date1;
-        if (!isNaN(date2.getTime())) return date2;
+        if (date1) return date1;
+        if (date2) return date2;
       } else if (/^\d{8}$/.test(dateStr)) {
         // YYYYMMDD
-        const year = dateStr.substring(0, 4);
-        const month = dateStr.substring(4, 6);
-        const day = dateStr.substring(6, 8);
-        const date = new Date(`${year}-${month}-${day}`);
-        if (!isNaN(date.getTime())) return date;
+        const year = Number(dateStr.substring(0, 4));
+        const month = Number(dateStr.substring(4, 6));
+        const day = Number(dateStr.substring(6, 8));
+        const date = parseLocalDate(year, month, day);
+        if (date) return date;
       }
     }
   }
