@@ -4,14 +4,14 @@ milestone: v1.13.1
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-05-12T13:49:02.224Z"
+last_updated: "2026-05-12T13:54:50.741Z"
 last_activity: 2026-05-12
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 23
-  completed_plans: 21
-  percent: 91
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-11)
 ## Current Position
 
 Phase: 4 (UX Enhancements) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-05-12
 
-Progress: [█████████░] 91%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [█████████░] 91%
 | Phase 04-ux-enhancements P01 | 35 | 1 tasks | 1 files |
 | Phase 04-ux-enhancements P02 | 5 | 1 tasks | 1 files |
 | Phase 04-ux-enhancements P03 | 4 | 2 tasks | 2 files |
+| Phase 04-ux-enhancements P04 | 1500 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,7 @@ Recent decisions affecting current work:
 - Roadmap: TD-03 + TD-04 travel together in Phase 1 (same untracked-resource / mobile-crash pattern)
 - Roadmap: ENH-02 + ENH-03 travel together in Phase 4 (shared RenderOptions extension)
 - Roadmap: ENH-06 is last in Phase 4 (highest-risk due to setCursor timing after openFile)
+- [Phase ?]: ENH-02+03: corner-square placed top-right (clear of day number and event dots); hasNote callback over precomputed map for render stability
 
 ### Pending Todos
 
@@ -89,6 +91,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-12T13:49:02.219Z
+Last session: 2026-05-12T13:54:43.606Z
 Stopped at: Phase 4 context gathered
 Resume file: None
