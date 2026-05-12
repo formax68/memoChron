@@ -175,9 +175,9 @@ export default class MemoChron extends Plugin {
     }
   }
 
-  private async goToToday() {
+  private goToToday() {
     if (this.calendarView) {
-      await this.calendarView.goToToday();
+      this.calendarView.goToToday();
     }
   }
 

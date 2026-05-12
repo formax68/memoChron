@@ -94,7 +94,7 @@ export class CalendarView extends ItemView {
       this.selectedDate = new Date();
       await this.showDayAgenda(this.selectedDate);
     } else if (!this.plugin.settings.calendarHeight) {
-      await this.goToToday();
+      this.goToToday();
     }
   }
 
@@ -311,32 +311,67 @@ export class CalendarView extends ItemView {
     this.isViewEventsRegistered = true;
   }
 
-  private async navigate(delta: number) {
+  private maybeBackgroundRefresh(): void {
+    // BUG-02 (D-05): fire-and-forget background fetch. fetchCalendars short-circuits
+    // internally when needsRefresh() is false, and fetchInFlight (Phase 2 D-12)
+    // dedups against the setupAutoRefresh interval timer. The `void` prefix marks
+    // the Promise as intentionally unhandled at the call site; the .then/.catch
+    // chain handles re-render and error logging.
+    void this.plugin.calendarService
+      .fetchCalendars(this.plugin.settings.calendarUrls, false)
+      .then(() => {
+        // Re-render so any newly-fetched events appear.
+        this.loadDailyNotes();
+        this.renderCalendar();
+        const dateToShow = this.selectedDate || new Date();
+        this.showDayAgenda(dateToShow);
+      })
+      .catch((error) => {
+        console.error("MemoChron: background refresh failed:", errorMessage(error));
+      });
+  }
+
+  private renderCurrentRange(): void {
+    this.renderCalendar();
+    const dateToShow = this.selectedDate || new Date();
+    this.showDayAgenda(dateToShow);
+  }
+
+  private navigate(delta: number): void {
     if (this.viewMode === 'month') {
       this.currentDate.setMonth(this.currentDate.getMonth() + delta);
     } else {
       const weeks = this.viewMode as number;
       this.currentDate.setDate(this.currentDate.getDate() + (weeks * 7 * delta));
     }
-    await this.refreshEvents();
+
+    // BUG-02 (D-04): render synchronously from the in-memory event cache.
+    // No await, no I/O, no perceptible delay between click and paint.
+    this.renderCurrentRange();
+
+    // BUG-02 (D-05): kick off a stale-cache background fetch through fetchCalendars,
+    // which is deduped against the auto-refresh interval via fetchInFlight (Phase 2).
+    this.maybeBackgroundRefresh();
   }
 
-  async goToToday() {
+  goToToday(): void {
     const today = new Date();
 
-    if (!this.isSameMonth(this.currentDate, today)) {
-      this.currentDate = today;
-      await this.refreshEvents();
-    }
+    // BUG-03 (D-08): always recenter — symmetric with navigate(). The previous
+    // isSameMonth short-circuit was incorrect for week-mode views, where today
+    // often falls in the current month but a different week. Today should
+    // recenter the view-mode's current range, not just re-select the day.
+    this.currentDate = today;
 
-    this.selectDate(today);
-  }
+    // BUG-03 (D-09): viewMode is intentionally NOT modified. A user in 2-week
+    // mode stays in 2-week mode, recentered on today's week (renderWeekDays
+    // recomputes via getStartOfWeek(this.currentDate)).
 
-  private isSameMonth(date1: Date, date2: Date): boolean {
-    return (
-      date1.getMonth() === date2.getMonth() &&
-      date1.getFullYear() === date2.getFullYear()
-    );
+    // BUG-02/BUG-03 (D-06): same decoupled pattern as navigate() — render
+    // synchronously from cached events; fire-and-forget a stale-cache fetch.
+    this.renderCalendar();
+    this.selectDate(today);          // sets selectedDate, updates UI selection, runs showDayAgenda
+    this.maybeBackgroundRefresh();
   }
 
   private async selectDate(date: Date) {
