@@ -421,6 +421,7 @@ export function parseDate(
 // `new Date("YYYY-MM-DD")` is UTC midnight and would return the previous
 // day in any timezone west of UTC — this helper avoids that bug (BUG-01).
 function parseLocalDate(year: number, month: number, day: number): Date | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
   const date = new Date(year, month - 1, day);
   return isNaN(date.getTime()) ? null : date;
 }
@@ -437,9 +438,7 @@ function parseDateFromFilename(filename: string): Date | null {
     /(\d{4}_\d{2}_\d{2})/,
     // YYYY.MM.DD
     /(\d{4}\.\d{2}\.\d{2})/,
-    // DD-MM-YYYY
-    /(\d{2}-\d{2}-\d{4})/,
-    // MM-DD-YYYY
+    // BUG-04 (D-11): #56 regression closed post-#58 (and BUG-01 fix in Phase 3 — local-day construction). 29-01-2026 → 2026-01-29 local. Handles DD-MM-YYYY and MM-DD-YYYY via in-branch dual-parse below.
     /(\d{2}-\d{2}-\d{4})/,
     // YYYYMMDD
     /(\d{8})/,
