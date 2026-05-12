@@ -64,7 +64,11 @@ Plans:
   2. Clicking the next-month or next-week arrow feels instantaneous; there is no perceptible delay between the click and the calendar re-rendering
   3. After dragging the calendar pane from month-height to week-height, the view-mode dropdown reads "Week" and the Today button scrolls to the current week — not the current month
   4. The input `29-01-2026` parses to 29 January 2026 (not 20 January 2029) under the post-#58 format handling — confirmed and documented
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 03-01-PLAN.md — BUG-01: parseDateFromFilename — convert six format branches to local-day numeric Date constructor
+- [ ] 03-02-PLAN.md — BUG-02 + BUG-03: decouple navigate() and goToToday() from fetch; add maybeBackgroundRefresh helper
+- [ ] 03-03-PLAN.md — BUG-04: closure comment + remove unreachable duplicate regex; create 03-HUMAN-UAT.md
 **UI hint**: yes
 
 ### Phase 4: UX Enhancements
@@ -90,5 +94,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 10/10 | Complete | 2026-05-10 |
 | 2. Security & Correctness | 5/5 | Complete | 2026-05-11 |
-| 3. Date Parsing & Navigation Bugs | 0/TBD | Not started | - |
+| 3. Date Parsing & Navigation Bugs | 0/3 | Planned | - |
 | 4. UX Enhancements | 0/TBD | Not started | - |
