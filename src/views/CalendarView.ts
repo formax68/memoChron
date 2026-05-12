@@ -311,14 +311,47 @@ export class CalendarView extends ItemView {
     this.isViewEventsRegistered = true;
   }
 
-  private async navigate(delta: number) {
+  private maybeBackgroundRefresh(): void {
+    // BUG-02 (D-05): fire-and-forget background fetch. fetchCalendars short-circuits
+    // internally when needsRefresh() is false, and fetchInFlight (Phase 2 D-12)
+    // dedups against the setupAutoRefresh interval timer. The `void` prefix marks
+    // the Promise as intentionally unhandled at the call site; the .then/.catch
+    // chain handles re-render and error logging.
+    void this.plugin.calendarService
+      .fetchCalendars(this.plugin.settings.calendarUrls, false)
+      .then(() => {
+        // Re-render so any newly-fetched events appear.
+        this.loadDailyNotes();
+        this.renderCalendar();
+        const dateToShow = this.selectedDate || new Date();
+        this.showDayAgenda(dateToShow);
+      })
+      .catch((error) => {
+        console.error("MemoChron: background refresh failed:", errorMessage(error));
+      });
+  }
+
+  private renderCurrentRange(): void {
+    this.renderCalendar();
+    const dateToShow = this.selectedDate || new Date();
+    this.showDayAgenda(dateToShow);
+  }
+
+  private navigate(delta: number): void {
     if (this.viewMode === 'month') {
       this.currentDate.setMonth(this.currentDate.getMonth() + delta);
     } else {
       const weeks = this.viewMode as number;
       this.currentDate.setDate(this.currentDate.getDate() + (weeks * 7 * delta));
     }
-    await this.refreshEvents();
+
+    // BUG-02 (D-04): render synchronously from the in-memory event cache.
+    // No await, no I/O, no perceptible delay between click and paint.
+    this.renderCurrentRange();
+
+    // BUG-02 (D-05): kick off a stale-cache background fetch through fetchCalendars,
+    // which is deduped against the auto-refresh interval via fetchInFlight (Phase 2).
+    this.maybeBackgroundRefresh();
   }
 
   async goToToday() {
