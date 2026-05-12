@@ -144,6 +144,8 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       firstDayOfWeek: this.plugin.settings.firstDayOfWeek,
       showDailyNote: this.plugin.settings.showDailyNoteInAgenda,
       dailyNoteColor: this.plugin.settings.dailyNoteColor,
+      hasNote: (event) => this.plugin.noteService.getExistingEventNote(event) !== null,
+      showNoteIndicatorOnGrid: this.plugin.settings.showNoteIndicatorOnGrid,
     };
 
     renderCalendarGrid(

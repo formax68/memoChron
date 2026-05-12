@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, Notice } from "obsidian";
+import { MarkdownRenderChild, Notice, setIcon } from "obsidian";
 import MemoChron from "../main";
 import {
   parseDate,
@@ -189,6 +189,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
           ? this.params.showDailyNote
           : this.plugin.settings.showDailyNoteInAgenda,
       dailyNoteColor: this.plugin.settings.dailyNoteColor,
+      hasNote: (event) => this.plugin.noteService.getExistingEventNote(event) !== null,
     };
 
     // Render agenda with click handlers
@@ -333,6 +334,12 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
       });
     }
 
+    // Note-exists indicator (ENH-02)
+    if (options.hasNote) {
+      const iconEl = eventEl.createEl("div", { cls: "memochron-event-note-indicator" });
+      setIcon(iconEl, options.hasNote(event) ? "file-check" : "file-plus");
+    }
+
     // Add click handler
     eventEl.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -388,6 +395,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     }
 
     let file = this.plugin.noteService.getExistingEventNote(event);
+    const isNewNote = !file;
 
     if (!file) {
       file = await this.plugin.noteService.createEventNote(event);
@@ -402,6 +410,10 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
     const leaf = this.plugin.app.workspace.getLeaf("tab");
     await leaf.openFile(file);
+
+    if (isNewNote) {
+      await this.render();
+    }
   }
 }
 

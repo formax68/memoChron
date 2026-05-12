@@ -212,6 +212,18 @@
   height: 8px;
 }
 
+/* ENH-03: corner-square indicator for day cells that have at least one event with a note */
+.memochron-note-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background-color: var(--interactive-accent);
+  pointer-events: none;
+}
+
 /* Week View */
 .memochron-week-grid {
   display: grid;
@@ -611,6 +623,15 @@
 
 .memochron-event-location {
   font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* ENH-02: note-exists icon at trailing end of agenda event rows */
+.memochron-event-note-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: var(--size-4-2);
   color: var(--text-muted);
 }
 

@@ -1,6 +1,6 @@
 import { CalendarEvent } from "../services/CalendarService";
 import { MemoChronSettings } from "../settings/types";
-import { TFile, Notice, App } from "obsidian";
+import { TFile, Notice, App, setIcon } from "obsidian";
 import MemoChron from "../main";
 
 export interface RenderOptions {
@@ -9,6 +9,8 @@ export interface RenderOptions {
   timeFormat?: "12h" | "24h";
   showDailyNote?: boolean;
   dailyNoteColor?: string;
+  hasNote?: (event: CalendarEvent) => boolean; // ENH-02 + ENH-03: returns true if a note exists for the event
+  showNoteIndicatorOnGrid?: boolean; // ENH-03: render the corner-square on day cells with at least one noted event
 }
 
 export function renderCalendarGrid(
@@ -213,6 +215,12 @@ function renderEventItem(
       text: `${icon} ${event.location}`,
     });
   }
+
+  // Note-exists indicator (ENH-02)
+  if (options.hasNote) {
+    const iconEl = eventEl.createEl("div", { cls: "memochron-event-note-indicator" });
+    setIcon(iconEl, options.hasNote(event) ? "file-check" : "file-plus");
+  }
 }
 
 function getReorderedWeekdays(firstDay: number): string[] {
@@ -284,6 +292,11 @@ function addEventIndicators(
   options: RenderOptions
 ) {
   dayEl.addClass("has-events");
+
+  // Note indicator corner-square (ENH-03)
+  if (options.showNoteIndicatorOnGrid && options.hasNote && events.some((e) => options.hasNote!(e))) {
+    dayEl.createEl("div", { cls: "memochron-note-indicator" });
+  }
 
   const dotsContainer = dayEl.createEl("div", {
     cls: "memochron-event-dots-container",

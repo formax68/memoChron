@@ -54,6 +54,7 @@ export interface MemoChronSettings {
   folderPathTemplate: string; // Template for organizing notes in date-based subfolders
   enableCalendarColors: boolean; // Global toggle for calendar colors feature
   showDailyNoteInAgenda: boolean; // Show daily note as an entry in the agenda
+  showNoteIndicatorOnGrid: boolean; // Show note indicator on calendar grid cells
   dailyNoteColor?: string; // Color for daily note entry when calendar colors are enabled
   enableAttendeeLinks: boolean; // Create wiki links for attendees
   filteredCuTypes: string[]; // CUTYPE values to INCLUDE (default: ["INDIVIDUAL", ""])
@@ -89,6 +90,7 @@ export const DEFAULT_SETTINGS: MemoChronSettings = {
   folderPathTemplate: "", // Empty by default for backwards compatibility
   enableCalendarColors: false, // Disabled by default
   showDailyNoteInAgenda: false, // Disabled by default
+  showNoteIndicatorOnGrid: false, // Disabled by default
   enableAttendeeLinks: false, // Disabled by default
   filteredCuTypes: DEFAULT_FILTERED_CUTYPES, // Include individuals and unspecified
   filteredAttendees: "", // No attendees filtered by default

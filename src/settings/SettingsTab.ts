@@ -502,6 +502,7 @@ export class SettingsTab extends PluginSettingTab {
     // Daily Notes sub-group
     this.renderSubgroupLabel(container, "Daily Notes");
     this.renderShowDailyNoteInAgenda(container);
+    this.renderShowNoteIndicatorOnGrid(container);
 
     // Attendees sub-group
     this.renderSubgroupLabel(container, "Attendees");
@@ -839,6 +840,21 @@ export class SettingsTab extends PluginSettingTab {
           await this.plugin.refreshCalendarView();
         })
     );
+  }
+
+  private renderShowNoteIndicatorOnGrid(container: HTMLElement): void {
+    new Setting(container)
+      .setName("Show note indicator on calendar grid")
+      .setDesc("Mark days that contain at least one event with a note")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showNoteIndicatorOnGrid)
+          .onChange(async (value) => {
+            this.plugin.settings.showNoteIndicatorOnGrid = value;
+            await this.plugin.saveSettings();
+            await this.plugin.refreshCalendarView();
+          })
+      );
   }
 
   private renderRefreshInterval(container: HTMLElement): void {

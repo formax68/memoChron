@@ -690,6 +690,14 @@ export class CalendarView extends ItemView {
           });
         }
       }
+
+      // Note indicator corner-square (ENH-03)
+      if (
+        this.plugin.settings.showNoteIndicatorOnGrid &&
+        events.some((e) => this.plugin.noteService.getExistingEventNote(e) !== null)
+      ) {
+        dayEl.createEl("div", { cls: "memochron-note-indicator" });
+      }
     }
   }
 
@@ -840,6 +848,7 @@ export class CalendarView extends ItemView {
     this.renderEventTime(eventEl, event);
     this.renderEventTitle(eventEl, event);
     this.renderEventLocation(eventEl, event);
+    this.renderEventNoteIndicator(eventEl, event);
     this.addEventClickHandler(eventEl, event);
   }
 
@@ -880,6 +889,11 @@ export class CalendarView extends ItemView {
       cls: "memochron-event-location",
       text: `${icon} ${event.location}`,
     });
+  }
+
+  private renderEventNoteIndicator(eventEl: HTMLElement, event: CalendarEvent): void {
+    const iconEl = eventEl.createEl("div", { cls: "memochron-event-note-indicator" });
+    setIcon(iconEl, this.plugin.noteService.getExistingEventNote(event) !== null ? "file-check" : "file-plus");
   }
 
   private getLocationIcon(location: string): string {
@@ -936,6 +950,11 @@ export class CalendarView extends ItemView {
       await leaf.openFile(file);
     } else {
       new Notice("Could not open the note in a new tab");
+    }
+
+    if (isNewNote) {
+      this.renderCalendar();
+      void this.showDayAgenda(this.selectedDate || new Date());
     }
   }
 
