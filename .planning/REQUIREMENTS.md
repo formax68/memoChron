@@ -39,7 +39,7 @@ Requirements for the stabilization milestone. Each maps to roadmap phases. All b
 - [x] **ENH-03**: An optional, user-toggleable indicator on the calendar grid marks days that contain at least one event with a note (off by default) (#56)
 - [x] **ENH-04**: Date format options for note titles include `DD-MM-YYYY` (NL/Dutch convention) (#56)
 - [x] **ENH-05**: Note templates support `{{day}}` and `{{month}}` variables that emit fully written names (e.g. `Monday`, `January`) (#56)
-- [ ] **ENH-06**: Templates may include a `{{cursor}}` marker; after the note is created and opened, the editor cursor is placed at that marker's position (#56)
+- [x] **ENH-06**: Templates may include a `{{cursor}}` marker; after the note is created and opened, the editor cursor is placed at that marker's position (#56)
 
 ## v2 Requirements
 
@@ -123,7 +123,7 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 | ENH-03 | Phase 4 | Complete |
 | ENH-04 | Phase 4 | Complete |
 | ENH-05 | Phase 4 | Complete |
-| ENH-06 | Phase 4 | Pending |
+| ENH-06 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 19 total
