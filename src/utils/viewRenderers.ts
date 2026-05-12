@@ -421,6 +421,7 @@ export function parseDate(
 // `new Date("YYYY-MM-DD")` is UTC midnight and would return the previous
 // day in any timezone west of UTC — this helper avoids that bug (BUG-01).
 function parseLocalDate(year: number, month: number, day: number): Date | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
   const date = new Date(year, month - 1, day);
   return isNaN(date.getTime()) ? null : date;
 }
