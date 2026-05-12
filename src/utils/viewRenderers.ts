@@ -406,7 +406,23 @@ export function parseDate(
     return date;
   }
 
-  // Try standard date formats
+  // WR-02 (BUG-01 follow-through): detect YYYY-MM-DD explicitly and route
+  // through parseLocalDate so the result lands on the correct local calendar
+  // day. `new Date("YYYY-MM-DD")` is UTC midnight, which back-shifts to the
+  // previous day in any timezone west of UTC — the same bug class BUG-01
+  // closes for daily-note filenames, here closed for code-block parameters
+  // (`date: 2026-01-15` in memochron-calendar / memochron-agenda blocks).
+  const isoMatch = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const local = parseLocalDate(
+      Number(isoMatch[1]),
+      Number(isoMatch[2]),
+      Number(isoMatch[3])
+    );
+    if (local) return local;
+  }
+
+  // Try standard date formats (fallback; YYYY-MM-DD handled above).
   const date = new Date(input);
   if (!isNaN(date.getTime())) {
     return date;
