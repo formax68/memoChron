@@ -84,7 +84,7 @@ Plans:
   6. A note template containing `{{cursor}}` places the editor cursor at that position after the note opens — the marker text itself does not appear in the saved note
 **Plans**: 5 plans
 Plans:
-- [ ] 04-01-PLAN.md — ENH-01: persistent today indicator on calendar grid (CSS-only inset accent ring on .memochron-day.today)
+- [x] 04-01-PLAN.md — ENH-01: persistent today indicator on calendar grid (CSS-only inset accent ring on .memochron-day.today)
 - [ ] 04-02-PLAN.md — ENH-04: relabel UK dropdown to "UK/EU (DD-MM-YYYY)" in both date-format dropdowns
 - [ ] 04-03-PLAN.md — ENH-05: add {{day}} and {{month}} template variables (toLocaleDateString "en-US")
 - [ ] 04-04-PLAN.md — ENH-02 + ENH-03: note-exists icon in agenda (always-on) + toggleable grid corner-square (default off)
@@ -101,4 +101,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 10/10 | Complete | 2026-05-10 |
 | 2. Security & Correctness | 5/5 | Complete | 2026-05-11 |
 | 3. Date Parsing & Navigation Bugs | 0/3 | Planned | - |
-| 4. UX Enhancements | 0/5 | Planned | - |
+| 4. UX Enhancements | 1/5 | In Progress|  |

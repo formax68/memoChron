@@ -34,7 +34,7 @@ Requirements for the stabilization milestone. Each maps to roadmap phases. All b
 
 ### UX Enhancements
 
-- [ ] **ENH-01**: A persistent visual indicator on the calendar grid distinguishes today from the selected day — both states are visible simultaneously (#55)
+- [x] **ENH-01**: A persistent visual indicator on the calendar grid distinguishes today from the selected day — both states are visible simultaneously (#55)
 - [ ] **ENH-02**: In the agenda / sidebar event list, events that already have an associated note display a distinct visual indicator (#56)
 - [ ] **ENH-03**: An optional, user-toggleable indicator on the calendar grid marks days that contain at least one event with a note (off by default) (#56)
 - [ ] **ENH-04**: Date format options for note titles include `DD-MM-YYYY` (NL/Dutch convention) (#56)
@@ -118,7 +118,7 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 | BUG-02 | Phase 3 | Pending |
 | BUG-03 | Phase 3 | Pending |
 | BUG-04 | Phase 3 | Pending |
-| ENH-01 | Phase 4 | Pending |
+| ENH-01 | Phase 4 | Complete |
 | ENH-02 | Phase 4 | Pending |
 | ENH-03 | Phase 4 | Pending |
 | ENH-04 | Phase 4 | Pending |
