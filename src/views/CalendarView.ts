@@ -317,14 +317,28 @@ export class CalendarView extends ItemView {
     // dedups against the setupAutoRefresh interval timer. The `void` prefix marks
     // the Promise as intentionally unhandled at the call site; the .then/.catch
     // chain handles re-render and error logging.
+    // WR-03: capture currentDate.getTime() (NOT identity) for the staleness
+    // guard. navigate() mutates this.currentDate in place via setMonth/setDate,
+    // so a strict-identity check would miss a navigate-while-fetching race.
+    // Comparing the timestamp catches both the in-place mutation paths and
+    // the goToToday replacement path.
+    const targetTime = this.currentDate.getTime();
     void this.plugin.calendarService
       .fetchCalendars(this.plugin.settings.calendarUrls, false)
       .then(() => {
+        // Bail if the user has navigated since this fetch started; the
+        // newer navigation already rendered + kicked off its own background
+        // refresh, and painting the older result on top would cause a
+        // phantom revert flicker on slow networks.
+        if (this.currentDate.getTime() !== targetTime) return;
         // Re-render so any newly-fetched events appear.
         this.loadDailyNotes();
         this.renderCalendar();
         const dateToShow = this.selectedDate || new Date();
-        this.showDayAgenda(dateToShow);
+        // WR-03: showDayAgenda is async; mark the inner call as
+        // intentionally unawaited so a future async leaf surfaces errors
+        // through the surrounding .catch rather than unhandledrejection.
+        void this.showDayAgenda(dateToShow);
       })
       .catch((error) => {
         console.error("MemoChron: background refresh failed:", errorMessage(error));
