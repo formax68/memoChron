@@ -2,35 +2,44 @@
 phase: 04-ux-enhancements
 verified: 2026-05-12T00:00:00Z
 status: gaps_found
-score: 4/6 must-haves verified
+score: 5/6 must-haves verified
 overrides_applied: 0
+re_verification:
+  previous_status: gaps_found
+  previous_score: 4/6
+  gaps_closed:
+    - "Today's cell shows a distinct ring or border even when a different day is selected — both highlights are visible simultaneously (WR-02)"
+    - "Events in the agenda that already have an associated note show a file-check icon; events without a note show a file-plus icon (WR-01)"
+    - "Cursor placement targets the correct file after openFile (WR-03 promoted truth #6 from PARTIAL to VERIFIED)"
+  gaps_remaining: []
+  regressions:
+    - "ENH-03 / truth #3 must be downgraded VERIFIED → FAILED: the grid corner-square uses var(--interactive-accent) and disappears when the day is also .selected (same zero-contrast bug class as WR-02 ring; previous verifier did not exercise the selected + has-note state combination). Surfaced by 04-REVIEW.md CR-01."
 gaps:
-  - truth: "Today's cell shows a distinct ring or border even when a different day is selected — both highlights are visible simultaneously"
+  - truth: "Optional, toggleable calendar-grid marker (ENH-03) visibly marks days that contain at least one event with a note — including on the currently-selected day"
     status: failed
-    reason: "The ENH-01 ring uses `box-shadow: inset 0 0 0 2px var(--interactive-accent)` and the selected-state background also uses `var(--interactive-accent)`. When today is the selected day both colors are identical and the ring has zero contrast — it disappears. No `.memochron-day.today.selected` override rule exists. The smoke-test claim in 04-01-SUMMARY.md ('ring is still visible on all four inner edges' when selected) is factually incorrect given the CSS color math."
+    reason: "styles.css:228 sets `.memochron-note-indicator { background-color: var(--interactive-accent) }`. styles.css:147 sets `.memochron-day.selected { background-color: var(--interactive-accent) }`. When a day with a note becomes the user's selected day, the corner-square dot has identical color to the cell background and is invisible — exactly the WR-02 bug class, applied to the note-indicator instead of the today-ring. The previous verifier validated truth #3 narrowly as 'off by default and toggleable' and did not exercise the selected-day state. ENH-03's requirement language is broader: it must visibly mark days containing notes, and the user's most-interrogated day is the one they have selected."
     artifacts:
       - path: "styles.css"
-        issue: "Lines 146-148 and 162-164: `.memochron-day.selected { background-color: var(--interactive-accent) }` and `.memochron-day.today { box-shadow: inset 0 0 0 2px var(--interactive-accent) }` use identical CSS variable values. No combined `.memochron-day.today.selected` rule overrides the ring color."
+        issue: "Line 221-230: `.memochron-note-indicator` uses `background-color: var(--interactive-accent)` — same color as `.memochron-day.selected` background at line 147. No combined `.memochron-day.selected .memochron-note-indicator` override rule exists."
     missing:
-      - "Add `.memochron-day.today.selected { box-shadow: inset 0 0 0 2px var(--text-on-accent); }` immediately after the `.memochron-day.today` rule, so the ring switches to a contrasting color when today is also selected. Alternatively use `var(--text-normal)` for a single rule that contrasts both states."
-
-  - truth: "Events in the agenda that already have an associated note show a file-check icon; events without a note show a file-plus icon"
-    status: failed
-    reason: "The icon rendering code is present (setIcon with file-check/file-plus on all three surfaces), but the CSS layout is broken: `.memochron-event-note-indicator { margin-left: auto }` has no effect because the parent `.memochron-agenda-event` is `display: block`, not a flex container. `margin-left: auto` on an `inline-flex` child in a block formatting context resolves to 0 — the icon renders on its own line below the location row rather than at the trailing end of the event row. WR-01 from the code review is confirmed."
-    artifacts:
-      - path: "styles.css"
-        issue: "Line 359: `.memochron-agenda-event { display: block (implicit) }` — not a flex container. Line 630-636: `.memochron-event-note-indicator { display: inline-flex; margin-left: auto }` — auto margin has no trailing-end effect without a flex parent."
-    missing:
-      - "Add `display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1);` to `.memochron-agenda-event` so `margin-left: auto` on `.memochron-event-note-indicator` pushes it to the trailing end. Verify `.memochron-agenda-event.with-color::before` colored border still renders correctly with flex layout."
-      - "Alternative: replace `margin-left: auto` with `position: absolute; top: 50%; right: var(--size-4-2); transform: translateY(-50%);` on `.memochron-event-note-indicator` — `.memochron-agenda-event` already has `position: relative`."
+      - "Add `.memochron-day.selected .memochron-note-indicator { background-color: var(--text-on-accent); }` immediately after the `.memochron-note-indicator` rule (around styles.css:230), so the corner-square switches to a contrasting color when its parent day is selected. Pattern matches the WR-02 resolution (Option A using --text-on-accent)."
+overrides: []
 ---
 
-# Phase 4: UX Enhancements Verification Report
+# Phase 4: UX Enhancements Verification Report (Re-Verification)
 
 **Phase Goal:** Users see today clearly distinguished from the selected day, can tell which events already have notes without opening them, can use NL date format for note titles, can use named day/month variables in templates, and can place the editor cursor precisely after note creation.
 **Verified:** 2026-05-12T00:00:00Z
 **Status:** gaps_found
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after 04-06 gap-closure pass (commits 12e9f3b, af16a91, 31eb735)
+
+---
+
+## Re-Verification Summary
+
+The 04-06 gap-closure plan successfully closed WR-01, WR-02, and WR-03. Truths #1, #2, and #6 from the previous verification all flip to VERIFIED. However, the post-gap-closure code review (04-REVIEW.md, commit 87730ff) surfaced **CR-01** — a new BLOCKER that is the exact analog of the WR-02 today-ring bug, applied to the ENH-03 corner-square indicator. The original verification did not exercise the selected-day state combination for the note-indicator; truth #3 must be downgraded.
+
+Net score movement: 4/6 → 5/6. Three gaps closed (WR-01, WR-02, WR-03) and one regression introduced into the verified-truth set (CR-01 invalidates truth #3). Phase goal is not yet fully achieved.
 
 ---
 
@@ -40,14 +49,14 @@ gaps:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | Today's cell shows a distinct ring or border even when today is also selected — both highlights visible simultaneously (SC#1 / ENH-01) | FAILED | `styles.css:162-164` ring uses `var(--interactive-accent)`; `styles.css:146-148` selected background uses same variable. No combined `.today.selected` rule. Ring is invisible in the dual-state case. |
-| 2 | Agenda events with notes show file-check icon; events without show file-plus icon (SC#2 / ENH-02) | FAILED | Icon code is present and correct (`setIcon` with `file-check`/`file-plus` in all three render paths). CSS layout is broken: `.memochron-agenda-event` is `display: block`, so `margin-left: auto` on the indicator has no effect — icon renders below the row, not at trailing end. |
-| 3 | "Note-exists dot" on calendar grid is off by default and toggleable (SC#3 / ENH-03) | VERIFIED | `src/settings/types.ts:93`: `showNoteIndicatorOnGrid: false`. Toggle in `SettingsTab.ts:849-854`. Grid indicator code in `CalendarView.ts:696-699` and `viewRenderers.ts:297-300`. |
-| 4 | Settings date-format dropdown includes "DD-MM-YYYY (NL/EU)" and produces `15-01-2026` for Jan 15 event (SC#4 / ENH-04) | VERIFIED | `SettingsTab.ts:957` and `1604`: `{ value: "UK", label: "UK/EU (DD-MM-YYYY)" }`. Persisted value `"UK"` unchanged. `NoteService.formatDate` "UK" branch (`toLocaleDateString("en-GB", ...)` + `toFilenameSafeDate`) unchanged. |
-| 5 | `{{day}}` and `{{month}}` in template produce `Monday` and `January` — not a number (SC#5 / ENH-05) | VERIFIED | `NoteService.ts:18,20`: interface fields. `NoteService.ts:286-287`: `event.start.toLocaleDateString("en-US", { weekday: "long" })` and `{ month: "long" }`. Both ride existing `applyTemplateVariables` path for body and title. |
-| 6 | `{{cursor}}` places cursor at marker position after note opens — marker text absent from saved note (SC#6 / ENH-06) | PARTIAL | Marker stripping: VERIFIED unconditionally (`extractCursorMarker` strips all `{{cursor}}` before `vault.create`). Cursor placement: implemented but unreliable — `requestAnimationFrame` callback does not check `view.file?.path === file.path` (WR-03). On tab switch between `openFile` and rAF fire, cursor lands on wrong file. Both surfaces (`CalendarView.ts:961-967`, `EmbeddedAgendaView.ts:420-426`) have this gap. |
+| 1 | Today's cell shows a distinct ring or border even when today is also selected — both highlights visible simultaneously (SC#1 / ENH-01) | VERIFIED | `styles.css:162-164` accent ring for unselected today; `styles.css:166-169` new `.memochron-day.today.selected` rule overrides with `inset 0 0 0 2px var(--text-on-accent)` — ring stays visible against the accent background. Commit 12e9f3b. |
+| 2 | Agenda events with notes show file-check icon; events without show file-plus icon (SC#2 / ENH-02) | VERIFIED | Icon rendering present on all three surfaces (`viewRenderers.ts:220-223`, `CalendarView.ts:894-897`, `EmbeddedAgendaView.ts:338-341`). `styles.css:635-643` now uses absolute positioning (`position: absolute; top: var(--size-4-2); right: var(--size-4-2)`) anchored to parent `.memochron-agenda-event` at `position: relative` (styles.css:370). Indicator renders at trailing top-right of each event row. Commit af16a91. |
+| 3 | Note-exists dot on calendar grid is off by default, toggleable, AND visibly marks days containing notes (SC#3 / ENH-03) | FAILED | Default-off and toggle wiring confirmed (`types.ts:57,93`; `SettingsTab.ts:851-854`; render guards in `CalendarView.ts:694-700` and `viewRenderers.ts:297-300`). HOWEVER, `styles.css:228` uses `background-color: var(--interactive-accent)` which is identical to `.memochron-day.selected` background at `styles.css:147`. No combined-state override rule exists. The corner-square is invisible when its day cell is selected — the exact WR-02 bug class applied to the note-indicator. Surfaced by 04-REVIEW.md CR-01. |
+| 4 | Settings date-format dropdown includes "DD-MM-YYYY (NL/EU)" and produces `15-01-2026` for Jan 15 event (SC#4 / ENH-04) | VERIFIED | `SettingsTab.ts:957,1604`: `{ value: "UK", label: "UK/EU (DD-MM-YYYY)" }` in both global and per-calendar dropdowns. `NoteService.formatDate` "UK" branch unchanged (`toLocaleDateString("en-GB", ...)` + `toFilenameSafeDate`). |
+| 5 | `{{day}}` and `{{month}}` in template produce `Monday` and `January` — not a number (SC#5 / ENH-05) | VERIFIED | `NoteService.ts:18,20`: interface fields `day: string` / `month: string`. `NoteService.ts:286-287`: `event.start.toLocaleDateString("en-US", { weekday: "long" })` and `{ month: "long" }`. Flows through `applyTemplateVariables` to both body and title. Help text in `SettingsTab.ts:940,1026` lists both variables. |
+| 6 | `{{cursor}}` places cursor at marker position after note opens — marker text absent from saved note; cursor lands on the just-opened file, not on a different tabbed file (SC#6 / ENH-06) | VERIFIED | Marker stripping unconditional via `extractCursorMarker` (`NoteService.ts:183`). Cursor placement uses `requestAnimationFrame` and now guards with `view.file?.path === file.path` (CalendarView.ts:965; EmbeddedAgendaView.ts:424). Wrong-file cursor write is impossible at the user-visible site. Commit 31eb735. |
 
-**Score:** 4/6 truths verified
+**Score:** 5/6 truths verified
 
 ---
 
@@ -55,14 +64,16 @@ gaps:
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `styles.css` | Inset ring on `.memochron-day.today`; corner-square on `.memochron-note-indicator`; icon spacing on `.memochron-event-note-indicator` | PARTIAL | Ring exists but invisible when today is selected (WR-02). Corner-square rule present and correct. Note-indicator CSS exists but parent not flex so icon layout is broken (WR-01). |
-| `src/settings/types.ts` | `showNoteIndicatorOnGrid: boolean` with default `false` | VERIFIED | Lines 57 and 93 confirmed. |
-| `src/utils/viewRenderers.ts` | Extended `RenderOptions` with `hasNote?` and `showNoteIndicatorOnGrid?`; trailing icon in `renderEventItem`; corner-square in `addEventIndicators` | VERIFIED | Lines 12-13 (RenderOptions fields), 220-222 (icon), 297-300 (corner-square). |
-| `src/views/CalendarView.ts` | `renderEventNoteIndicator` method; re-renders after `createEventNote`; passes `hasNote`/`showNoteIndicatorOnGrid`; `MarkdownView` import; cursor placement after `openFile` | VERIFIED | All present. WR-03 gap in cursor placement is a correctness issue, not a missing artifact. |
-| `src/views/EmbeddedCalendarView.ts` | Passes `hasNote` and `showNoteIndicatorOnGrid` through `RenderOptions` | VERIFIED | Lines 147-148 confirmed. |
-| `src/views/EmbeddedAgendaView.ts` | Passes `hasNote`; re-renders after `createEventNote`; `MarkdownView` import; cursor placement | VERIFIED | All present. WR-03 applies here too. |
-| `src/settings/SettingsTab.ts` | `showNoteIndicatorOnGrid` toggle; "UK/EU (DD-MM-YYYY)" label (×2); `{{day}}`, `{{month}}`, `{{cursor}}` in help text | VERIFIED | All confirmed. |
-| `src/services/NoteService.ts` | `day`/`month` in `EventTemplateVariables`; `extractCursorMarker`; `createEventNote` returns `{ file, cursor }` | VERIFIED | All confirmed. |
+| `styles.css` `.memochron-day.today` | Inset accent ring on today | VERIFIED | Line 162-164. |
+| `styles.css` `.memochron-day.today.selected` | Override ring with --text-on-accent when today is also selected | VERIFIED | Line 167-169 (added by commit 12e9f3b). |
+| `styles.css` `.memochron-event-note-indicator` | Trailing-end icon at top-right of agenda event row via absolute positioning | VERIFIED | Line 634-643: `position: absolute; top: var(--size-4-2); right: var(--size-4-2)`. No `margin-left: auto` (commit af16a91 removed it). |
+| `styles.css` `.memochron-note-indicator` | Visible corner-square dot for ENH-03 in all relevant cell states | FAILED | Line 221-230: defines square with `var(--interactive-accent)` background. No `.selected .memochron-note-indicator` override — square is invisible when day is selected (CR-01). |
+| `src/settings/types.ts` `showNoteIndicatorOnGrid` | Boolean field with `false` default | VERIFIED | Lines 57 and 93. |
+| `src/utils/viewRenderers.ts` `RenderOptions` | `hasNote?` and `showNoteIndicatorOnGrid?` fields; trailing icon in `renderEventItem`; corner-square in `addEventIndicators` | VERIFIED | Lines 12-13, 220-222, 297-300. |
+| `src/views/CalendarView.ts` rAF active-file guard | `view.file?.path === file.path` inside rAF callback in `showEventDetails` | VERIFIED | Line 965 (added by commit 31eb735). `MarkdownView` imported at line 1. |
+| `src/views/EmbeddedAgendaView.ts` rAF active-file guard | `view.file?.path === file.path` inside rAF callback in `handleEventClick` | VERIFIED | Line 424 (added by commit 31eb735). `MarkdownView` imported at line 1. |
+| `src/services/NoteService.ts` template variables | `day`/`month` on `EventTemplateVariables`; `extractCursorMarker` helper; `createEventNote` returns `{ file, cursor }` | VERIFIED | Lines 7-27 (interface), 183 (helper), 66 (return type), 286-287 (en-US locale calls). |
+| `src/settings/SettingsTab.ts` | `showNoteIndicatorOnGrid` toggle; "UK/EU (DD-MM-YYYY)" label (×2); `{{day}}`/`{{month}}`/`{{cursor}}` in help text | VERIFIED | Lines 851-854, 957, 1604, 940, 1026. |
 
 ---
 
@@ -70,36 +81,40 @@ gaps:
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `viewRenderers.ts createDayElement` | `styles.css .memochron-day.today` | `.today` class applied | PARTIAL | Class application is correct; CSS rule exists but ring color equals background color when `.selected` — visual goal fails. |
-| `viewRenderers.ts renderEventItem` | `setIcon('file-check'/'file-plus')` | `options.hasNote` callback | WIRED | Code confirmed at lines 220-222. Icon rendered correctly; display placement broken by CSS (WR-01). |
-| `CalendarView renderEventNoteIndicator` | `setIcon('file-check'/'file-plus')` | `noteService.getExistingEventNote` | WIRED | Lines 894-896 confirmed. Same CSS display issue applies. |
-| `SettingsTab.ts` | `types.ts showNoteIndicatorOnGrid` | Toggle onChange writes setting | WIRED | Lines 851-854 confirmed. |
-| `NoteService.ts createEventNote` | `CalendarView showEventDetails` | `Promise<{ file, cursor }>` return shape | WIRED | `CalendarView.ts:936-942` destructures correctly. |
-| `NoteService.ts createEventNote` | `EmbeddedAgendaView handleEventClick` | `Promise<{ file, cursor }>` return shape | WIRED | `EmbeddedAgendaView.ts:398-404` destructures correctly. |
-| `CalendarView showEventDetails` | `MarkdownView.editor.setCursor` | `requestAnimationFrame` → `getActiveViewOfType` | PARTIAL | rAF fires correctly but no `view.file?.path === file.path` guard (WR-03). |
-| `EmbeddedAgendaView handleEventClick` | `MarkdownView.editor.setCursor` | `requestAnimationFrame` → `getActiveViewOfType` | PARTIAL | Same WR-03 gap. |
+| `viewRenderers.ts createDayElement` | `styles.css .memochron-day.today` + `.memochron-day.today.selected` | `.today` class application; CSS specificity ordering | WIRED | Both rules present; ring contrast works for both unselected and selected states. |
+| `viewRenderers.ts addEventIndicators` + `CalendarView.ts addDayEventIndicator` | `styles.css .memochron-note-indicator` | DOM `div.memochron-note-indicator` created when `showNoteIndicatorOnGrid && events.some(hasNote)` | PARTIAL | Code wiring correct; CSS color renders invisible against `.selected` background (CR-01). |
+| `viewRenderers.ts renderEventItem` + `CalendarView.ts renderEventNoteIndicator` + `EmbeddedAgendaView.ts renderEventItem` | `setIcon('file-check'/'file-plus')` at top-right of `.memochron-agenda-event` row | `noteService.getExistingEventNote(event) !== null`; CSS absolute positioning | WIRED | All three surfaces render icon; absolute positioning anchors correctly to the `position: relative` parent. |
+| `SettingsTab.ts` | `types.ts showNoteIndicatorOnGrid` | Toggle onChange writes setting + refreshCalendarView | WIRED | Lines 851-854 confirmed. |
+| `NoteService.ts createEventNote` | `CalendarView.showEventDetails` and `EmbeddedAgendaView.handleEventClick` | `Promise<{ file: TFile; cursor: ... | null }>` return shape | WIRED | Both surfaces destructure correctly (CalendarView.ts:940-942, EmbeddedAgendaView.ts:402-404). |
+| `CalendarView.showEventDetails` rAF | `MarkdownView.editor.setCursor` | `requestAnimationFrame` → `getActiveViewOfType(MarkdownView)` with `view.file?.path === file.path` guard | WIRED | Line 963-969. Guard prevents wrong-file cursor write. |
+| `EmbeddedAgendaView.handleEventClick` rAF | `MarkdownView.editor.setCursor` | Same pattern via `this.plugin.app.workspace` | WIRED | Line 422-428. |
 
 ---
 
 ## Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
-|----------|---------------|--------|-------------------|--------|
-| `viewRenderers.ts renderEventItem` note icon | `options.hasNote(event)` | `noteService.getExistingEventNote(event) !== null` — synchronous vault hash lookup | Yes | FLOWING (icon value is live; display placement broken by CSS) |
-| `CalendarView addDayEventIndicator` corner-square | `events.some(e => noteService.getExistingEventNote(e) !== null)` guarded by `settings.showNoteIndicatorOnGrid` | Live settings + live vault lookup per render | Yes | FLOWING |
-| `NoteService extractCursorMarker` | `cursor: { line, ch }` | Computed from template content before strip pass | Yes | FLOWING |
+|----------|---------------|--------|--------------------|--------|
+| `viewRenderers.ts renderEventItem` note icon | `options.hasNote(event)` | `noteService.getExistingEventNote(event) !== null` — synchronous vault lookup | Yes | FLOWING |
+| `CalendarView.ts addDayEventIndicator` corner-square | `events.some(e => noteService.getExistingEventNote(e) !== null)` guarded by `settings.showNoteIndicatorOnGrid` | Live settings + live vault lookup | Yes | FLOWING (data correct; CSS rendering broken in selected state) |
+| `NoteService.ts extractCursorMarker` | `cursor: { line, ch }` | Computed from post-frontmatter body content; `(line, ch)` of first `{{cursor}}` after closing `---` | Yes | FLOWING |
+| `CalendarView.ts` + `EmbeddedAgendaView.ts` rAF cursor write | `pos` from `cursorPos` + `view.file?.path === file.path` guard | `createEventNote` return value piped via destructuring | Yes | FLOWING |
 
 ---
 
 ## Behavioral Spot-Checks
 
-Step 7b: SKIPPED — no runnable entry points without starting the Obsidian host application.
+| Behavior | Command | Result | Status |
+|----------|---------|--------|--------|
+| Build green (TypeScript + esbuild) | `npm run build` | exit 0, no errors, no warnings | PASS |
+
+Visual rendering checks (CSS contrast, icon layout, ring visibility) require running Obsidian and are routed to human verification — none required because all five gaps and one new gap are programmatically observable in the source.
 
 ---
 
 ## Probe Execution
 
-Step 7c: No probe scripts declared for this phase.
+No probe scripts declared for this phase.
 
 ---
 
@@ -107,79 +122,70 @@ Step 7c: No probe scripts declared for this phase.
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-------------|-------------|--------|----------|
-| ENH-01 | 04-01-PLAN.md | Persistent today indicator visible simultaneously with selected state | BLOCKED | Ring exists in CSS but same color as selected background — invisible in dual state (WR-02) |
-| ENH-02 | 04-04-PLAN.md | Agenda events show file-check/file-plus icon based on note existence | BLOCKED | Icon code correct; CSS parent layout prevents right-alignment — icon renders below row not at trailing end (WR-01) |
-| ENH-03 | 04-04-PLAN.md | Optional toggleable grid note-indicator, off by default | SATISFIED | `showNoteIndicatorOnGrid: false` default; toggle wired; corner-square renders when enabled |
-| ENH-04 | 04-02-PLAN.md | DD-MM-YYYY note title format discoverable to NL/EU users | SATISFIED | "UK/EU (DD-MM-YYYY)" label in both dropdowns; value "UK" unchanged |
-| ENH-05 | 04-03-PLAN.md | `{{day}}` / `{{month}}` template variables produce English names | SATISFIED | `en-US` locale hard-coded; interface fields and return object populated |
-| ENH-06 | 04-05-PLAN.md | `{{cursor}}` places cursor at position; marker absent from saved note | PARTIAL | Marker stripping is unconditional and correct. Cursor placement has active-file guard missing (WR-03) — can write cursor to wrong file on tab switch |
+| ENH-01 | 04-01-PLAN.md | Persistent today indicator visible simultaneously with selected state | SATISFIED | Dual-rule design `.memochron-day.today` + `.memochron-day.today.selected` covers both states; commit 12e9f3b. |
+| ENH-02 | 04-04-PLAN.md | Agenda events show file-check/file-plus icon based on note existence | SATISFIED | Icon code on all three surfaces; CSS absolute-positioning anchors icon to top-right of each row; commit af16a91. |
+| ENH-03 | 04-04-PLAN.md | Optional toggleable grid note-indicator, off by default, marking days with notes | BLOCKED | Default-off + toggle wiring satisfied. Render code correct. CSS contrast fails on the selected-day branch (CR-01); indicator silently vanishes from the user's currently-selected day — the day they care about most. |
+| ENH-04 | 04-02-PLAN.md | DD-MM-YYYY note title format discoverable to NL/EU users | SATISFIED | "UK/EU (DD-MM-YYYY)" label present in both dropdowns; persisted value "UK" unchanged; formatter logic untouched. |
+| ENH-05 | 04-03-PLAN.md | `{{day}}` / `{{month}}` template variables produce English names | SATISFIED | `en-US` locale hard-coded; interface fields populated; help text updated. |
+| ENH-06 | 04-05-PLAN.md | `{{cursor}}` places cursor at position; marker absent from saved note; lands on correct file | SATISFIED | Marker stripping unconditional. Cursor placement now guards `view.file?.path === file.path` (commit 31eb735). |
+
+All six ENH-* requirement IDs from REQUIREMENTS.md are accounted for and present in PLAN frontmatter (04-01..04-06). ENH-03 is the only requirement that does not currently SATISFY.
 
 ---
 
 ## Anti-Patterns Found
 
-| File | Pattern | Severity | Impact |
-|------|---------|----------|--------|
-| `styles.css:162-164` | `var(--interactive-accent)` ring on `var(--interactive-accent)` background — zero-contrast rendering | BLOCKER | ENH-01 / SC#1: ring invisible when today is selected; stated goal "both highlights visible simultaneously" not met |
-| `styles.css:630-636` | `margin-left: auto` on child of `display: block` parent — auto margin resolves to 0 | BLOCKER | ENH-02 / SC#2: note-exists icon layout broken; icon renders below event row rather than at trailing end |
-| `src/views/CalendarView.ts:961-967` | `requestAnimationFrame` cursor write without `view.file?.path === file.path` guard | WARNING | ENH-06 / SC#6 (partial): cursor may be written to wrong file on tab switch; non-deterministic corruption |
-| `src/views/EmbeddedAgendaView.ts:420-426` | Same missing active-file guard | WARNING | Same ENH-06 correctness gap on embedded surface |
+| File | Line | Pattern | Severity | Impact |
+|------|------|---------|----------|--------|
+| `styles.css` | 221-230 + 146-148 | `var(--interactive-accent)` corner-square on `var(--interactive-accent)` background when `.selected .memochron-note-indicator` resolves — zero-contrast rendering | BLOCKER (CR-01) | ENH-03 / SC#3: corner-square invisible on selected day; "marks days that contain at least one event with a note" semantically broken for the user's current day. |
+| `styles.css` | 11 | Dead CSS variable `--color-text-today: var(--interactive-accent)` declared on `:root` with zero usages | INFO (IN-01 from REVIEW) | None — declared but unused; cleanup item. |
+| `src/views/CalendarView.ts` | 959-962 | Inner `const file = createdFile` shadowing the outer `let file` to satisfy strict-null narrowing inside the rAF closure | INFO (IN-02 from REVIEW) | None — behavior correct; minor readability nit. Same pattern duplicated in EmbeddedAgendaView.ts:418-421. |
+| `src/views/EmbeddedAgendaView.ts` | 391-432 | `handleEventClick` does not wrap `createEventNote` in try/catch; rejection escapes as unhandled promise rejection (CalendarView has the equivalent guard) | WARNING (WR-01 from REVIEW) | Embedded surface lacks the user-feedback parity. Does not block any of the six SCs but is a divergence from `CalendarView.addEventClickHandler:918-925`. Out of scope for this verification pass; route to a future hardening plan. |
+| `src/views/CalendarView.ts` + `src/views/EmbeddedAgendaView.ts` | rAF sites | rAF handle is not cancelled on view unload (IN-03/WR-02 from REVIEW). Active-file guard prevents wrong-file cursor write, so user-visible bug is impossible — but the callback still runs after unload. | WARNING | Does not affect SC#6 (the guard makes the wrong-file write impossible). Lifecycle hygiene concern only. |
+| `src/utils/viewRenderers.ts` + `src/views/CalendarView.ts` | 164-224 + 835-853 | Per-surface duplication of `renderEventItem` extended by ENH-02 work — two near-identical agenda row renderers | INFO (IN-03 from REVIEW) | None — both surfaces are exercised by ENH-02; duplication is debt, not defect. |
+| `src/utils/viewRenderers.ts` + `src/views/EmbeddedAgendaView.ts` vs `src/views/CalendarView.ts` | 220-223 / 338-341 vs 894-897 | Note icon rendering is gated on `options.hasNote` in shared/embedded paths but unconditional in CalendarView | INFO (IN-04 from REVIEW) | None today (all callers provide `hasNote`); latent risk if a future caller forgets. |
+
+No debt-marker comments (TBD/FIXME/XXX) found in the modified files.
 
 ---
 
 ## Human Verification Required
 
-None identified — all blockers and warnings are programmatically observable from the codebase.
+None — the one blocker (CR-01) is programmatically observable from the codebase (CSS variable equality + missing combined-state override). The 04-REVIEW.md warnings WR-01 (embedded-agenda try/catch parity) and IN-03/WR-02 (rAF unload cleanup) are out of scope for the phase-goal verification — they do not block any of the six SCs.
 
 ---
 
 ## Gaps Summary
 
-**2 blockers prevent the phase goal from being fully achieved.**
+**One blocker prevents the phase goal from being fully achieved.**
 
-### Gap 1 — ENH-01 / SC#1: Today ring invisible when today is selected (WR-02)
+### Gap 1 — ENH-03 / SC#3 / Truth #3: Note-indicator corner-square invisible on selected day (CR-01)
 
-Root cause: `styles.css` lines 162-164 use `var(--interactive-accent)` for the ring; lines 146-148 use the same variable for the selected background. No combined `.memochron-day.today.selected` rule exists to override the ring color with a contrasting value.
+Root cause: `styles.css:221-230` defines the corner-square with `background-color: var(--interactive-accent)`. `styles.css:146-148` defines the selected-day cell with `background-color: var(--interactive-accent)`. Identical color; zero contrast; the square disappears whenever the day with a note is the user's current selected day.
 
-Fix: add to `styles.css` immediately after the `.memochron-day.today` rule:
+This is the exact analog of WR-02 (today-ring contrast) that the 04-06 gap-closure plan just fixed. The previous verifier validated truth #3 narrowly as "off by default and toggleable" and did not exercise the selected + has-note state combination; truth #3 must be downgraded from VERIFIED to FAILED in this re-verification.
+
+Practical user impact: a user who enables `showNoteIndicatorOnGrid` to glance-check which days have notes will see the indicator silently vanish on whichever day they are currently clicked into — defeating the feature's stated purpose ("marks days that contain at least one event with a note", REQUIREMENTS ENH-03). Today + selected + has-note is the worst case: the ring is now visible (post-WR-02), but the note-dot is not.
+
+**Fix:** Add a combined-state override immediately after the existing `.memochron-note-indicator` rule (around styles.css:230):
+
 ```css
-.memochron-day.today.selected {
-  box-shadow: inset 0 0 0 2px var(--text-on-accent);
+/* ENH-03: contrasting indicator when the day is also selected — survives the accent background */
+.memochron-day.selected .memochron-note-indicator {
+  background-color: var(--text-on-accent);
 }
 ```
 
-### Gap 2 — ENH-02 / SC#2: Note-exists icon CSS layout broken (WR-01)
+Pattern is identical to the WR-02 resolution (REVIEW.md CR-01 Fix block). Single-rule diff; no parent change; uses the same theme-aware `--text-on-accent` token that was vetted in 04-06.
 
-Root cause: `.memochron-event-note-indicator` uses `margin-left: auto` to push the icon right, but `.memochron-agenda-event` is `display: block`, not flex. Auto margins have no push effect in a block formatting context.
+### Non-blocking observations (do not affect phase goal)
 
-Fix option A: Add flex layout to `.memochron-agenda-event`:
-```css
-.memochron-agenda-event {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--size-4-1);
-}
-```
-Then verify the colored left-border `::before` pseudo-element and `overflow: hidden` still behave correctly.
-
-Fix option B: Switch `.memochron-event-note-indicator` to absolute positioning:
-```css
-.memochron-event-note-indicator {
-  position: absolute;
-  top: 50%;
-  right: var(--size-4-2);
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-```
-`.memochron-agenda-event` already has `position: relative` (line 365), so no parent change needed.
-
-### Non-blocking warning: WR-03
-
-ENH-06 cursor placement writes to whichever `MarkdownView` is active at rAF fire time, without confirming it is the file just opened. Adding `view.file?.path === file.path` guard in both `CalendarView.ts:962` and `EmbeddedAgendaView.ts:421` closes the gap. This does not block SC#6's mandatory claim ("marker text does not appear in saved note") but is a correctness defect in cursor targeting.
+- **REVIEW.md WR-01 (embedded-agenda try/catch parity):** `EmbeddedAgendaView.handleEventClick` (lines 391-432) does not wrap `createEventNote` in try/catch. CalendarView already does (lines 918-925). Surface divergence; out of scope for closing Phase 4 SCs but worth queuing.
+- **REVIEW.md IN-03 / WR-02 (rAF unload cleanup):** Neither rAF call site cancels the pending frame on view unload. The active-file guard added by 04-06 makes the wrong-file cursor write impossible, so SC#6 is not at risk — but the callback still runs against the live `app.workspace` after unload. Pure lifecycle hygiene.
+- **REVIEW.md IN-01 / IN-02 / IN-03 / IN-04 (code-quality smells):** Dead CSS variable, closure-shadow pattern, sidebar/shared duplication, optional-vs-unconditional `hasNote` gating. None block any SC.
 
 ---
 
 _Verified: 2026-05-12T00:00:00Z_
 _Verifier: Claude (gsd-verifier)_
+_Mode: re-verification after 04-06 gap closure_
