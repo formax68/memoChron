@@ -956,11 +956,13 @@ export class CalendarView extends ItemView {
     }
 
     if (isNewNote) {
-      if (cursorPos !== null) {
+      const createdFile = file;
+      if (cursorPos !== null && createdFile) {
         const pos = cursorPos;
+        const file = createdFile;
         requestAnimationFrame(() => {
           const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-          if (view?.editor) {
+          if (view?.editor && view.file?.path === file.path) {
             view.editor.setCursor(pos);
             view.editor.focus();
           }
