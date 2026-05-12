@@ -63,7 +63,7 @@ export class NoteService {
     return this.plugin.settings;
   }
 
-  async createEventNote(event: CalendarEvent): Promise<TFile> {
+  async createEventNote(event: CalendarEvent): Promise<{ file: TFile; cursor: { line: number; ch: number } | null }> {
     const filePath = this.buildFilePath(event);
 
     try {
@@ -71,11 +71,12 @@ export class NoteService {
 
       const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
       if (existingFile instanceof TFile) {
-        return existingFile;
+        return { file: existingFile, cursor: null };
       }
 
-      const content = this.generateNoteContent(event);
-      return await this.plugin.app.vault.create(filePath, content);
+      const { content, cursor } = this.generateNoteContent(event);
+      const file = await this.plugin.app.vault.create(filePath, content);
+      return { file, cursor };
     } catch (error) {
       console.error("Error creating note:", errorMessage(error));
       throw error;
@@ -156,7 +157,7 @@ export class NoteService {
     });
   }
 
-  private generateNoteContent(event: CalendarEvent): string {
+  private generateNoteContent(event: CalendarEvent): { content: string; cursor: { line: number; ch: number } | null } {
     try {
       const variables = this.getEventTemplateVariables(event);
       const frontmatter = this.generateFrontmatter(event, variables);
@@ -165,16 +166,56 @@ export class NoteService {
         calendarSettings.noteTemplate ?? this.settings.noteTemplate;
       const content = this.applyTemplateVariables(noteTemplate, variables);
 
-      return `${frontmatter}\n${content}`;
+      const combined = `${frontmatter}\n${content}`;
+      return this.extractCursorMarker(combined);
     } catch (error) {
       console.error("Error generating note content:", errorMessage(error));
       // Fallback to basic content
-      return `# ${
+      const fallback = `# ${
         event.title
       }\n\n**Date:** ${event.start.toLocaleDateString()}\n**Time:** ${event.start.toLocaleTimeString()}\n**Source:** ${
         event.source
       }\n\n${event.description || ""}`;
+      return { content: fallback, cursor: null };
     }
+  }
+
+  private extractCursorMarker(fullContent: string): { content: string; cursor: { line: number; ch: number } | null } {
+    const MARKER = "{{cursor}}";
+    const lines = fullContent.split("\n");
+
+    // Find the line index immediately after the closing frontmatter delimiter.
+    // Walk lines incrementing delimitersSeen each time we see "---".
+    // When delimitersSeen reaches 2, bodyStartLine = i + 1.
+    // If fewer than 2 delimiters found, treat entire content as body (graceful fallback per D-13).
+    let delimitersSeen = 0;
+    let bodyStartLine = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].trim() === NoteService.FRONTMATTER_DELIMITER) {
+        delimitersSeen++;
+        if (delimitersSeen === 2) {
+          bodyStartLine = i + 1;
+          break;
+        }
+      }
+    }
+
+    // Search for the first marker in body lines only (per D-13 — frontmatter markers
+    // are stripped but NOT honored as cursor targets).
+    let cursor: { line: number; ch: number } | null = null;
+    for (let i = bodyStartLine; i < lines.length; i++) {
+      const ch = lines[i].indexOf(MARKER);
+      if (ch !== -1) {
+        cursor = { line: i, ch };
+        break;
+      }
+    }
+
+    // Strip ALL occurrences of the marker from the full content (per D-12 — marker
+    // text never appears in the saved file regardless of position).
+    const stripped = fullContent.split(MARKER).join("");
+
+    return { content: stripped, cursor };
   }
 
   private generateFrontmatter(

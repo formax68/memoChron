@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, Notice, setIcon } from "obsidian";
+import { MarkdownRenderChild, MarkdownView, Notice, setIcon } from "obsidian";
 import MemoChron from "../main";
 import {
   parseDate,
@@ -396,9 +396,12 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
     let file = this.plugin.noteService.getExistingEventNote(event);
     const isNewNote = !file;
+    let cursorPos: { line: number; ch: number } | null = null;
 
     if (!file) {
-      file = await this.plugin.noteService.createEventNote(event);
+      const created = await this.plugin.noteService.createEventNote(event);
+      file = created.file;
+      cursorPos = created.cursor;
       if (!file) {
         new Notice("Failed to create note");
         return;
@@ -412,6 +415,16 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     await leaf.openFile(file);
 
     if (isNewNote) {
+      if (cursorPos !== null) {
+        const pos = cursorPos;
+        requestAnimationFrame(() => {
+          const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+          if (view?.editor) {
+            view.editor.setCursor(pos);
+            view.editor.focus();
+          }
+        });
+      }
       await this.render();
     }
   }

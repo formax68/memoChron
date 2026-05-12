@@ -1023,7 +1023,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(container)
       .setName("Note template")
       .setDesc(
-        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{day}}, {{month}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_links_list}}, {{attendees_count}}"
+        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{day}}, {{month}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_links_list}}, {{attendees_count}}. Use {{cursor}} in the body to set the cursor position when a new note opens (stripped from saved content; not honored inside frontmatter or on existing notes)."
       )
       .addTextArea((text) => {
         text

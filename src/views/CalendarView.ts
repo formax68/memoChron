@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile, DropdownComponent, setIcon, Menu, MenuItem } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, DropdownComponent, setIcon, MarkdownView, Menu, MenuItem } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
@@ -934,9 +934,12 @@ export class CalendarView extends ItemView {
 
     let file = this.plugin.noteService.getExistingEventNote(event);
     const isNewNote = !file;
+    let cursorPos: { line: number; ch: number } | null = null;
 
     if (!file) {
-      file = await this.plugin.noteService.createEventNote(event);
+      const created = await this.plugin.noteService.createEventNote(event);
+      file = created.file;
+      cursorPos = created.cursor;
       if (!file) {
         throw new Error("Failed to create note");
       }
@@ -953,6 +956,16 @@ export class CalendarView extends ItemView {
     }
 
     if (isNewNote) {
+      if (cursorPos !== null) {
+        const pos = cursorPos;
+        requestAnimationFrame(() => {
+          const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+          if (view?.editor) {
+            view.editor.setCursor(pos);
+            view.editor.focus();
+          }
+        });
+      }
       this.renderCalendar();
       void this.showDayAgenda(this.selectedDate || new Date());
     }
