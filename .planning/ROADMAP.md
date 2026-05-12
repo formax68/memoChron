@@ -66,8 +66,8 @@ Plans:
   4. The input `29-01-2026` parses to 29 January 2026 (not 20 January 2029) under the post-#58 format handling — confirmed and documented
 **Plans**: 3 plans
 Plans:
-- [ ] 03-01-PLAN.md — BUG-01: parseDateFromFilename — convert six format branches to local-day numeric Date constructor
-- [ ] 03-02-PLAN.md — BUG-02 + BUG-03: decouple navigate() and goToToday() from fetch; add maybeBackgroundRefresh helper
+- [x] 03-01-PLAN.md — BUG-01: parseDateFromFilename — convert six format branches to local-day numeric Date constructor
+- [x] 03-02-PLAN.md — BUG-02 + BUG-03: decouple navigate() and goToToday() from fetch; add maybeBackgroundRefresh helper
 - [ ] 03-03-PLAN.md — BUG-04: closure comment + remove unreachable duplicate regex; create 03-HUMAN-UAT.md
 **UI hint**: yes
 
