@@ -423,7 +423,19 @@ export function parseDate(
 function parseLocalDate(year: number, month: number, day: number): Date | null {
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
   const date = new Date(year, month - 1, day);
-  return isNaN(date.getTime()) ? null : date;
+  if (isNaN(date.getTime())) return null;
+  // WR-01: reject overflow rollover (e.g. Feb 31 -> Mar 3). The numeric
+  // Date constructor silently rolls invalid day-of-month forward into the
+  // next month; verify the constructed Date round-trips to the input
+  // components so impossible dates return null instead of a wrong date.
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
 }
 
 function parseDateFromFilename(filename: string): Date | null {
