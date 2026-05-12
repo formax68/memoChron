@@ -14,6 +14,10 @@ interface EventTemplateVariables {
   "end_date-iso": string;
   start_time: string;
   end_time: string;
+  // Full English weekday name (e.g. "Monday") — locale hard-coded to "en-US"
+  day: string;
+  // Full English month name (e.g. "January") — locale hard-coded to "en-US"
+  month: string;
   source: string;
   location: string;
   locationText: string;
@@ -238,6 +242,8 @@ export class NoteService {
       "end_date-iso": endDateIsoStr,
       start_time: this.formatTime(event.start, event.source),
       end_time: this.formatTime(event.end, event.source),
+      day: event.start.toLocaleDateString("en-US", { weekday: "long" }),
+      month: event.start.toLocaleDateString("en-US", { month: "long" }),
       source: event.source,
       location: event.location || "",
       locationText: this.formatLocationText(event.location),

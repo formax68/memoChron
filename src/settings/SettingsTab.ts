@@ -921,7 +921,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(container)
       .setName("Note title format")
       .setDesc(
-        "Format for new note titles. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}"
+        "Format for new note titles. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{day}}, {{month}}, {{source}}, {{location}}, {{description}}"
       )
       .addText((text) =>
         text
@@ -1007,7 +1007,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(container)
       .setName("Note template")
       .setDesc(
-        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_links_list}}, {{attendees_count}}"
+        "Template for the note content. Available variables: {{event_title}}, {{date}}, {{start_date}}, {{end_date}}, {{start_time}}, {{end_time}}, {{day}}, {{month}}, {{source}}, {{location}}, {{description}}, {{attendees}}, {{attendees_list}}, {{attendees_links}}, {{attendees_links_list}}, {{attendees_count}}"
       )
       .addTextArea((text) => {
         text
