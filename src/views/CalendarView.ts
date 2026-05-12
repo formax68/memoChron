@@ -94,7 +94,7 @@ export class CalendarView extends ItemView {
       this.selectedDate = new Date();
       await this.showDayAgenda(this.selectedDate);
     } else if (!this.plugin.settings.calendarHeight) {
-      await this.goToToday();
+      this.goToToday();
     }
   }
 
@@ -354,22 +354,24 @@ export class CalendarView extends ItemView {
     this.maybeBackgroundRefresh();
   }
 
-  async goToToday() {
+  goToToday(): void {
     const today = new Date();
 
-    if (!this.isSameMonth(this.currentDate, today)) {
-      this.currentDate = today;
-      await this.refreshEvents();
-    }
+    // BUG-03 (D-08): always recenter — symmetric with navigate(). The previous
+    // isSameMonth short-circuit was incorrect for week-mode views, where today
+    // often falls in the current month but a different week. Today should
+    // recenter the view-mode's current range, not just re-select the day.
+    this.currentDate = today;
 
-    this.selectDate(today);
-  }
+    // BUG-03 (D-09): viewMode is intentionally NOT modified. A user in 2-week
+    // mode stays in 2-week mode, recentered on today's week (renderWeekDays
+    // recomputes via getStartOfWeek(this.currentDate)).
 
-  private isSameMonth(date1: Date, date2: Date): boolean {
-    return (
-      date1.getMonth() === date2.getMonth() &&
-      date1.getFullYear() === date2.getFullYear()
-    );
+    // BUG-02/BUG-03 (D-06): same decoupled pattern as navigate() — render
+    // synchronously from cached events; fire-and-forget a stale-cache fetch.
+    this.renderCalendar();
+    this.selectDate(today);          // sets selectedDate, updates UI selection, runs showDayAgenda
+    this.maybeBackgroundRefresh();
   }
 
   private async selectDate(date: Date) {
