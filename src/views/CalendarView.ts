@@ -199,7 +199,7 @@ export class CalendarView extends ItemView {
 
     // Apply saved height
     if (this.plugin.settings.calendarHeight) {
-      this.calendar.style.height = `${this.plugin.settings.calendarHeight}px`;
+      this.calendar.setCssProps({ height: `${this.plugin.settings.calendarHeight}px` });
     }
 
     // Create resize handle
@@ -658,7 +658,7 @@ export class CalendarView extends ItemView {
               .getPropertyValue("--interactive-accent")
               .trim() ||
             "#7c3aed";
-          dailyNoteDot.style.color = dailyNoteColor;
+          dailyNoteDot.setCssProps({ color: dailyNoteColor });
         }
 
         // Add a colored dot for each calendar that has events
@@ -667,7 +667,7 @@ export class CalendarView extends ItemView {
             cls: "memochron-event-dot colored",
           });
           if (event.color) {
-            dot.style.color = event.color;
+            dot.setCssProps({ color: event.color });
           }
         });
       } else {
@@ -982,21 +982,11 @@ export class CalendarView extends ItemView {
       ".memochron-controls"
     ) as HTMLElement;
 
-    if (this.plugin.settings.hideCalendar) {
-      this.calendar.style.display = "none";
-      if (this.resizeHandle) this.resizeHandle.style.display = "none";
-      if (controls) {
-        controls.style.display = "none";
-      }
-      this.agenda.classList.add("agenda-only");
-    } else {
-      this.calendar.style.display = "";
-      if (this.resizeHandle) this.resizeHandle.style.display = "";
-      if (controls) {
-        controls.style.display = "";
-      }
-      this.agenda.classList.remove("agenda-only");
-    }
+    const hide = this.plugin.settings.hideCalendar;
+    this.calendar.classList.toggle("memochron-hidden", hide);
+    if (this.resizeHandle) this.resizeHandle.classList.toggle("memochron-hidden", hide);
+    if (controls) controls.classList.toggle("memochron-hidden", hide);
+    this.agenda.classList.toggle("agenda-only", hide);
   }
 
   private setupDragAndDrop() {
@@ -1181,7 +1171,7 @@ export class CalendarView extends ItemView {
   private handleDragMove(e: MouseEvent) {
     const deltaY = e.clientY - this.dragStartY;
     const newHeight = Math.max(100, this.dragStartHeight + deltaY);
-    this.calendar.style.height = `${newHeight}px`;
+    this.calendar.setCssProps({ height: `${newHeight}px` });
 
     // Dynamic View Switching
     // We only trigger if height changed significantly enough or periodically
@@ -1224,7 +1214,7 @@ export class CalendarView extends ItemView {
     const idealHeight = padding + headerHeight + (weeks * rowHeight);
 
     // Animate snap if desired, or just set
-    this.calendar.style.height = `${idealHeight}px`;
+    this.calendar.setCssProps({ height: `${idealHeight}px` });
 
     // Save height setting
     this.plugin.settings.calendarHeight = idealHeight;

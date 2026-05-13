@@ -301,9 +301,6 @@ export class SettingsTab extends PluginSettingTab {
         errorEl = urlSetting.descEl.createDiv({
           cls: "memochron-error-message",
         });
-        errorEl.style.color = "var(--text-error, #c92424)";
-        errorEl.style.fontSize = "0.9em";
-        errorEl.style.marginTop = "0.5em";
 
         errorEl.createSpan({ text: validation.error });
 
@@ -314,8 +311,6 @@ export class SettingsTab extends PluginSettingTab {
             text: "How do I get the correct URL?",
             cls: "memochron-help-btn",
           });
-          helpBtn.style.marginTop = "0.5em";
-          helpBtn.style.fontSize = "0.85em";
           this.plugin.registerDomEvent(helpBtn, "click", (e) => {
             e.preventDefault();
             new CalendarUrlHelpModal(this.app, this.plugin).open();
@@ -645,25 +640,11 @@ export class SettingsTab extends PluginSettingTab {
     // when no color is set OR when isCustom is false. Pass null for the plus-icon path.
     customLabel.empty();
     customLabel.appendChild(this.buildColorSwatch(isCustom ? currentColor : null));
-    customLabel.style.position = "relative";
-    customLabel.style.display = "inline-block";
-    customLabel.style.width = "24px";
-    customLabel.style.height = "24px";
     const colorInput = customLabel.createEl("input", {
       type: "color",
       cls: "memochron-inline-color-input",
     });
     colorInput.value = this.colorToHex(currentColor);
-    colorInput.style.position = "absolute";
-    colorInput.style.top = "0";
-    colorInput.style.left = "0";
-    colorInput.style.width = "24px";
-    colorInput.style.height = "24px";
-    colorInput.style.opacity = "0";
-    colorInput.style.cursor = "pointer";
-    colorInput.style.border = "none";
-    colorInput.style.padding = "0";
-    colorInput.style.margin = "0";
     this.plugin.registerDomEvent(colorInput, "change", async (e) => {
       const hex = (e.target as HTMLInputElement).value;
       this.plugin.settings.calendarUrls[index].color = hex;
@@ -728,25 +709,11 @@ export class SettingsTab extends PluginSettingTab {
     // when no color is set OR when isCustom is false. Pass null for the plus-icon path.
     customLabel.empty();
     customLabel.appendChild(this.buildColorSwatch(isCustom ? currentColor : null));
-    customLabel.style.position = "relative";
-    customLabel.style.display = "inline-block";
-    customLabel.style.width = "24px";
-    customLabel.style.height = "24px";
     const colorInput = customLabel.createEl("input", {
       type: "color",
       cls: "memochron-inline-color-input",
     });
     colorInput.value = this.colorToHex(currentColor);
-    colorInput.style.position = "absolute";
-    colorInput.style.top = "0";
-    colorInput.style.left = "0";
-    colorInput.style.width = "24px";
-    colorInput.style.height = "24px";
-    colorInput.style.opacity = "0";
-    colorInput.style.cursor = "pointer";
-    colorInput.style.border = "none";
-    colorInput.style.padding = "0";
-    colorInput.style.margin = "0";
     this.plugin.registerDomEvent(colorInput, "change", async (e) => {
       const hex = (e.target as HTMLInputElement).value;
       this.plugin.settings.dailyNoteColor = hex;
@@ -887,9 +854,6 @@ export class SettingsTab extends PluginSettingTab {
           cls: "memochron-error-message",
           text: validation.error,
         });
-        errorEl.style.color = "var(--text-error, #c92424)";
-        errorEl.style.fontSize = "0.9em";
-        errorEl.style.marginTop = "0.5em";
       } else {
         // Save valid interval
         this.plugin.settings.refreshInterval = interval;
@@ -1934,7 +1898,6 @@ class CalendarUrlHelpModal extends Modal {
 
     // Documentation link
     const docLink = contentEl.createDiv({ cls: "memochron-help-doc-link" });
-    docLink.style.marginTop = "1em";
     const link = docLink.createEl("a", {
       text: "View full documentation on GitHub",
       href: "https://github.com/formax68/memoChron#remote-calendars",
@@ -1943,8 +1906,6 @@ class CalendarUrlHelpModal extends Modal {
 
     // Close button
     const buttonContainer = contentEl.createDiv({ cls: "memochron-help-buttons" });
-    buttonContainer.style.marginTop = "1.5em";
-    buttonContainer.style.textAlign = "right";
 
     new ButtonComponent(buttonContainer)
       .setButtonText("Close")

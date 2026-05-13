@@ -317,7 +317,7 @@ function addEventIndicators(
         text: "•",
       });
       if (event.color) {
-        dot.style.color = event.color;
+        dot.setCssProps({ color: event.color });
       }
     });
   } else {
