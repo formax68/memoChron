@@ -28,7 +28,7 @@ Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian c
 
 ### Documentation & guardrails
 
-- [ ] **DOC-01**: A working ESLint configuration (`.eslintrc.json` or `eslint.config.js`) is installed and enforces — at minimum — `no-console`, `no-inner-html`, the Obsidian community linting rules (no inline styles, no `as TFile` cast, no view-in-`registerView`, popout-window helpers), `@typescript-eslint/no-floating-promises`, `@typescript-eslint/no-explicit-any`, and `@typescript-eslint/no-unused-vars`. `npm run lint` is a script in `package.json`. CI (`.github/workflows/`) runs lint on every push and PR. A failing lint blocks the build
+- [x] **DOC-01**: A working ESLint configuration (`.eslintrc.json` or `eslint.config.js`) is installed and enforces — at minimum — `no-console`, `no-inner-html`, the Obsidian community linting rules (no inline styles, no `as TFile` cast, no view-in-`registerView`, popout-window helpers), `@typescript-eslint/no-floating-promises`, `@typescript-eslint/no-explicit-any`, and `@typescript-eslint/no-unused-vars`. `npm run lint` is a script in `package.json`. CI (`.github/workflows/`) runs lint on every push and PR. A failing lint blocks the build
 - [ ] **DOC-02**: `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` (new or merged into existing codebase docs) carry a "Directory Compliance" do/don't section — one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page — so future plans land compliant by default
 
 ## v2 Requirements
@@ -107,7 +107,7 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 | DIR-11 | Phase 5 | Complete |
 | DIR-12 | Phase 5 | Complete |
 | BUG-07 | Phase 7 | Pending |
-| DOC-01 | Phase 5 | Pending |
+| DOC-01 | Phase 5 | Complete |
 | DOC-02 | Phase 8 | Pending |
 
 **Coverage:**
