@@ -308,6 +308,7 @@ export class SettingsTab extends PluginSettingTab {
         if (validation.isWrongUrlType) {
           errorEl.createEl("br");
           const helpBtn = errorEl.createEl("button", {
+            // eslint-disable-next-line obsidianmd/ui/sentence-case -- standard English: first-person pronoun "I" is always capitalized
             text: "How do I get the correct URL?",
             cls: "memochron-help-btn",
           });
@@ -336,12 +337,14 @@ export class SettingsTab extends PluginSettingTab {
       .addButton((btn) =>
         btn
           .setIcon("folder-open")
+          // eslint-disable-next-line obsidianmd/ui/sentence-case -- acronym: ICS
           .setTooltip("Choose ICS file from vault")
           .onClick(async () => {
             const files = this.app.vault
               .getFiles()
               .filter((f) => f.extension === "ics");
             if (files.length === 0) {
+              // eslint-disable-next-line obsidianmd/ui/sentence-case -- acronym: ICS
               new Notice("No ICS files found in vault");
               return;
             }
@@ -373,7 +376,7 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc("Comma-separated tags for event notes")
       .addText((text) =>
         text
-          .setPlaceholder("work, meetings")
+          .setPlaceholder("Work, meetings")
           .setValue(source.tags?.join(", ") || "")
           .onChange(async (value) => {
             this.plugin.settings.calendarUrls[index].tags = this.parseTags(value);
@@ -508,6 +511,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Link to Advanced for filtering
     new Setting(container)
+      // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Advanced" is a labeled settings section
       .setDesc("Configure attendee type filtering in the Advanced section below.");
   }
 
@@ -881,7 +885,7 @@ export class SettingsTab extends PluginSettingTab {
 
     const locationInput = new TextComponent(locationSetting.controlEl);
     locationInput
-      .setPlaceholder("calendar-notes/")
+      .setPlaceholder("Calendar-notes/")
       .setValue(this.plugin.settings.noteLocation);
 
     const suggestionContainer = locationSetting.controlEl.createDiv({
@@ -1008,6 +1012,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(container)
       .setName("Create links for attendees")
       .setDesc(
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Obsidian; [[Name]] is an illustrative template example
         "Automatically create wiki links [[Name]] for event attendees. Obsidian will find the notes regardless of their folder location."
       )
       .addToggle((toggle) =>
@@ -1069,6 +1074,7 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc("Comma-separated list of names or emails to exclude from event notes (case-insensitive)")
       .addText((text) =>
         text
+          // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper nouns: example person names
           .setPlaceholder("John Doe, Jane Smith")
           .setValue(this.plugin.settings.filteredAttendees)
           .onChange(async (value) => {
@@ -1237,7 +1243,7 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc("Default tags for all event notes (comma-separated)")
       .addText((text) =>
         text
-          .setPlaceholder("event, meeting")
+          .setPlaceholder("Event, meeting")
           .setValue(this.plugin.settings.defaultTags.join(", "))
           .onChange(async (value) => {
             this.plugin.settings.defaultTags = this.parseTags(value);
@@ -1602,6 +1608,7 @@ class CalendarNotesSettingsModal extends Modal {
           "",
           `Default (${this.plugin.settings.noteTimeFormat})`
         );
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- acronym: PM (ante/post meridiem time notation)
         dropdown.addOption("12h", "12-hour (1:30 PM)");
         dropdown.addOption("24h", "24-hour (13:30)");
         dropdown
@@ -1832,19 +1839,24 @@ class CalendarUrlHelpModal extends Modal {
     contentEl.empty();
     contentEl.addClass("memochron-help-modal");
 
-    contentEl.createEl("h2", { text: "How to Get the Correct Calendar URL" });
+    contentEl.createEl("h2", { text: "How to get the correct calendar URL" });
 
     // Google Calendar section
     const gcalSection = contentEl.createDiv({ cls: "memochron-help-section" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Google Calendar
     gcalSection.createEl("h3", { text: "Google Calendar" });
 
     const gcalSteps = gcalSection.createEl("ol");
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Google Calendar
     gcalSteps.createEl("li", { text: "Open Google Calendar in your browser" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Settings" is a Google Calendar UI menu label
     gcalSteps.createEl("li", { text: "Click the gear icon (⚙️) → Settings" });
     gcalSteps.createEl("li", { text: "In the left sidebar, click on the calendar you want to add" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Integrate calendar" is a Google Calendar settings section label
     gcalSteps.createEl("li", { text: "Scroll down to \"Integrate calendar\"" });
     const gcalStep5 = gcalSteps.createEl("li");
     gcalStep5.appendText("Copy the ");
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: iCal (Apple/IETF calendar standard); "Secret address in iCal format" is Google's exact UI label
     gcalStep5.createEl("strong", { text: "Secret address in iCal format" });
 
     const gcalNote = gcalSection.createDiv({ cls: "memochron-help-note" });
@@ -1858,12 +1870,17 @@ class CalendarUrlHelpModal extends Modal {
     outlookSection.createEl("h3", { text: "Outlook / Microsoft 365" });
 
     const outlookSteps = outlookSection.createEl("ol");
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Outlook
     outlookSteps.createEl("li", { text: "Open Outlook calendar on the web (outlook.office.com)" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Outlook
     outlookSteps.createEl("li", { text: "Click the gear icon → View all Outlook settings" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Shared calendars" is an Outlook settings section label
     outlookSteps.createEl("li", { text: "Go to Calendar → Shared calendars" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Publish a calendar" is an Outlook UI section label
     outlookSteps.createEl("li", { text: "Under \"Publish a calendar\", select your calendar and permissions" });
     const outlookStep5 = outlookSteps.createEl("li");
     outlookStep5.appendText("Copy the ");
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- acronym: ICS (iCalendar format)
     outlookStep5.createEl("strong", { text: "ICS link" });
     outlookStep5.appendText(" (not the HTML link)");
 
@@ -1871,19 +1888,24 @@ class CalendarUrlHelpModal extends Modal {
 
     // iCloud section
     const icloudSection = contentEl.createDiv({ cls: "memochron-help-section" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Apple iCloud Calendar
     icloudSection.createEl("h3", { text: "Apple iCloud Calendar" });
 
     const icloudSteps = icloudSection.createEl("ol");
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper nouns: Calendar app, Mac (macOS application names)
     icloudSteps.createEl("li", { text: "Open the Calendar app on your Mac" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Share Calendar" is a macOS Calendar menu action
     icloudSteps.createEl("li", { text: "Right-click on the calendar → Share Calendar" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Public Calendar" is a macOS Calendar UI label
     icloudSteps.createEl("li", { text: "Check \"Public Calendar\" to make it shareable" });
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Copy Link" is a macOS Calendar UI action
     icloudSteps.createEl("li", { text: "Click \"Copy Link\" to get the subscription URL" });
 
     contentEl.createEl("hr");
 
     // Common mistakes
     const mistakesSection = contentEl.createDiv({ cls: "memochron-help-section" });
-    mistakesSection.createEl("h3", { text: "Common Mistakes" });
+    mistakesSection.createEl("h3", { text: "Common mistakes" });
 
     const mistakesList = mistakesSection.createEl("ul");
     const mistakeItem1 = mistakesList.createEl("li");

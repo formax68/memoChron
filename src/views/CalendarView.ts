@@ -44,6 +44,7 @@ export class CalendarView extends ItemView {
   }
 
   getDisplayText(): string {
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: MemoChron
     return "MemoChron calendar";
   }
 
@@ -773,6 +774,7 @@ export class CalendarView extends ItemView {
     // Add title first
     dailyNoteEl.createEl("div", {
       cls: "memochron-event-title",
+      // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Daily Note" refers to Obsidian's Daily Notes feature
       text: "Daily Note",
     });
 
@@ -794,6 +796,7 @@ export class CalendarView extends ItemView {
       // Check if daily notes plugin is loaded
       if (!appHasDailyNotesPluginLoaded()) {
         new Notice(
+          // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper nouns: Daily Notes, Settings, Core plugins (Obsidian UI labels)
           "Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins."
         );
         return;
@@ -827,6 +830,7 @@ export class CalendarView extends ItemView {
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));
       new Notice(
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Daily Notes (Obsidian plugin name)
         "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
       );
     }
@@ -1021,6 +1025,7 @@ export class CalendarView extends ItemView {
 
       // Check if it's an ICS file
       if (!file.name.endsWith(".ics")) {
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- acronym: ICS (iCalendar format)
         new Notice("Please drop an ICS calendar file");
         return;
       }
