@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Directory Compliance
 status: planning
-last_updated: "2026-05-13T09:41:00.385Z"
+last_updated: "2026-05-13T13:00:00.000Z"
 last_activity: 2026-05-13
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,44 +17,45 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-11)
+See: .planning/PROJECT.md (updated 2026-05-13)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 04 — ux-enhancements
+**Current focus:** Phase 05 — Guardrails & Trivial Fixes (planning)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 05 — Guardrails & Trivial Fixes (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-13 — Milestone v1.15 started
+Status: Roadmap created; ready to plan Phase 05
+Last activity: 2026-05-13 — v1.15 roadmap created (phases 05–08)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 8
+- Total plans completed: 23 (v1.14.0)
 - Average duration: -
-- Total execution time: 0 hours
+- Total execution time: 0 hours (v1.15)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
+| 01 | 10 | - | - |
 | 02 | 5 | - | - |
 | 03 | 3 | - | - |
+| 04 | 5 | - | - |
+| 05 | TBD | - | - |
+| 06 | TBD | - | - |
+| 07 | TBD | - | - |
+| 08 | TBD | - | - |
 
 **Recent Trend:**
 
-- Last 5 plans: none yet
+- Last 5 plans: 04-01 through 04-05 (v1.14.0 Phase 4, all complete)
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 04-ux-enhancements P01 | 35 | 1 tasks | 1 files |
-| Phase 04-ux-enhancements P02 | 5 | 1 tasks | 1 files |
-| Phase 04-ux-enhancements P03 | 4 | 2 tasks | 2 files |
-| Phase 04-ux-enhancements P04 | 1500 | 3 tasks | 7 files |
-| Phase 04-ux-enhancements P05 | 119 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -63,21 +64,21 @@ Last activity: 2026-05-13 — Milestone v1.15 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Roadmap: BUG-04 assigned to Phase 3 (not Phase 2) — it is a verify/close task for the #58 date-parse fix; best confirmed alongside BUG-01 when the date-parse path is freshest in mind
-- Roadmap: TD-01 + TD-02 travel together in Phase 1 (same main.ts construction site)
-- Roadmap: TD-03 + TD-04 travel together in Phase 1 (same untracked-resource / mobile-crash pattern)
-- Roadmap: ENH-02 + ENH-03 travel together in Phase 4 (shared RenderOptions extension)
-- Roadmap: ENH-06 is last in Phase 4 (highest-risk due to setCursor timing after openFile)
-- [Phase ?]: ENH-02+03: corner-square placed top-right (clear of day number and event dots); hasNote callback over precomputed map for render stability
+- Roadmap (v1.15): Phase 05 lands ESLint + CI lint gate FIRST, before any code-touching phase, so the rules being enforced are the same rules subsequent phases are fixing. ESLint is wired with per-file/per-rule overrides that name the phase responsible for removing them — no rule is silently disabled.
+- Roadmap (v1.15): DIR-02, DIR-03, DIR-04 travel together in Phase 06 because they touch the same files (CalendarView, EmbeddedCalendarView, EmbeddedAgendaView, SettingsTab, viewRenderers). Splitting them would double-touch the same lines and produce avoidable merge churn.
+- Roadmap (v1.15): BUG-07 joins Phase 07 (Lifecycle & Compatibility), not its own phase, because root-cause analysis points at the same view-lifecycle area as DIR-05. The bug either falls out of DIR-05's fix or closes with a documented Obsidian-side explanation.
+- Roadmap (v1.15): DOC-02 (CLAUDE.md + CONVENTIONS update) is the FINAL deliverable of the milestone, landing in Phase 08. Ending with the conventions document captures every rule actually used during the milestone, rather than aspirational rules written at planning time.
+- Roadmap (v1.15): Phases 01–04 are preserved as historical entries in the active ROADMAP.md (collapsed in `<details>`). Phase numbering is monotonic — v1.15 starts at Phase 05.
 
 ### Pending Todos
 
-None yet.
+None yet (Phase 05 not yet planned).
 
 ### Blockers/Concerns
 
-- Phase 3 (BUG-01): Acceptance requires manual timezone-offset verification — `TZ=America/New_York` test is a hard definition-of-done criterion, not optional
-- Phase 4 (ENH-06): Confirm exact tick mechanism for `setCursor` timing at implementation time (`requestAnimationFrame` vs `app.workspace.onLayoutReady`) — do not bake in an assumption
+- Phase 05 (DOC-01): The ESLint configuration must use temporary overrides so the lint gate passes against the v1.15 starting tree, but every override must be commented with the phase that will remove it. Silent rule disables would defeat the milestone.
+- Phase 07 (DIR-06): Popout-window compatibility cannot be fully verified without a manual test in an Obsidian popout window. UAT step is mandatory.
+- Phase 07 (BUG-07): Root cause may be in Obsidian core, not MemoChron. If so, close with a written explanation under `.planning/phases/07-*/` rather than forcing a workaround.
 
 ## Deferred Items
 
@@ -89,6 +90,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-12T13:59:07.563Z
-Stopped at: Phase 4 context gathered
+Last session: 2026-05-13T13:00:00.000Z
+Stopped at: v1.15 roadmap created (phases 05–08); ready to plan Phase 05
 Resume file: None

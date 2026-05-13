@@ -94,26 +94,26 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DIR-01 | TBD | Pending |
-| DIR-02 | TBD | Pending |
-| DIR-03 | TBD | Pending |
-| DIR-04 | TBD | Pending |
-| DIR-05 | TBD | Pending |
-| DIR-06 | TBD | Pending |
-| DIR-07 | TBD | Pending |
-| DIR-08 | TBD | Pending |
-| DIR-09 | TBD | Pending |
-| DIR-10 | TBD | Pending |
-| DIR-11 | TBD | Pending |
-| DIR-12 | TBD | Pending |
-| BUG-07 | TBD | Pending |
-| DOC-01 | TBD | Pending |
-| DOC-02 | TBD | Pending |
+| DIR-01 | Phase 8 | Pending |
+| DIR-02 | Phase 6 | Pending |
+| DIR-03 | Phase 6 | Pending |
+| DIR-04 | Phase 6 | Pending |
+| DIR-05 | Phase 7 | Pending |
+| DIR-06 | Phase 7 | Pending |
+| DIR-07 | Phase 7 | Pending |
+| DIR-08 | Phase 7 | Pending |
+| DIR-09 | Phase 8 | Pending |
+| DIR-10 | Phase 8 | Pending |
+| DIR-11 | Phase 5 | Pending |
+| DIR-12 | Phase 5 | Pending |
+| BUG-07 | Phase 7 | Pending |
+| DOC-01 | Phase 5 | Pending |
+| DOC-02 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 15 total
-- Mapped to phases: 0 (roadmapper will fill this in)
-- Unmapped: 15
+- Mapped to phases: 15
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-13*

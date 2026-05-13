@@ -1,104 +1,138 @@
-# Roadmap: MemoChron — Stabilization Milestone
+# Roadmap: MemoChron
+
+> **Phase numbering is monotonic across milestones.** Phases 01–04 belong to the prior v1.14.0 (Stabilization) milestone and are preserved below as historical entries. Phases 05+ are the active v1.15 (Directory Compliance) work. Do not renumber or reuse 01–04.
+
+## Milestones
+
+- [x] **v1.14.0 Stabilization** — Phases 01–04 (shipped 2026-05-12)
+- [ ] **v1.15 Directory Compliance** — Phases 05–08 (active)
 
 ## Overview
 
-This milestone takes MemoChron from its stable v1.13.1 base to a clean, submission-ready state. Four phases progress from invisible-but-critical internal hygiene (lifecycle correctness, mobile crash prevention) through security hardening, through date-parsing correctness, to user-visible UX enhancements that depend on that corrected date foundation. Each phase leaves the plugin in a releasable state.
+**v1.14.0 (shipped 2026-05-12)** took MemoChron from v1.13.1 through four phases of internal hygiene, security hardening, date-parsing correctness, and UX enhancements.
+
+**v1.15 (active)** is a compliance milestone. The Obsidian community-plugin Review scorecard for v1.13.1 currently reads **"Risks" (1/4)**, driven by a long list of guideline violations. v1.15 closes every finding in one pass *and* installs lint/CI guardrails so the same issues cannot regrow on future feature work. Four phases — Guardrails first (so the rules are enforced while the rest of the milestone runs), then the big mechanical DOM-API refactor, then lifecycle/compatibility fixes plus the open settings-modal bug, then type/code hygiene closed out with the conventions document — leave the plugin in a state where re-submitting to the directory should flip the badge to "Excellent."
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- Integer phases (1, 2, 3, …): Planned milestone work
+- Decimal phases (5.1, 5.2, …): Urgent insertions (marked with INSERTED)
+- Numbering is monotonic across milestones (never restarts).
 
-Decimal phases appear between their surrounding integers in numeric order.
+### v1.14.0 Stabilization (historical)
 
-- [x] **Phase 1: Foundation** - Lifecycle hygiene, settings propagation, and dead-code removal — no user-visible change; eliminates mobile crash risk
-- [ ] **Phase 2: Security & Correctness** - Color validation hardened at load time, consistent error handling, and three standalone bugs fixed
-- [ ] **Phase 3: Date Parsing & Navigation Bugs** - BUG-01 keystone date-fix plus related navigation, concurrency, and format-verification bugs
-- [x] **Phase 4: UX Enhancements** - Today indicator, note-exists markers, NL date format, named template variables, and cursor placement — all built on the stable Phase 3 base (completed 2026-05-12)
+- [x] **Phase 1: Foundation** — Lifecycle hygiene, settings propagation, dead-code removal (shipped v1.14.0)
+- [x] **Phase 2: Security & Correctness** — Color validation hardened, consistent error handling, three standalone bugs fixed (shipped v1.14.0)
+- [x] **Phase 3: Date Parsing & Navigation Bugs** — BUG-01 date-fix plus related navigation/concurrency/format-verification bugs (shipped v1.14.0)
+- [x] **Phase 4: UX Enhancements** — Today indicator, note-exists markers, NL date format, named template variables, cursor placement (shipped v1.14.0)
+
+### v1.15 Directory Compliance (active)
+
+- [ ] **Phase 5: Guardrails & Trivial Fixes** — Install ESLint + CI lint gate; land DIR-11 manifest punctuation and DIR-12 release attestation so the rest of the milestone runs against enforced rules
+- [ ] **Phase 6: DOM API Refactor** — Replace every `innerHTML`/`outerHTML` write, every `element.style.*` assignment, and every raw `document.createElement` call with Obsidian's `createEl` / `createDiv` / `setText` / `setCssProps` helpers, in one coordinated pass across the view layer
+- [ ] **Phase 7: Lifecycle & Compatibility** — Remove the view-in-`registerView` memory leak, add popout-window helpers, narrow `as TFile` casts via `instanceof`, fix floating promises and `MarkdownRenderChild` return-type mismatches, and resolve BUG-07 (settings modal closes on plugin toggle)
+- [ ] **Phase 8: Type Hygiene & Conventions** — Console logging gated/removed, `any`/`??`/`case`-block/escape-char violations cleaned, ~21 unused vars removed, and `CLAUDE.md` + `.planning/codebase/CONVENTIONS.md` updated so future plans land compliant by default
 
 ## Phase Details
 
+<details>
+<summary>✅ Phases 01–04 — v1.14.0 Stabilization (shipped 2026-05-12)</summary>
+
 ### Phase 1: Foundation
-**Goal**: Plugin does not leak resources on unload, does not crash on iOS from untracked timers or drag listeners, and reads live settings in both services — with dead code removed to reduce noise for all subsequent phases
+**Goal**: Plugin does not leak resources on unload, does not crash on iOS from untracked timers or drag listeners, and reads live settings in both services — with dead code removed
 **Depends on**: Nothing (first phase)
 **Requirements**: TD-01, TD-02, TD-03, TD-04, CLEAN-01
-**Success Criteria** (what must be TRUE):
-  1. Changing the refresh interval in settings takes effect for the next cache-expiry check without reloading Obsidian
-  2. Disabling the MemoChron plugin on iOS (via fast enable/disable cycle) does not produce an "undefined is not an object" crash
-  3. Dragging the calendar pane to resize it and then immediately closing the sidebar does not leave orphaned `mousemove`/`mouseup` listeners on `window`
-  4. The codebase contains no reference to `calculateEndDate`, `DEFAULT_TEMPLATE_PATH`, `TEMPLATE_VARIABLES`, the unused `App`/`TFile` imports, or the dead `renderAgendaList` import in embedded views
-**Plans**: 10 plans (5 original + 5 code-review gap closures)
-Plans:
-- [x] 01-01-PLAN.md — TD-01: drop CalendarService refreshMinutes; read live refresh interval
-- [x] 01-02-PLAN.md — TD-02: NoteService reads live plugin settings via getter; constructor takes (plugin) only
-- [x] 01-03-PLAN.md — TD-03: wrap setupAutoRefresh / scheduleBackgroundRefresh / onOpen timers in registerInterval; add detachLeavesOfType to onunload
-- [x] 01-04-PLAN.md — TD-04: CalendarView isDragging flag and View.onClose override that removes orphan window drag listeners
-- [x] 01-05-PLAN.md — CLEAN-01: remove calculateEndDate, DEFAULT_TEMPLATE_PATH, TEMPLATE_VARIABLES, and unused App/TFile/renderAgendaList imports
-- [x] 01-06-PLAN.md — CR-01 + IN-02: own setTimeout handles for plugin-level 100ms + view-level 50ms timers; clear with window.clearTimeout
-- [x] 01-07-PLAN.md — WR-01: drop redundant registerInterval wrap in setupAutoRefresh (no more accumulating stale interval IDs)
-- [x] 01-08-PLAN.md — WR-02: split code-block params on first colon (preserves titles/datetimes with embedded colons)
-- [x] 01-09-PLAN.md — WR-03: static import for obsidian-daily-notes-interface in EmbeddedCalendarView (matches sibling pattern)
-- [x] 01-10-PLAN.md — IN-01: type CalendarView drag-handler bindings as ((e: MouseEvent) =&gt; void) | undefined
+**Plans**: 10/10 complete
+**Status**: Complete (2026-05-10)
 
 ### Phase 2: Security & Correctness
-**Goal**: Plugin loads cleanly even with corrupted or malicious color values in saved settings, every catch block emits a meaningful message, and the three small standalone bugs that do not depend on BUG-01 are resolved
+**Goal**: Plugin loads cleanly even with corrupted or malicious color values in saved settings, every catch block emits a meaningful message, and three small standalone bugs are resolved
 **Depends on**: Phase 1
 **Requirements**: SEC-01, SEC-02, BUG-05, BUG-06
-**Success Criteria** (what must be TRUE):
-  1. Loading a vault whose `data.json` contains a crafted color string (e.g. `"><script>alert(1)</script>`) does not inject markup — the value is replaced with the default color at `loadSettings` time
-  2. SVG color swatches in the settings tab are constructed via `createElementNS` — no template-literal injection path exists at render time
-  3. Every visible error in the plugin (failed fetch, failed note creation, failed cache read) shows a specific message rather than `[object Object]` or `undefined`
-  4. The `getStartOfWeek` function returns the correct week-start date for every `firstDayOfWeek` value (0–6), including Saturday-start (firstDayOfWeek = 6)
-  5. A second background-refresh triggered while a fetch is in flight does not produce a double-render or duplicate event list
-**Plans**: 5 (5 complete — 02-01 through 02-05)
-**UI hint**: yes
+**Plans**: 5/5 complete
 **Status**: Complete (2026-05-11)
 
 ### Phase 3: Date Parsing & Navigation Bugs
-**Goal**: Daily-note filenames in non-UTC timezones map to the correct local calendar day, month/week navigation feels immediate, the drag-resize view-mode sync is correct, and the BUG-04 date-parsing edge case is confirmed closed — clearing the prerequisite for all Phase 4 enhancements
+**Goal**: Daily-note filenames in non-UTC timezones map to the correct local calendar day; month/week navigation is instantaneous; drag-resize view-mode sync correct; BUG-04 closed
 **Depends on**: Phase 2
 **Requirements**: BUG-01, BUG-02, BUG-03, BUG-04
-**Success Criteria** (what must be TRUE):
-  1. A daily note named `2026-01-15.md` in a vault used in Montreal (UTC-5) shows events for January 15 — not January 14
-  2. Clicking the next-month or next-week arrow feels instantaneous; there is no perceptible delay between the click and the calendar re-rendering
-  3. After dragging the calendar pane from month-height to week-height, the view-mode dropdown reads "Week" and the Today button scrolls to the current week — not the current month
-  4. The input `29-01-2026` parses to 29 January 2026 (not 20 January 2029) under the post-#58 format handling — confirmed and documented
-**Plans**: 3 plans
-Plans:
-- [x] 03-01-PLAN.md — BUG-01: parseDateFromFilename — convert six format branches to local-day numeric Date constructor
-- [x] 03-02-PLAN.md — BUG-02 + BUG-03: decouple navigate() and goToToday() from fetch; add maybeBackgroundRefresh helper
-- [x] 03-03-PLAN.md — BUG-04: closure comment + remove unreachable duplicate regex; create 03-HUMAN-UAT.md
-**UI hint**: yes
+**Plans**: 3/3 complete
+**Status**: Complete (2026-05-12)
 
 ### Phase 4: UX Enhancements
-**Goal**: Users see today clearly distinguished from the selected day, can tell which events already have notes without opening them, can use NL date format for note titles, can use named day/month variables in templates, and can place the editor cursor precisely after note creation
+**Goal**: Today clearly distinct from selected day; agenda/grid note-exists indicators; NL date format; named template variables; cursor placement
 **Depends on**: Phase 3
 **Requirements**: ENH-01, ENH-02, ENH-03, ENH-04, ENH-05, ENH-06
+**Plans**: 5/5 complete
+**Status**: Complete (2026-05-12)
+
+</details>
+
+### Phase 5: Guardrails & Trivial Fixes
+**Goal**: ESLint configuration installed and running in CI before any code-touching phase begins, so the rules being enforced are the same rules the rest of the milestone is fixing. The two single-line directory findings (`manifest.json` description punctuation, GitHub release artifact attestation) land here because they are independent of everything else and the milestone benefits from removing the trivial findings up front.
+**Depends on**: Nothing (first phase of v1.15)
+**Requirements**: DOC-01, DIR-11, DIR-12
 **Success Criteria** (what must be TRUE):
-  1. Today's cell on the calendar grid shows a distinct ring or border even when a different day is selected — both highlights are visible simultaneously
-  2. Events in the agenda that already have an associated note show a file-check icon; events without a note show a file-plus icon
-  3. An optional "note-exists dot" on the calendar grid can be toggled on in settings; it is off by default and does not appear on grid cells for existing users until enabled
-  4. The settings date-format dropdown includes "DD-MM-YYYY (NL/EU)" and selecting it produces note titles like `15-01-2026` for a January 15 event
-  5. A note template containing `{{day}}` and `{{month}}` produces `Monday` and `January` (or the correct English weekday/month name) — not a number
-  6. A note template containing `{{cursor}}` places the editor cursor at that position after the note opens — the marker text itself does not appear in the saved note
-**Plans**: 5 plans
-Plans:
-- [x] 04-01-PLAN.md — ENH-01: persistent today indicator on calendar grid (CSS-only inset accent ring on .memochron-day.today)
-- [x] 04-02-PLAN.md — ENH-04: relabel UK dropdown to "UK/EU (DD-MM-YYYY)" in both date-format dropdowns
-- [x] 04-03-PLAN.md — ENH-05: add {{day}} and {{month}} template variables (toLocaleDateString "en-US")
-- [x] 04-04-PLAN.md — ENH-02 + ENH-03: note-exists icon in agenda (always-on) + toggleable grid corner-square (default off)
-- [x] 04-05-PLAN.md — ENH-06: {{cursor}} template marker with strip-before-write and requestAnimationFrame → setCursor
+  1. `npm run lint` exists as a script in `package.json` and exits non-zero when any rule in DOC-01's required list is violated (`no-console`, no `innerHTML`/`outerHTML` writes, no inline `element.style.*`, no `as TFile`, `@typescript-eslint/no-floating-promises`, `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, and the Obsidian-specific rules covered by the scorecard)
+  2. A GitHub Actions workflow under `.github/workflows/` runs `npm run lint` on every push and pull request, and a failing lint fails the build
+  3. ESLint runs cleanly against the v1.15 starting tree by use of per-file or per-rule overrides whose comments explicitly name the phase that will remove them (Phase 6 for the DOM-API rules, Phase 7 for the lifecycle/promise/cast rules, Phase 8 for the type-hygiene and console rules) — no rule is silently disabled
+  4. The `description` field in `manifest.json` ends with `.`, `!`, or `?`
+  5. The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset (verified by inspecting the workflow YAML and the next pre-release output)
+**Plans**: TBD
+
+### Phase 6: DOM API Refactor
+**Goal**: Eliminate every directory finding tied to raw DOM construction in one coordinated pass. DIR-02, DIR-03, and DIR-04 are bundled because they touch the same files (`CalendarView.ts`, `EmbeddedCalendarView.ts`, `EmbeddedAgendaView.ts`, `SettingsTab.ts`, `viewRenderers.ts`) and splitting them would double-touch the same lines and produce avoidable merge churn. At phase end, the view layer constructs DOM exclusively through Obsidian's typed helpers, dynamic styling is driven by CSS classes or `setCssProps`, and the ESLint overrides for these rules from Phase 5 are removed.
+**Depends on**: Phase 5
+**Requirements**: DIR-02, DIR-03, DIR-04
+**Success Criteria** (what must be TRUE):
+  1. `git ls-files src/ | xargs grep -nE '\.(inner|outer)HTML\s*='` returns zero matches in shipped code
+  2. `git ls-files src/ | xargs grep -nE '\.style\.(border|color|cursor|display|fontSize|height|left|margin|marginTop|opacity|padding|position|textAlign|top|width)\s*='` returns zero matches in shipped code (dynamic values use `setCssProps`; static values use CSS classes in `styles.css`)
+  3. `git ls-files src/ | xargs grep -n 'document\.createElement'` returns zero matches across views, embedded views, settings tab, and `viewRenderers`; all DOM construction goes through `createEl` / `createDiv` / `createSpan`
+  4. The Phase 5 ESLint overrides covering `no-inner-html`, the inline-style rule, and `document.createElement` are removed from `.eslintrc` and `npm run lint` still passes
+  5. Manual UAT: opening the sidebar calendar, switching month/week view, opening an embedded calendar code block, and opening the settings tab all render visually identically to the v1.14.0 baseline (no layout, color, or interactivity regressions)
+**Plans**: TBD
 **UI hint**: yes
+
+### Phase 7: Lifecycle & Compatibility
+**Goal**: Close every directory finding rooted in Obsidian's view-lifecycle and runtime-context contracts. The fixes share teardown / context-discovery reasoning, so they travel together. BUG-07 (toggling MemoChron in Community Plugins closes the Settings modal) joins this phase because root-cause analysis points at the same view-lifecycle area — the bug either falls out of DIR-05's fix or is closed with a documented Obsidian-side explanation.
+**Depends on**: Phase 6
+**Requirements**: DIR-05, DIR-06, DIR-07, DIR-08, BUG-07
+**Success Criteria** (what must be TRUE):
+  1. The `registerView` callback in `src/main.ts` constructs and returns the `CalendarView` instance directly; `plugin.calendarView = view` no longer occurs inside the callback; consumers fetch the view lazily from the workspace
+  2. `git ls-files src/ | xargs grep -nE '(^|[^.a-zA-Z])document\.|window\.set(Timeout|Interval)\b'` audited: every match in a view context uses `activeDocument` / `activeWindow.setTimeout` / `activeWindow.setInterval` (or the workspace-aware equivalent); non-view contexts are documented
+  3. `git ls-files src/ | xargs grep -n 'as TFile'` returns zero matches; every consumer of `TAbstractFile` narrows via `instanceof TFile` first
+  4. `npm run lint` reports zero `@typescript-eslint/no-floating-promises` violations and zero "Promise-returning override on `MarkdownRenderChild` lifecycle method" findings; the Phase 5 ESLint overrides for these rules are removed
+  5. Manual UAT: disabling MemoChron in Obsidian's Community Plugins list does NOT close the Settings modal (or, if root cause is Obsidian-side, a written closure note is committed under `.planning/phases/07-*/` with reproduction steps and Obsidian-version evidence)
+  6. Manual UAT: opening the plugin in an Obsidian popout window (right-click pane → "Move to new window") renders the calendar grid correctly, navigation works, and timers continue to fire — verifying DIR-06's `activeDocument` / `activeWindow` adoption
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 8: Type Hygiene & Conventions
+**Goal**: Close the final cluster of directory findings — console logging, TypeScript hygiene (`any`, nullish-on-LHS-of-`??`, lexical decls in `case`, unnecessary regex escapes), and the 21 named unused vars/imports — and land the conventions document as the closing commit so every rule learned across the milestone is captured for future work. Ending the milestone with DOC-02 (rather than starting with it) guarantees the do/don't list reflects what the code actually does after v1.15 lands, not what was hoped for at planning time.
+**Depends on**: Phase 7
+**Requirements**: DIR-01, DIR-09, DIR-10, DOC-02
+**Success Criteria** (what must be TRUE):
+  1. The four sites flagged by the scorecard (`CalendarService.ts:249, 282, 324` and `SettingsTab.ts:1720`) no longer contain `console.*` calls in shipped code; the full source tree is audited and any other `console.*` calls are either removed or gated behind a developer-only debug flag that defaults to `false`
+  2. `npm run lint` reports zero `@typescript-eslint/no-explicit-any` violations across `src/` (ambient `.d.ts` shims and any test fixtures excluded by config), zero `no-case-declarations` violations, zero `no-useless-escape` violations, and zero `??` operators with a constant LHS
+  3. `npm run lint` reports zero `@typescript-eslint/no-unused-vars` violations; specifically, the 21 names called out by the scorecard (`App`, `CalendarEvent`, `CalendarNotesSettings`, `controls`, `convertTimezone`, `date`, `DateElements`, `DEFAULT_CALENDAR_URLS`, `DropdownComponent`, `e`, `error`, `isNewNote`, `MemoChronSettings`, `Notice`, `plugin`, `Property`, `renderAgendaList`, `target`, `TextAreaComponent`, `TFile`, `title`) are either deleted from source or genuinely consumed
+  4. The Phase 5 ESLint overrides for `no-console`, `no-explicit-any`, `no-unused-vars`, `no-case-declarations`, and `no-useless-escape` are removed; `npm run lint` passes against a clean configuration with no per-rule or per-file disables tied to scorecard findings
+  5. `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` carry a "Directory Compliance" do/don't section with one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page
+  6. Milestone-level: a fresh run of the Obsidian community-plugin Review scorecard against the v1.15 main-branch snapshot shows zero remaining "Avoid …" findings from the v1.13.1 report
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 → 6 → 7 → 8 (v1.15, active)
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 10/10 | Complete | 2026-05-10 |
-| 2. Security & Correctness | 5/5 | Complete | 2026-05-11 |
-| 3. Date Parsing & Navigation Bugs | 0/3 | Planned | - |
-| 4. UX Enhancements | 5/5 | Complete   | 2026-05-12 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation | v1.14.0 | 10/10 | Complete | 2026-05-10 |
+| 2. Security & Correctness | v1.14.0 | 5/5 | Complete | 2026-05-11 |
+| 3. Date Parsing & Navigation Bugs | v1.14.0 | 3/3 | Complete | 2026-05-12 |
+| 4. UX Enhancements | v1.14.0 | 5/5 | Complete | 2026-05-12 |
+| 5. Guardrails & Trivial Fixes | v1.15 | 0/TBD | Not started | - |
+| 6. DOM API Refactor | v1.15 | 0/TBD | Not started | - |
+| 7. Lifecycle & Compatibility | v1.15 | 0/TBD | Not started | - |
+| 8. Type Hygiene & Conventions | v1.15 | 0/TBD | Not started | - |
