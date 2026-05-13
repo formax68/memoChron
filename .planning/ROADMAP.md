@@ -91,7 +91,13 @@
   3. `git ls-files src/ | xargs grep -n 'document\.createElement'` returns zero matches across views, embedded views, settings tab, and `viewRenderers`; all DOM construction goes through `createEl` / `createDiv` / `createSpan`
   4. The Phase 5 ESLint overrides covering `no-inner-html`, the inline-style rule, and `document.createElement` are removed from `.eslintrc` and `npm run lint` still passes
   5. Manual UAT: opening the sidebar calendar, switching month/week view, opening an embedded calendar code block, and opening the settings tab all render visually identically to the v1.14.0 baseline (no layout, color, or interactivity regressions)
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 06-01-PLAN.md — DIR-02: replace setup-guide innerHTML with createEl + appendText (5 sites in SettingsTab.ts)
+- [ ] 06-02-PLAN.md — DIR-04: replace document.createElement with createEl for color input (2 sites in SettingsTab.ts)
+- [ ] 06-03-PLAN.md — DIR-03: replace inline styles with CSS classes and setCssProps across 5 source files + styles.css
+- [ ] 06-04-PLAN.md — Remove Phase 6 ESLint overrides + resolve obsidianmd/ui/sentence-case (DIR-02/03/04 acceptance)
+- [ ] 06-05-PLAN.md — Record Phase 6 human UAT (visual parity with v1.14.0)
 **UI hint**: yes
 
 ### Phase 7: Lifecycle & Compatibility
@@ -119,7 +125,6 @@
   4. The Phase 5 ESLint overrides for `no-console`, `no-explicit-any`, `no-unused-vars`, `no-case-declarations`, and `no-useless-escape` are removed; `npm run lint` passes against a clean configuration with no per-rule or per-file disables tied to scorecard findings
   5. `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` carry a "Directory Compliance" do/don't section with one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page
   6. Milestone-level: a fresh run of the Obsidian community-plugin Review scorecard against the v1.15 main-branch snapshot shows zero remaining "Avoid …" findings from the v1.13.1 report
-**Plans**: TBD
 
 ## Progress
 
@@ -133,6 +138,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 3. Date Parsing & Navigation Bugs | v1.14.0 | 3/3 | Complete | 2026-05-12 |
 | 4. UX Enhancements | v1.14.0 | 5/5 | Complete | 2026-05-12 |
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
-| 6. DOM API Refactor | v1.15 | 0/TBD | Not started | - |
+| 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 0/TBD | Not started | - |
 | 8. Type Hygiene & Conventions | v1.15 | 0/TBD | Not started | - |
