@@ -1879,7 +1879,9 @@ class CalendarUrlHelpModal extends Modal {
     gcalSteps.createEl("li", { text: "Click the gear icon (⚙️) → Settings" });
     gcalSteps.createEl("li", { text: "In the left sidebar, click on the calendar you want to add" });
     gcalSteps.createEl("li", { text: "Scroll down to \"Integrate calendar\"" });
-    gcalSteps.createEl("li").innerHTML = "Copy the <strong>Secret address in iCal format</strong>";
+    const gcalStep5 = gcalSteps.createEl("li");
+    gcalStep5.appendText("Copy the ");
+    gcalStep5.createEl("strong", { text: "Secret address in iCal format" });
 
     const gcalNote = gcalSection.createDiv({ cls: "memochron-help-note" });
     gcalNote.createEl("strong", { text: "Correct URL looks like: " });
@@ -1896,7 +1898,10 @@ class CalendarUrlHelpModal extends Modal {
     outlookSteps.createEl("li", { text: "Click the gear icon → View all Outlook settings" });
     outlookSteps.createEl("li", { text: "Go to Calendar → Shared calendars" });
     outlookSteps.createEl("li", { text: "Under \"Publish a calendar\", select your calendar and permissions" });
-    outlookSteps.createEl("li").innerHTML = "Copy the <strong>ICS link</strong> (not the HTML link)";
+    const outlookStep5 = outlookSteps.createEl("li");
+    outlookStep5.appendText("Copy the ");
+    outlookStep5.createEl("strong", { text: "ICS link" });
+    outlookStep5.appendText(" (not the HTML link)");
 
     outlookSection.createEl("hr");
 
@@ -1917,9 +1922,15 @@ class CalendarUrlHelpModal extends Modal {
     mistakesSection.createEl("h3", { text: "Common Mistakes" });
 
     const mistakesList = mistakesSection.createEl("ul");
-    mistakesList.createEl("li").innerHTML = "<strong>Using the public link</strong> - This opens a webpage, not calendar data";
-    mistakesList.createEl("li").innerHTML = "<strong>Using the embed link</strong> - This is for embedding in websites";
-    mistakesList.createEl("li").innerHTML = "<strong>Missing the .ics extension</strong> - The URL should end with .ics";
+    const mistakeItem1 = mistakesList.createEl("li");
+    mistakeItem1.createEl("strong", { text: "Using the public link" });
+    mistakeItem1.appendText(" - This opens a webpage, not calendar data");
+    const mistakeItem2 = mistakesList.createEl("li");
+    mistakeItem2.createEl("strong", { text: "Using the embed link" });
+    mistakeItem2.appendText(" - This is for embedding in websites");
+    const mistakeItem3 = mistakesList.createEl("li");
+    mistakeItem3.createEl("strong", { text: "Missing the .ics extension" });
+    mistakeItem3.appendText(" - The URL should end with .ics");
 
     // Documentation link
     const docLink = contentEl.createDiv({ cls: "memochron-help-doc-link" });
