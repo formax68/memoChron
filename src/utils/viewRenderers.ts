@@ -150,6 +150,7 @@ function renderDailyNoteEntry(
 
   dailyNoteEl.createEl("div", {
     cls: "memochron-event-title",
+    // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: "Daily Note" refers to Obsidian's Daily Notes feature
     text: "Daily Note",
   });
 

@@ -63,41 +63,6 @@ export default tseslint.config(
   },
 
   // ---------------------------------------------------------------------------
-  // Phase 6 — DIR-02 / DIR-03 / DIR-04 will remove these when the DOM-API
-  // refactor lands. Also silences ui/sentence-case (discovered in dry-run)
-  // across all UI-facing files until the text copy is normalised.
-  // ---------------------------------------------------------------------------
-  {
-    files: [
-      "src/settings/SettingsTab.ts",
-      "src/views/CalendarView.ts",
-    ],
-    rules: {
-      "@microsoft/sdl/no-inner-html": "off",
-      "no-unsanitized/property": "off",
-      "no-unsanitized/method": "off",
-      "obsidianmd/no-static-styles-assignment": "off",
-      "no-restricted-syntax": "off", // disables our document.createElement check
-    },
-  },
-  {
-    files: [
-      "src/services/CalendarService.ts",
-      "src/settings/SettingsTab.ts",
-      "src/utils/viewRenderers.ts",
-      "src/views/CalendarView.ts",
-      "src/views/EmbeddedAgendaView.ts",
-      "src/views/EmbeddedCalendarView.ts",
-    ],
-    rules: {
-      // Dry-run discovered: ui/sentence-case fires on all UI-facing strings
-      // with proper nouns and acronyms (MemoChron, iCal, Google, etc.).
-      // Phase 6 will normalise copy when the DOM-API refactor touches these files.
-      "obsidianmd/ui/sentence-case": "off",
-    },
-  },
-
-  // ---------------------------------------------------------------------------
   // Phase 7 — DIR-05 / DIR-06 / DIR-07 / DIR-08 will remove these when the
   // lifecycle / compatibility cleanup lands.
   // ---------------------------------------------------------------------------

@@ -266,6 +266,7 @@ export class CalendarService {
     if (this.events.length > 0 && !forceRefresh) {
       console.log("MemoChron: Background refresh started");
     } else if (forceRefresh) {
+      // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: MemoChron
       new Notice("MemoChron: Refreshing calendars...");
     }
   }
@@ -281,6 +282,7 @@ export class CalendarService {
   private showErrorNotification(forceRefresh: boolean) {
     if (forceRefresh) {
       new Notice(
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: MemoChron
         "MemoChron: Failed to refresh calendars. Check the console for details."
       );
     }
@@ -479,6 +481,7 @@ export class CalendarService {
           return response;
         }
         
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper nouns: MemoChron, Outlook, Obsidian
         new Notice("MemoChron: Outlook calendar access failed. The URL works in browser but not in Obsidian. This may be due to Obsidian's network restrictions.");
         // Return proper response structure
         return {
