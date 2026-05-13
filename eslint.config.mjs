@@ -140,7 +140,6 @@ export default tseslint.config(
       "no-console": "off", // Re-tightened in Phase 8 to "error"
 
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
@@ -148,6 +147,23 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-return": "off",
       "no-case-declarations": "off",
       "no-useless-escape": "off",
+    },
+  },
+  // Phase 8 — DIR-01 will remove these when type-hygiene lands. Narrow `files`
+  // list (not `src/**/*.ts`) so any NEW unused-var introduced outside this
+  // closed set fails the gate — preserves DOC-01 acceptance for new code.
+  {
+    files: [
+      "src/services/CalendarService.ts",
+      "src/services/IcsImportService.ts",
+      "src/settings/SettingsTab.ts",
+      "src/settings/types.ts",
+      "src/utils/viewRenderers.ts",
+      "src/views/CalendarView.ts",
+      "src/views/EmbeddedCalendarView.ts",
+    ],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 
