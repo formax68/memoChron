@@ -1204,6 +1204,23 @@
 
 .memochron-inline-color-custom-label {
   cursor: pointer;
+  position: relative;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+}
+
+.memochron-inline-color-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
 .memochron-inline-color-custom-label.selected svg circle {
@@ -1220,6 +1237,8 @@
   padding: var(--size-4-1) var(--size-4-2);
   cursor: pointer;
   transition: background-color 0.15s ease;
+  margin-top: 0.5em;
+  font-size: 0.85em;
 }
 
 .memochron-help-btn:hover {
@@ -1278,6 +1297,12 @@
 
 .memochron-help-doc-link {
   text-align: center;
+  margin-top: 1em;
+}
+
+.memochron-help-buttons {
+  margin-top: 1.5em;
+  text-align: right;
 }
 
 .memochron-help-doc-link a {
@@ -1290,7 +1315,12 @@
 
 /* Error message styling */
 .memochron-error-message {
-  color: var(--text-error);
+  color: var(--text-error, #c92424);
   font-size: 0.9em;
   margin-top: var(--size-4-2);
+}
+
+/* Utility classes */
+.memochron-hidden {
+  display: none;
 }
