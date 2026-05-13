@@ -19,7 +19,7 @@ Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian c
 - [ ] **DIR-08**: No floating promise occurs in shipped code; every `Promise`-returning call is either `await`ed, given an explicit `.catch` handler, or marked with the `void` operator. `EmbeddedCalendarView` and `EmbeddedAgendaView` lifecycle methods (`onload`, `onunload`) match the synchronous return type required by `MarkdownRenderChild`
 - [ ] **DIR-09**: No `any` type appears in shipped source code (test fixtures and `.d.ts` shims excepted); `??` operators do not appear with a constant left-hand side; no lexical declarations appear inside `case` blocks without a block scope; no unnecessary escape characters remain in regular expression literals
 - [ ] **DIR-10**: ESLint reports zero `@typescript-eslint/no-unused-vars` violations across the source tree (the 21 names flagged by the scorecard — `App`, `CalendarEvent`, `CalendarNotesSettings`, `controls`, `convertTimezone`, `date`, `DateElements`, `DEFAULT_CALENDAR_URLS`, `DropdownComponent`, `e`, `error`, `isNewNote`, `MemoChronSettings`, `Notice`, `plugin`, `Property`, `renderAgendaList`, `target`, `TextAreaComponent`, `TFile`, `title` — are all either deleted or genuinely used)
-- [ ] **DIR-11**: `manifest.json` `description` field ends with `.`, `!`, or `?`
+- [x] **DIR-11**: `manifest.json` `description` field ends with `.`, `!`, or `?`
 - [ ] **DIR-12**: The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset
 
 ### Bugs
@@ -104,7 +104,7 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 | DIR-08 | Phase 7 | Pending |
 | DIR-09 | Phase 8 | Pending |
 | DIR-10 | Phase 8 | Pending |
-| DIR-11 | Phase 5 | Pending |
+| DIR-11 | Phase 5 | Complete |
 | DIR-12 | Phase 5 | Pending |
 | BUG-07 | Phase 7 | Pending |
 | DOC-01 | Phase 5 | Pending |

@@ -4,14 +4,14 @@ milestone: v1.15
 milestone_name: Directory Compliance
 status: executing
 stopped_at: Phase 5 context gathered
-last_updated: "2026-05-13T10:50:28.306Z"
-last_activity: 2026-05-13 -- Phase 5 execution started
+last_updated: "2026-05-13T10:52:21.171Z"
+last_activity: 2026-05-13
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 29
-  completed_plans: 25
-  percent: 86
+  completed_plans: 26
+  percent: 90
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 ## Current Position
 
 Phase: 5 (Guardrails & Trivial Fixes) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 5
-Last activity: 2026-05-13 -- Phase 5 execution started
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-05-13
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Last activity: 2026-05-13 -- Phase 5 execution started
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 05 P01 | 5m | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,7 @@ Recent decisions affecting current work:
 - Roadmap (v1.15): BUG-07 joins Phase 07 (Lifecycle & Compatibility), not its own phase, because root-cause analysis points at the same view-lifecycle area as DIR-05. The bug either falls out of DIR-05's fix or closes with a documented Obsidian-side explanation.
 - Roadmap (v1.15): DOC-02 (CLAUDE.md + CONVENTIONS update) is the FINAL deliverable of the milestone, landing in Phase 08. Ending with the conventions document captures every rule actually used during the milestone, rather than aspirational rules written at planning time.
 - Roadmap (v1.15): Phases 01–04 are preserved as historical entries in the active ROADMAP.md (collapsed in `<details>`). Phase numbering is monotonic — v1.15 starts at Phase 05.
+- [Phase ?]: One-character diff closes the terminating punctuation scorecard finding.
 
 ### Pending Todos
 
@@ -91,6 +93,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-13T10:03:00.245Z
+Last session: 2026-05-13T10:52:21.167Z
 Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-guardrails-trivial-fixes/05-CONTEXT.md
+Resume file: None
