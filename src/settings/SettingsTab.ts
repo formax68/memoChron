@@ -257,9 +257,12 @@ export class SettingsTab extends PluginSettingTab {
 
     this.renderCalendarDetails(detailsEl, source, index);
 
-    // Header click toggles collapse
+    // Header click toggles collapse. Default must match the initial-render
+    // call above (`?? true`) so the first click on a never-touched item
+    // actually toggles — otherwise `!(undefined ?? false) === true`
+    // re-asserts the default-collapsed state and the first click is a no-op.
     this.plugin.registerDomEvent(headerEl, "click", () => {
-      const nowCollapsed = !(this.collapsedCalendars.get(index) ?? false);
+      const nowCollapsed = !(this.collapsedCalendars.get(index) ?? true);
       this.collapsedCalendars.set(index, nowCollapsed);
       chevron.classList.toggle("collapsed", nowCollapsed);
       detailsEl.classList.toggle("collapsed", nowCollapsed);
