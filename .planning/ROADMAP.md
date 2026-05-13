@@ -93,7 +93,7 @@
   5. Manual UAT: opening the sidebar calendar, switching month/week view, opening an embedded calendar code block, and opening the settings tab all render visually identically to the v1.14.0 baseline (no layout, color, or interactivity regressions)
 **Plans**: 5 plans
 Plans:
-- [ ] 06-01-PLAN.md — DIR-02: replace setup-guide innerHTML with createEl + appendText (5 sites in SettingsTab.ts)
+- [x] 06-01-PLAN.md — DIR-02: replace setup-guide innerHTML with createEl + appendText (5 sites in SettingsTab.ts)
 - [ ] 06-02-PLAN.md — DIR-04: replace document.createElement with createEl for color input (2 sites in SettingsTab.ts)
 - [ ] 06-03-PLAN.md — DIR-03: replace inline styles with CSS classes and setCssProps across 5 source files + styles.css
 - [ ] 06-04-PLAN.md — Remove Phase 6 ESLint overrides + resolve obsidianmd/ui/sentence-case (DIR-02/03/04 acceptance)
