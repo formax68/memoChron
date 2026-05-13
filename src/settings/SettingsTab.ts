@@ -649,10 +649,11 @@ export class SettingsTab extends PluginSettingTab {
     customLabel.style.display = "inline-block";
     customLabel.style.width = "24px";
     customLabel.style.height = "24px";
-    const colorInput = document.createElement("input");
-    colorInput.type = "color";
+    const colorInput = customLabel.createEl("input", {
+      type: "color",
+      cls: "memochron-inline-color-input",
+    });
     colorInput.value = this.colorToHex(currentColor);
-    colorInput.className = "memochron-inline-color-input";
     colorInput.style.position = "absolute";
     colorInput.style.top = "0";
     colorInput.style.left = "0";
@@ -663,7 +664,6 @@ export class SettingsTab extends PluginSettingTab {
     colorInput.style.border = "none";
     colorInput.style.padding = "0";
     colorInput.style.margin = "0";
-    customLabel.appendChild(colorInput);
     this.plugin.registerDomEvent(colorInput, "change", async (e) => {
       const hex = (e.target as HTMLInputElement).value;
       this.plugin.settings.calendarUrls[index].color = hex;
@@ -732,10 +732,11 @@ export class SettingsTab extends PluginSettingTab {
     customLabel.style.display = "inline-block";
     customLabel.style.width = "24px";
     customLabel.style.height = "24px";
-    const colorInput = document.createElement("input");
-    colorInput.type = "color";
+    const colorInput = customLabel.createEl("input", {
+      type: "color",
+      cls: "memochron-inline-color-input",
+    });
     colorInput.value = this.colorToHex(currentColor);
-    colorInput.className = "memochron-inline-color-input";
     colorInput.style.position = "absolute";
     colorInput.style.top = "0";
     colorInput.style.left = "0";
@@ -746,7 +747,6 @@ export class SettingsTab extends PluginSettingTab {
     colorInput.style.border = "none";
     colorInput.style.padding = "0";
     colorInput.style.margin = "0";
-    customLabel.appendChild(colorInput);
     this.plugin.registerDomEvent(colorInput, "change", async (e) => {
       const hex = (e.target as HTMLInputElement).value;
       this.plugin.settings.dailyNoteColor = hex;
