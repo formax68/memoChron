@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, MarkdownView, Notice, setIcon } from "obsidian";
+import { MarkdownRenderChild, MarkdownView, Notice, setIcon, TFile } from "obsidian";
 import MemoChron from "../main";
 import {
   parseDate,
@@ -378,7 +378,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
 
       if (dailyNote) {
         const leaf = this.plugin.app.workspace.getLeaf("tab");
-        await leaf.openFile(dailyNote);
+        await leaf.openFile(dailyNote as TFile);
       }
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));

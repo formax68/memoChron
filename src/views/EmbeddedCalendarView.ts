@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, Notice } from "obsidian";
+import { MarkdownRenderChild, Notice, TFile } from "obsidian";
 import MemoChron from "../main";
 import {
   renderCalendarGrid,
@@ -230,7 +230,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       // Open the daily note
       if (dailyNote) {
         const leaf = this.plugin.app.workspace.getLeaf("tab");
-        await leaf.openFile(dailyNote);
+        await leaf.openFile(dailyNote as TFile);
       }
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));

@@ -73,7 +73,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Toggle handler
     this.plugin.registerDomEvent(headerEl, "click", () => {
-      const nowCollapsed = !this.collapsedSections.get(name) ?? !defaultCollapsed;
+      const nowCollapsed = !(this.collapsedSections.get(name) ?? defaultCollapsed);
       this.collapsedSections.set(name, nowCollapsed);
 
       chevron.classList.toggle("collapsed", nowCollapsed);
@@ -259,7 +259,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Header click toggles collapse
     this.plugin.registerDomEvent(headerEl, "click", () => {
-      const nowCollapsed = !this.collapsedCalendars.get(index) ?? false;
+      const nowCollapsed = !(this.collapsedCalendars.get(index) ?? false);
       this.collapsedCalendars.set(index, nowCollapsed);
       chevron.classList.toggle("collapsed", nowCollapsed);
       detailsEl.classList.toggle("collapsed", nowCollapsed);

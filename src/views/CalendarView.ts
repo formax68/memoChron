@@ -822,7 +822,7 @@ export class CalendarView extends ItemView {
       // Open the daily note
       if (dailyNote) {
         const leaf = this.app.workspace.getLeaf("tab");
-        await leaf.openFile(dailyNote);
+        await leaf.openFile(dailyNote as TFile);
       }
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));
