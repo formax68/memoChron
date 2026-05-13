@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write          # required by attest-build-provenance to mint OIDC token
+      attestations: write      # required by attest-build-provenance to persist attestation
+      artifact-metadata: write # required by v3+ for artifact metadata storage records
     steps:
       - uses: actions/checkout@v3
 
@@ -22,6 +25,14 @@ jobs:
         run: |
           npm install
           npm run build
+
+      - name: Attest release artifacts
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
 
       - name: Create release
         env:
