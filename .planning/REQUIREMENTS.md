@@ -20,7 +20,7 @@ Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian c
 - [ ] **DIR-09**: No `any` type appears in shipped source code (test fixtures and `.d.ts` shims excepted); `??` operators do not appear with a constant left-hand side; no lexical declarations appear inside `case` blocks without a block scope; no unnecessary escape characters remain in regular expression literals
 - [ ] **DIR-10**: ESLint reports zero `@typescript-eslint/no-unused-vars` violations across the source tree (the 21 names flagged by the scorecard — `App`, `CalendarEvent`, `CalendarNotesSettings`, `controls`, `convertTimezone`, `date`, `DateElements`, `DEFAULT_CALENDAR_URLS`, `DropdownComponent`, `e`, `error`, `isNewNote`, `MemoChronSettings`, `Notice`, `plugin`, `Property`, `renderAgendaList`, `target`, `TextAreaComponent`, `TFile`, `title` — are all either deleted or genuinely used)
 - [x] **DIR-11**: `manifest.json` `description` field ends with `.`, `!`, or `?`
-- [ ] **DIR-12**: The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset
+- [x] **DIR-12**: The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset
 
 ### Bugs
 
@@ -105,7 +105,7 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 | DIR-09 | Phase 8 | Pending |
 | DIR-10 | Phase 8 | Pending |
 | DIR-11 | Phase 5 | Complete |
-| DIR-12 | Phase 5 | Pending |
+| DIR-12 | Phase 5 | Complete |
 | BUG-07 | Phase 7 | Pending |
 | DOC-01 | Phase 5 | Pending |
 | DOC-02 | Phase 8 | Pending |

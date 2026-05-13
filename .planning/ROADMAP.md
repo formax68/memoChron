@@ -132,7 +132,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 2. Security & Correctness | v1.14.0 | 5/5 | Complete | 2026-05-11 |
 | 3. Date Parsing & Navigation Bugs | v1.14.0 | 3/3 | Complete | 2026-05-12 |
 | 4. UX Enhancements | v1.14.0 | 5/5 | Complete | 2026-05-12 |
-| 5. Guardrails & Trivial Fixes | v1.15 | 1/4 | In Progress|  |
+| 5. Guardrails & Trivial Fixes | v1.15 | 2/4 | In Progress|  |
 | 6. DOM API Refactor | v1.15 | 0/TBD | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 0/TBD | Not started | - |
 | 8. Type Hygiene & Conventions | v1.15 | 0/TBD | Not started | - |
