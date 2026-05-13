@@ -16,8 +16,10 @@ It showcases a list of your calendar events. When you click on an event, it crea
 - 🎯 **Drag & Drop Import**: Drag single-event ICS files onto the agenda to create notes instantly
 - 📂 **Smart Folder Organization**: Automatically organize notes into date-based subfolders with customizable templates
 - 👀 **Visual Calendar**: View your schedule in a clean, native-looking calendar interface in Obsidian's sidebar
+- 🔵 **Always-Visible Today Indicator**: Today is always marked on the grid, distinct from the selected day
 - 📋 **Daily Agenda View**: See a detailed list of events for any selected day
-- ✨ **Automatic Note Creation**: Create notes for events with customizable templates
+- 🔗 **Note-Exists Indicators**: Events that already have a linked note are visually marked in the agenda, with an optional dot on the calendar grid
+- ✨ **Automatic Note Creation**: Create notes for events with customizable templates and a `{{cursor}}` marker for placing the caret on note open
 - 🔄 **Auto-Refresh**: Keep your calendar data up to date with configurable refresh intervals
 - 🎨 **Customizable**: Configure note templates, locations, and naming conventions
 - 🌈 **Calendar Colors**: Visually distinguish between different calendar sources with an advanced color picker
@@ -189,8 +191,11 @@ In the plugin settings, you can customize:
   - {{end_date-iso}} - The event end date in YYYY-MM-DD format
   - {{start_time}}
   - {{end_time}}
+  - {{day}} - Full English weekday name of the event start date (e.g. `Monday`)
+  - {{month}} - Full English month name of the event start date (e.g. `January`)
+  - {{cursor}} - Marker for where the editor caret should be placed after the note is created and opened. The marker itself is stripped from the final note. Only the first occurrence is used.
 
-  **Date format:** The "Note date format" setting (ISO, US, UK, Long) controls how {{date}}, {{start_date}}, and {{end_date}} appear. US and UK formats use **hyphens** (e.g. DD-MM-YYYY, MM-DD-YYYY), not slashes, so dates are safe for note filenames and for YAML properties (e.g. custom properties like "Data Evento"). This avoids parsing issues when Obsidian or other tools read the date.
+  **Date format:** The "Note date format" setting (ISO, US, UK/EU, Long) controls how {{date}}, {{start_date}}, and {{end_date}} appear. US uses `MM-DD-YYYY` and UK/EU uses `DD-MM-YYYY` (the NL/Dutch convention) — all with **hyphens**, never slashes, so dates are safe for note filenames and for YAML properties (e.g. custom properties like "Data Evento"). This also keeps frontmatter date values consistent with the title.
   - {{description}}
   - {{location}}
   - {{source}}
@@ -554,6 +559,36 @@ MemoChron supports flexible folder organization using customizable templates. Yo
 - No bi-directional sync (changes in notes don't update calendar events)
 - Basic calendar views (monthly with agenda)
 - Local ICS files are not automatically watched for changes (use manual refresh)
+
+## What's New in v1.14.0
+
+### ✨ UX Enhancements
+
+- **Always-Visible Today Indicator**: Today is now distinctly marked on the calendar grid even when a different day is selected, so the current date is never ambiguous.
+- **Note-Exists Indicators**: Events that already have a linked note display a distinct icon in the agenda. An optional, toggleable dot also marks days that contain at least one event with a note on the calendar grid (off by default).
+- **`{{day}}` and `{{month}}` Template Variables**: Use the fully written weekday and month names (e.g. `Monday`, `January`) in note titles, content, and folder templates.
+- **`{{cursor}}` Marker**: Drop `{{cursor}}` anywhere in your note template to control exactly where the caret lands when a new event note is created and opened — start typing without clicking.
+- **UK/EU Date Format**: The UK date format is now labelled "UK/EU (DD-MM-YYYY)" and consistently uses hyphens in both the title and frontmatter, matching the NL/Dutch convention.
+
+### 🐛 Bug Fixes
+
+- **Daily-Note Timezone (#59)**: Daily-note filenames like `2026-04-08` now resolve to the correct **local** calendar day in non-UTC timezones (e.g. Montreal/Americas). Previously they could land on the previous day.
+- **Snappy Navigation (#54)**: Month and week navigation arrows now repaint instantly with no perceptible lag, even when clicked rapidly.
+- **Drag-Resize View Sync (#54)**: Drag-resizing the calendar pane between month and week sizes now keeps the view-mode dropdown in sync, and the "Today" button correctly recenters across all view modes.
+- **Frontmatter Date Corruption (#56)**: Fixed a bug where note frontmatter could record a corrupted date (e.g. `29-01-2026` → `20/01/2029`) when using the UK date format.
+- **Saturday-Start Weeks**: Fixed an edge case in the start-of-week calculation when the first day of the week is set to Saturday.
+- **Background Fetch Races**: Concurrent calendar fetches are now deduplicated — no double-renders or duplicate events when manual refresh and the auto-refresh timer overlap.
+
+### 🔒 Security & Robustness
+
+- **XSS-Safe Color Settings**: Saved color values are validated on load and on render; malformed or malicious values fall back to a safe default and never reach the DOM as raw markup.
+- **Meaningful Error Messages**: Every catch block now produces a meaningful Notice — no more `undefined` or `[object Object]` when something fails in the calendar fetch path or ICS-import handler.
+
+### 🧰 Internal
+
+- **Lifecycle Cleanup**: Views, services, the auto-refresh timer, and drag listeners are now properly disposed when the plugin unloads — no more dangling timers or listeners after disable/reload.
+- **Live Settings Reads**: Services read live settings instead of cached references, so changes in the settings tab take effect immediately.
+- **Dead Code Removed**: Removed unused code paths surfaced during the milestone audit.
 
 ## What's New in v1.10.0
 
