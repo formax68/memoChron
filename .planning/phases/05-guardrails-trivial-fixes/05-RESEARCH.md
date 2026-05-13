@@ -800,22 +800,25 @@ Note: the sample plugin uses `"lint": "eslint ."` (which lints everything not in
 | A3 | `gh release download` from a draft pre-release works for the repo owner | §8.2 | If wrong, planner runs UAT on the published (post-draft) release instead — same `gh attestation verify` command |
 | A4 | The `--draft` release attestation reads correctly with `--repo formax68/memoChron` | §8.2 | If wrong, falling back to `--owner formax68` is the documented alternative |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **TypeScript 5.x type-check breakage on the v1.15 starting tree**
    - What we know: TS bumps 4.7 → 5.9 are usually clean for code that uses basic types, but `strictNullChecks: true` combined with TS 5.x's tightened narrowing can surface latent issues.
    - What's unclear: Whether `src/services/CalendarService.ts`'s `(dtstart as any).jCal` or `src/utils/timezoneUtils.ts`'s Luxon usage will newly error.
    - Recommendation: planner runs `npm install typescript@5.9.3 && npx tsc -noEmit -skipLibCheck` BEFORE installing ESLint, to isolate type errors from lint errors. Fix or silence per case.
+   - **RESOLVED:** Plan 03 Task 1 Step A isolates the TS bump and runs `tsc -noEmit -skipLibCheck` before the ESLint toolchain install. Any new TS errors are fixed in-task; if a fix is non-trivial, Task 1 SUMMARY documents the case for follow-up.
 
 2. **Should we bump `actions/checkout` and `actions/setup-node` in `release.yml` at the same time?**
    - What we know: CONTEXT.md `<decisions>` Claude's Discretion says "planner aligns with `release.yml`" but also says this is "adjacent improvement" and "not a Phase 5 acceptance criterion."
    - What's unclear: User preference — purist (only DIR-12 changes touch `release.yml`) vs pragmatic (one PR, all improvements).
    - Recommendation: defer to planner's call. Both are defensible; researcher leans purist (only DIR-12 changes to `release.yml`, no Node bump, no checkout/setup-node bump) to keep the DIR-12 commit's diff narrow.
+   - **RESOLVED:** Plan 02 takes the purist path — Plan 02 Task 1 action explicitly says "Do NOT bump `actions/checkout@v3` or `actions/setup-node@v3`" and the acceptance criterion `grep -c "actions/setup-node@v3"` locks the chosen path. Bundling the bumps stays deferred for a follow-up phase or out-of-band PR.
 
 3. **Will `obsidianmd/validate-manifest` flag MemoChron's `manifest.json`?**
    - What we know: The rule is in `recommended` at `error`. The plugin's manifest validation checks the standard Obsidian manifest schema.
    - What's unclear: Whether MemoChron's current `manifest.json` (e.g., the missing `fundingUrl` field, or `author: ""` in `package.json`) flags anything.
    - Recommendation: planner's dry-run captures this. If it flags, either fix (the spirit of v1.15) or add to a `// Phase 5 — manifest cleanup` override (researcher prefers fix).
+   - **RESOLVED:** Plan 03 Task 2 Step C (empirical dry-run against the v1.15 starting tree) surfaces any `validate-manifest` flags. The dry-run loop fixes each flag in-place where cheap, or extends a named-phase override block if the fix is genuinely out-of-scope for Phase 5; Plan 03 SUMMARY records the final disposition.
 
 ## Environment Availability
 
