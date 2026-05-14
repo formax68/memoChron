@@ -73,9 +73,9 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 
 **Directory scorecard findings (Obsidian Review):**
 - [ ] **DIR-01**: Console logging — flagged sites in `CalendarService.ts` (~3) and `SettingsTab.ts` (~1) removed or gated; full codebase audit completed
-- [ ] **DIR-02**: `innerHTML` / `outerHTML` writes replaced with `createEl` / `createDiv` / `setText` / DOM API at every site
-- [ ] **DIR-03**: `element.style.*` inline assignments (border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width) replaced with CSS classes or `setCssProps`
-- [ ] **DIR-04**: String-literal element-creation patterns replaced with the Obsidian `createEl({ cls, text })` / `createDiv({ cls })` helpers across views (calendar grid, agenda, settings, embedded views)
+- [x] **DIR-02**: `innerHTML` / `outerHTML` writes replaced with `createEl` / `createDiv` / `setText` / DOM API at every site — Validated in Phase 6 (DOM API Refactor)
+- [x] **DIR-03**: `element.style.*` inline assignments (border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width) replaced with CSS classes or `setCssProps` — Validated in Phase 6 (DOM API Refactor)
+- [x] **DIR-04**: String-literal element-creation patterns replaced with the Obsidian `createEl({ cls, text })` / `createDiv({ cls })` helpers across views (calendar grid, agenda, settings, embedded views) — Validated in Phase 6 (DOM API Refactor)
 - [ ] **DIR-05**: View memory-leak fixed — `plugin.calendarView = view` removed from inside `registerView`; the view is constructed and returned directly
 - [ ] **DIR-06**: Popout-window compatibility — `document` → `activeDocument`, `setTimeout()` → `activeWindow.setTimeout()` (or `this.app.workspace.activeWindow.setTimeout` per Obsidian API)
 - [ ] **DIR-07**: `instanceof TFile` narrowing replaces all `as TFile` casts
@@ -162,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-13 — v1.15 Directory Compliance milestone started; v1.14.0 (Stabilization) shipped 2026-05-12*
+*Last updated: 2026-05-14 — Phase 6 (DOM API Refactor) complete: DIR-02 / DIR-03 / DIR-04 closed; v1.14.0 (Stabilization) shipped 2026-05-12*
