@@ -97,7 +97,7 @@ Plans:
 - [x] 06-02-PLAN.md — DIR-04: replace document.createElement with createEl for color input (2 sites in SettingsTab.ts)
 - [x] 06-03-PLAN.md — DIR-03: replace inline styles with CSS classes and setCssProps across 5 source files + styles.css
 - [x] 06-04-PLAN.md — Remove Phase 6 ESLint overrides + resolve obsidianmd/ui/sentence-case (DIR-02/03/04 acceptance)
-- [ ] 06-05-PLAN.md — Record Phase 6 human UAT (visual parity with v1.14.0)
+- [x] 06-05-PLAN.md — Record Phase 6 human UAT (visual parity with v1.14.0)
 **UI hint**: yes
 
 ### Phase 7: Lifecycle & Compatibility
