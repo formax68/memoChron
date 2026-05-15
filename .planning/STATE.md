@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 Phase: 7
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-05-14
+Last activity: 2026-05-15 - Completed quick task 260515-l3j: revert manifest to 1.14.0 to fix obsidian install
 
 ## Performance Metrics
 
@@ -82,6 +82,12 @@ None yet (Phase 05 not yet planned).
 - Phase 05 (DOC-01): The ESLint configuration must use temporary overrides so the lint gate passes against the v1.15 starting tree, but every override must be commented with the phase that will remove it. Silent rule disables would defeat the milestone.
 - Phase 07 (DIR-06): Popout-window compatibility cannot be fully verified without a manual test in an Obsidian popout window. UAT step is mandatory.
 - Phase 07 (BUG-07): Root cause may be in Obsidian core, not MemoChron. If so, close with a written explanation under `.planning/phases/07-*/` rather than forcing a workaround.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260515-l3j | Revert manifest/package/versions to 1.14.0 (fix Obsidian install) | 2026-05-15 | 64410f6 | [260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia](./quick/260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia/) |
 
 ## Deferred Items
 
