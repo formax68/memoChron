@@ -139,7 +139,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 07-03-PLAN.md — DIR-07: narrow TAbstractFile via instanceof TFile (4 sites across 3 view files)
+- [x] 07-03-PLAN.md — DIR-07: narrow TAbstractFile via instanceof TFile (4 sites across 3 view files)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -186,5 +186,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 4. UX Enhancements | v1.14.0 | 5/5 | Complete | 2026-05-12 |
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
-| 7. Lifecycle & Compatibility | v1.15 | 2/7 | In Progress|  |
+| 7. Lifecycle & Compatibility | v1.15 | 3/7 | In Progress|  |
 | 8. Type Hygiene & Conventions | v1.15 | 0/TBD | Not started | - |
