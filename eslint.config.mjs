@@ -63,34 +63,6 @@ export default tseslint.config(
   },
 
   // ---------------------------------------------------------------------------
-  // Phase 7 — DIR-05 / DIR-06 / DIR-07 / DIR-08 will remove these when the
-  // lifecycle / compatibility cleanup lands.
-  // ---------------------------------------------------------------------------
-  {
-    files: [
-      "src/main.ts",
-      "src/views/CalendarView.ts",
-      "src/views/EmbeddedCalendarView.ts",
-      "src/views/EmbeddedAgendaView.ts",
-      "src/settings/SettingsTab.ts",
-      "src/services/CalendarService.ts",
-      "src/services/NoteService.ts",
-      "src/utils/colorValidation.ts",
-      "src/utils/viewRenderers.ts",
-    ],
-    rules: {
-      "obsidianmd/no-view-references-in-plugin": "off",
-      "obsidianmd/no-tfile-tfolder-cast": "off",
-      "obsidianmd/prefer-active-doc": "off",
-      "obsidianmd/prefer-window-timers": "off",
-      "obsidianmd/detach-leaves": "off",
-      "@typescript-eslint/no-floating-promises": "off",
-      "@typescript-eslint/no-misused-promises": "off",
-      "@typescript-eslint/no-unnecessary-type-assertion": "off",
-    },
-  },
-
-  // ---------------------------------------------------------------------------
   // Phase 8 — DIR-01 / DIR-09 / DIR-10 will remove these when type-hygiene
   // and console-discipline land.
   // ---------------------------------------------------------------------------
