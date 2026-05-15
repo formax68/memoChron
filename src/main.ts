@@ -17,7 +17,6 @@ export default class MemoChron extends Plugin {
   settings: MemoChronSettings;
   calendarService: CalendarService;
   noteService: NoteService;
-  calendarView: CalendarView;
   private refreshTimer: number | null = null;
   private backgroundRefreshTimer: number | null = null;
 
@@ -44,7 +43,7 @@ export default class MemoChron extends Plugin {
   private registerViews() {
     this.registerView(
       MEMOCHRON_VIEW_TYPE,
-      (leaf) => (this.calendarView = new CalendarView(leaf, this))
+      (leaf) => new CalendarView(leaf, this)
     );
   }
 
@@ -95,7 +94,8 @@ export default class MemoChron extends Plugin {
   }
 
   onunload() {
-    this.app.workspace.detachLeavesOfType(MEMOCHRON_VIEW_TYPE);
+    // Obsidian handles leaf cleanup automatically on disable/update; detaching here
+    // would reset the user's leaf placement (per obsidianmd/detach-leaves rule + Plugin Guidelines).
     this.clearRefreshTimer();
     this.clearBackgroundRefreshTimer();
   }
@@ -163,30 +163,36 @@ export default class MemoChron extends Plugin {
     return rightLeaf || this.app.workspace.getLeaf("split", "vertical");
   }
 
+  private getCalendarView(): CalendarView | null {
+    const leaves = this.app.workspace.getLeavesOfType(MEMOCHRON_VIEW_TYPE);
+    const view = leaves[0]?.view;
+    return view instanceof CalendarView ? view : null;
+  }
+
   async refreshCalendarView(forceRefresh = false) {
-    if (this.calendarView) {
-      await this.calendarView.refreshEvents(forceRefresh);
-    }
+    const view = this.getCalendarView();
+    if (!view) return;
+    await view.refreshEvents(forceRefresh);
   }
 
   updateCalendarColors() {
-    if (this.calendarView) {
-      this.calendarView.updateColors();
-    }
+    const view = this.getCalendarView();
+    if (!view) return;
+    view.updateColors();
   }
 
   private goToToday() {
-    if (this.calendarView) {
-      this.calendarView.goToToday();
-    }
+    const view = this.getCalendarView();
+    if (!view) return;
+    view.goToToday();
   }
 
   async toggleCalendar() {
     this.settings.hideCalendar = !this.settings.hideCalendar;
     await this.saveSettings();
-    if (this.calendarView) {
-      this.calendarView.toggleCalendarVisibility();
-    }
+    const view = this.getCalendarView();
+    if (!view) return;
+    view.toggleCalendarVisibility();
   }
 
   private setupAutoRefresh() {
