@@ -31,13 +31,13 @@ Out of scope (Phase 8 territory): `console.*` cleanup (DIR-01), `any` removal (D
 
 - **D-01:** **Add a `getCalendarView(): CalendarView | null` private method on the `MemoChron` plugin class** that does `this.app.workspace.getLeavesOfType(MEMOCHRON_VIEW_TYPE)[0]?.view` and returns it only if it passes an `instanceof CalendarView` check (otherwise `null`). The 5 callsites in `src/main.ts:167–188` (`refreshEvents`, `updateColors`, `goToToday`, `toggleCalendarVisibility`, plus the `forceRefresh` command path) call `this.getCalendarView()` and null-check the result. Rationale: 5 callsites → one lookup site; the `instanceof` guard doubles as the typed-narrowing the obsidianmd rule wants; no inline duplication.
 - **D-02:** **Delete the `calendarView: CalendarView` field on the plugin class entirely** (`src/main.ts:20`). The `registerView` callback (line 47) becomes `(leaf) => new CalendarView(leaf, this)` — pure factory, no side-effect assignment. The plugin no longer holds a reference; Obsidian's workspace is the single source of truth.
-- **D-03:** **`onunload` teardown stays through `app.workspace.detachLeavesOfType(MEMOCHRON_VIEW_TYPE)`** which is already present and is the obsidianmd-recommended teardown path. The `detach-leaves` lint finding goes away once the leak field is removed (the rule fires because of the held reference, not the detach call). Verify after the field deletion.
+- **D-03:** ~~~~`onunload` teardown stays through `app.workspace.detachLeavesOfType(MEMOCHRON_VIEW_TYPE)`...~~~~ — **SUPERSEDED by A1 (see `<amendments>`).** Research verified the `obsidianmd/detach-leaves` rule auto-fixes by *deleting* this call; Obsidian's Plugin Guidelines confirm detaching in `onunload` resets the user's leaf placement on every reload/update. Final state: **delete the `detachLeavesOfType` call from `onunload` entirely.** This is also the leading hypothesis for closing BUG-07 (see A1).
 
 ### DIR-06 active-doc / active-window strategy (Claude discretion — locked by user)
 
 - **D-04:** **Use the Obsidian globals `activeDocument` and `activeWindow` directly** — not `this.app.workspace.activeWindow`. The obsidianmd plugin's `prefer-active-doc` and `prefer-window-timers` rules auto-fix to the globals; the recommended Obsidian eslint config registers them as globals; using the workspace path adds a `this.app.workspace.` prefix without functional benefit and makes the line longer to read. This also fixes `colorValidation.ts:46` cleanly — the file has no plugin reference and doesn't need one.
 - **D-05:** **`setCss*Props`-adjacent reads:** every `getComputedStyle(document.documentElement)` becomes `getComputedStyle(activeDocument.documentElement)`. The 14 sites split as: SettingsTab.ts (×9 — lines 170, 612, 636, 670, 681, 705 plus the three more eslint finds), CalendarView.ts (lines 658, 767), EmbeddedAgendaView.ts (line 259), viewRenderers.ts (line 144), colorValidation.ts (line 46). All are accent-color or `--text-on-accent` reads that need to follow the popout window's actual theme — perfect fit for `activeDocument`.
-- **D-06:** **`window.setTimeout` / `window.setInterval` → `activeWindow.setTimeout` / `activeWindow.setInterval`** at all 4 sites including the two plugin-context timers in `main.ts:202, 227`. Even though those timers are kicked off at plugin load (not in a view), they fire over a long window during which the active leaf may move to a popout — the rule applies. The mobile-WebView iOS comment at `main.ts:219` about `setTimeout`/`setInterval` ID pools stays as written; the API surface change is `window.` → `activeWindow.` only, the cleanup path is unchanged.
+- **D-06:** ~~~~`window.setTimeout` / `window.setInterval` → `activeWindow.setTimeout` / `activeWindow.setInterval`...~~~~ — **SUPERSEDED by A2 (see `<amendments>`).** Research verified the `obsidianmd/prefer-window-timers` rule auto-fixes the *opposite* direction (`activeWindow.setTimeout` → `window.setTimeout`); the asymmetry vs `prefer-active-doc` is intentional (`activeDocument` for DOM ops, `window.*` for timers — see the iOS WKWebView timer-ID-pool comment already at `main.ts:215-222`). Final state: **leave `window.setInterval`/`window.setTimeout` as-is for timers; rule expects `window.*`, not `activeWindow.*`.** `main.ts:202` and `main.ts:227` need no change. The 2 `SettingsTab` timer sites and the `CalendarView.ts:79` site must already use (or be migrated to) `window.*` form. Additionally, research surfaced 2 `requestAnimationFrame` sites (`CalendarView.ts:967`, `EmbeddedAgendaView.ts:425`) covered by the same rule — these must also be prefixed `window.`.
 - **D-07:** **No `app.workspace.activeWindow` indirection.** Phase 7 commits to the globals (`activeWindow`, `activeDocument`) per D-04. If a future Obsidian API change deprecates the globals, that's a separate refactor.
 
 ### DIR-07 TFile narrowing
@@ -91,6 +91,33 @@ Out of scope (Phase 8 territory): `console.*` cleanup (DIR-01), `any` removal (D
 - **Exact `BUG-07-CLOSURE.md` shape if needed** — planner formats based on D-12 contents: reproduction steps, Obsidian version (`Obsidian → About`), OS, evidence that the same behavior happens on a stock Obsidian instance (no MemoChron-side workaround works), and a one-line statement that DIR-05 has been verified independently.
 
 </decisions>
+
+<amendments>
+## Post-Research Amendments (locked by user, 2026-05-15)
+
+The researcher (07-RESEARCH.md, `## Conflicts with CONTEXT.md`) verified two `eslint-plugin-obsidianmd` rule sources by reading them line-by-line and running `npm run lint` with Phase 7 overrides disabled. Two CONTEXT.md decisions contradicted the rules Phase 7 must satisfy. The user resolved both during plan-phase, before plans were written. Amendments below supersede the cited decisions.
+
+- **A1 (supersedes D-03 — `detach-leaves` rule):** **Delete `app.workspace.detachLeavesOfType(MEMOCHRON_VIEW_TYPE)` from `onunload` entirely.** Source: `node_modules/eslint-plugin-obsidianmd/dist/lib/rules/detachLeaves.js` auto-fix removes the call; Obsidian's Plugin Guidelines forbid it because it resets the user's leaf placement on every plugin reload/update.
+  - **Cascade:** the `obsidianmd/detach-leaves` finding closes by deletion, not by removing the field. (CONTEXT.md previously assumed the finding closed as a cascade of D-02; A1 makes the closure explicit.)
+  - **BUG-07 implication:** the forum thread the researcher cited (Obsidian 1.12.2 "Settings modal closes when disabling a plugin's actively focused view") reproduces with **core** plugins too, suggesting an Obsidian-side bug. Removing `detachLeavesOfType` from `onunload` is the only plugin-side mitigation available — if BUG-07 closes after A1, fold the closure into commit 1 per D-11; if it still reproduces, commit 5 lands with `BUG-07-CLOSURE.md` per D-12.
+  - **Commit placement:** A1 lands in D-11 commit 1 (`refactor(main): fix view-in-registerView memory leak (DIR-05)`) alongside D-02's field deletion. Single commit captures both rule fixes for the `main.ts` lifecycle area.
+
+- **A2 (supersedes D-06 — `prefer-window-timers` rule):** **Use `window.setTimeout` / `window.setInterval` / `window.requestAnimationFrame` for timers, not `activeWindow.*`.** Source: `eslint-plugin-obsidianmd/dist/lib/rules/preferWindowTimers.js` emits `noActiveWindowTimer` for `activeWindow.setTimeout` and auto-fixes back to `window.setTimeout`. The `prefer-active-doc` rule has explicit code to skip timer methods. The asymmetry is intentional and documented inline in MemoChron at `src/main.ts:215-222` (iOS WKWebView timer-ID pool comment).
+  - **Site-by-site reconciliation** (from researcher's live ESLint inventory):
+    - `src/main.ts:202` (`setInterval`) — already `window.setInterval` ✓ — **no change.**
+    - `src/main.ts:227` (`setTimeout`) — already `window.setTimeout` ✓ — **no change.**
+    - `src/views/CalendarView.ts:79` (startup `setTimeout`) — confirm `window.` prefix; add if missing.
+    - `src/settings/SettingsTab.ts:1381, 1783` (2 `setTimeout` sites) — confirm `window.` prefix; add if missing.
+    - `src/views/CalendarView.ts:967` (`requestAnimationFrame`) — **add `window.` prefix** (newly surfaced by research; CONTEXT.md inventory missed it).
+    - `src/views/EmbeddedAgendaView.ts:425` (`requestAnimationFrame`) — **add `window.` prefix** (newly surfaced by research; CONTEXT.md inventory missed it).
+  - **D-05 (the `getComputedStyle(document.documentElement)` → `getComputedStyle(activeDocument.documentElement)` work) is unchanged.** `activeDocument` for DOM reads is correct and matches `prefer-active-doc`; A2 only touches the timer half of CONTEXT.md.
+  - **Commit placement:** A2 lands in D-11 commit 2 (`refactor(views): adopt activeDocument and activeWindow for popout-window support (DIR-06)`). The commit-message subject keeps the original DIR-06 framing; the body should note that `window.*` is the rule-correct shape for timers per A2 and `activeDocument` is the correct shape for DOM reads per D-04/D-05.
+
+- **Verification probe (additive to D-12 / success criteria):** after Phase 7 closes, `npx eslint --fix` must be a no-op on the Phase 7 files (rules already pass). The Phase 7 override block at `eslint.config.mjs:66–92` deletes cleanly per D-11 commit 6.
+
+- **Open follow-up (logged, not blocking Phase 7):** the broader workspace-vs-globals question raised by D-07 ("if the Obsidian API ever changes…") is reaffirmed as out-of-scope. A1 and A2 commit to the globals (`activeDocument`) and `window` for timers respectively, per the current `eslint-plugin-obsidianmd` shape.
+
+</amendments>
 
 <canonical_refs>
 ## Canonical References
