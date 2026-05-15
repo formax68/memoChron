@@ -378,9 +378,9 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
         dailyNote = await createDailyNote(momentDate);
       }
 
-      if (dailyNote) {
+      if (dailyNote instanceof TFile) {
         const leaf = this.plugin.app.workspace.getLeaf("tab");
-        await leaf.openFile(dailyNote as TFile);
+        await leaf.openFile(dailyNote);
       }
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));
