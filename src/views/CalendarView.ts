@@ -655,7 +655,7 @@ export class CalendarView extends ItemView {
           });
           const dailyNoteColor =
             this.plugin.settings.dailyNoteColor ||
-            getComputedStyle(document.documentElement)
+            getComputedStyle(activeDocument.documentElement)
               .getPropertyValue("--interactive-accent")
               .trim() ||
             "#7c3aed";
@@ -764,7 +764,7 @@ export class CalendarView extends ItemView {
       // Use the configured color or default to theme's accent color
       const dailyNoteColor =
         this.plugin.settings.dailyNoteColor ||
-        getComputedStyle(document.documentElement)
+        getComputedStyle(activeDocument.documentElement)
           .getPropertyValue("--interactive-accent")
           .trim() ||
         "#7c3aed";
@@ -964,7 +964,7 @@ export class CalendarView extends ItemView {
       if (cursorPos !== null && createdFile) {
         const pos = cursorPos;
         const file = createdFile;
-        requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
           const view = this.app.workspace.getActiveViewOfType(MarkdownView);
           if (view?.editor && view.file?.path === file.path) {
             view.editor.setCursor(pos);

@@ -167,7 +167,7 @@ export class SettingsTab extends PluginSettingTab {
               });
               if (!this.plugin.settings.dailyNoteColor) {
                 this.plugin.settings.dailyNoteColor =
-                  getComputedStyle(document.documentElement)
+                  getComputedStyle(activeDocument.documentElement)
                     .getPropertyValue("--interactive-accent")
                     .trim() || "#7c3aed";
               }
@@ -609,7 +609,7 @@ export class SettingsTab extends PluginSettingTab {
         cls: "memochron-inline-color-swatch",
       });
       const finalColor = color.cssVar
-        ? getComputedStyle(document.documentElement)
+        ? getComputedStyle(activeDocument.documentElement)
           .getPropertyValue(color.cssVar)
           .trim() || color.fallback
         : color.fallback;
@@ -633,7 +633,7 @@ export class SettingsTab extends PluginSettingTab {
     });
     const isCustom = !baseColors.some((c) => {
       const col = c.cssVar
-        ? getComputedStyle(document.documentElement)
+        ? getComputedStyle(activeDocument.documentElement)
           .getPropertyValue(c.cssVar)
           .trim() || c.fallback
         : c.fallback;
@@ -667,7 +667,7 @@ export class SettingsTab extends PluginSettingTab {
     const baseColors = this.getObsidianBaseColors();
     const currentColor =
       this.plugin.settings.dailyNoteColor ||
-      getComputedStyle(document.documentElement)
+      getComputedStyle(activeDocument.documentElement)
         .getPropertyValue("--interactive-accent")
         .trim() ||
       "#7c3aed";
@@ -678,7 +678,7 @@ export class SettingsTab extends PluginSettingTab {
         cls: "memochron-inline-color-swatch",
       });
       const finalColor = color.cssVar
-        ? getComputedStyle(document.documentElement)
+        ? getComputedStyle(activeDocument.documentElement)
           .getPropertyValue(color.cssVar)
           .trim() || color.fallback
         : color.fallback;
@@ -702,7 +702,7 @@ export class SettingsTab extends PluginSettingTab {
     });
     const isCustom = !baseColors.some((c) => {
       const col = c.cssVar
-        ? getComputedStyle(document.documentElement)
+        ? getComputedStyle(activeDocument.documentElement)
           .getPropertyValue(c.cssVar)
           .trim() || c.fallback
         : c.fallback;
@@ -1378,7 +1378,7 @@ export class SettingsTab extends PluginSettingTab {
     this.plugin.registerDomEvent(input.inputEl, "input", showSuggestions);
 
     this.plugin.registerDomEvent(input.inputEl, "blur", () => {
-      setTimeout(() => {
+      window.setTimeout(() => {
         // Check if container still exists before manipulating
         if (suggestionContainer && suggestionContainer.parentNode) {
           suggestionContainer.classList.remove("is-visible");
@@ -1780,7 +1780,7 @@ class CalendarNotesSettingsModal extends Modal {
     this.plugin.registerDomEvent(input.inputEl, "input", showSuggestions);
 
     this.plugin.registerDomEvent(input.inputEl, "blur", () => {
-      setTimeout(() => {
+      window.setTimeout(() => {
         // Check if container still exists before manipulating
         if (suggestionContainer && suggestionContainer.parentNode) {
           suggestionContainer.classList.remove("is-visible");
