@@ -432,7 +432,7 @@ export class CalendarView extends ItemView {
     if (this.viewMode === 'month') {
       this.renderMonthDays(grid);
     } else {
-      this.renderWeekDays(grid, this.viewMode as number);
+      this.renderWeekDays(grid, this.viewMode);
     }
   }
 
@@ -1217,7 +1217,7 @@ export class CalendarView extends ItemView {
       const { firstDayOffset, daysInMonth } = this.getMonthInfo(year, month);
       weeks = Math.ceil((firstDayOffset + daysInMonth) / 7);
     } else {
-      weeks = this.viewMode as number;
+      weeks = this.viewMode;
     }
 
     const idealHeight = padding + headerHeight + (weeks * rowHeight);
