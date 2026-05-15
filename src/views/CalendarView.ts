@@ -145,7 +145,9 @@ export class CalendarView extends ItemView {
 
       // Store them in our map with date as key
       Object.entries(allDailyNotes).forEach(([dateStr, file]) => {
-        this.dailyNotes.set(dateStr, file as TFile);
+        if (file instanceof TFile) {
+          this.dailyNotes.set(dateStr, file);
+        }
       });
     } catch (error) {
       console.error("Failed to load daily notes:", errorMessage(error));
@@ -823,9 +825,9 @@ export class CalendarView extends ItemView {
       }
 
       // Open the daily note
-      if (dailyNote) {
+      if (dailyNote instanceof TFile) {
         const leaf = this.app.workspace.getLeaf("tab");
-        await leaf.openFile(dailyNote as TFile);
+        await leaf.openFile(dailyNote);
       }
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));

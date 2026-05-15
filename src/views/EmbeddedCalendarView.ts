@@ -229,9 +229,9 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       }
 
       // Open the daily note
-      if (dailyNote) {
+      if (dailyNote instanceof TFile) {
         const leaf = this.plugin.app.workspace.getLeaf("tab");
-        await leaf.openFile(dailyNote as TFile);
+        await leaf.openFile(dailyNote);
       }
     } catch (error) {
       console.error("Failed to handle daily note:", errorMessage(error));
