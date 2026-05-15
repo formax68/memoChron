@@ -968,7 +968,7 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.noteTimeFormat = value as "12h" | "24h";
             await this.plugin.saveSettings();
             // Refresh the calendar view to show the new time format
-            this.plugin.calendarView?.refreshEvents();
+            this.plugin.refreshCalendarView();
           });
       });
   }
@@ -1064,7 +1064,7 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.filteredCuTypes.filter(t => t !== value);
         }
         await this.plugin.saveSettings();
-        this.plugin.calendarView?.refreshEvents();
+        this.plugin.refreshCalendarView();
       });
     });
 
@@ -1080,7 +1080,7 @@ export class SettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.filteredAttendees = value;
             await this.plugin.saveSettings();
-            this.plugin.calendarView?.refreshEvents();
+            this.plugin.refreshCalendarView();
           })
       );
   }
