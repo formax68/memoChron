@@ -84,7 +84,7 @@ export class CalendarView extends ItemView {
         // Render first to ensure we can measure row heights
         this.renderCalendar();
         this.recalculateViewModeFromHeight(this.plugin.settings.calendarHeight);
-        this.refreshEvents();
+        void this.refreshEvents();
       }, 50);
     } else {
       await this.refreshEvents();
@@ -115,7 +115,7 @@ export class CalendarView extends ItemView {
 
     // Always show agenda for selected date or today
     const dateToShow = this.selectedDate || new Date();
-    this.showDayAgenda(dateToShow);
+    void this.showDayAgenda(dateToShow);
   }
 
   updateColors() {
@@ -127,7 +127,7 @@ export class CalendarView extends ItemView {
 
     // Re-render the agenda with new colors
     const dateToShow = this.selectedDate || new Date();
-    this.showDayAgenda(dateToShow);
+    void this.showDayAgenda(dateToShow);
   }
 
   private loadDailyNotes() {
@@ -306,7 +306,7 @@ export class CalendarView extends ItemView {
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
         if (this.leaf.view === this) {
-          this.refreshEvents();
+          void this.refreshEvents();
         }
       })
     );
@@ -351,7 +351,7 @@ export class CalendarView extends ItemView {
   private renderCurrentRange(): void {
     this.renderCalendar();
     const dateToShow = this.selectedDate || new Date();
-    this.showDayAgenda(dateToShow);
+    void this.showDayAgenda(dateToShow);
   }
 
   private navigate(delta: number): void {
@@ -387,7 +387,7 @@ export class CalendarView extends ItemView {
     // BUG-02/BUG-03 (D-06): same decoupled pattern as navigate() — render
     // synchronously from cached events; fire-and-forget a stale-cache fetch.
     this.renderCalendar();
-    this.selectDate(today);          // sets selectedDate, updates UI selection, runs showDayAgenda
+    void this.selectDate(today);     // sets selectedDate, updates UI selection, runs showDayAgenda
     this.maybeBackgroundRefresh();
   }
 
@@ -706,8 +706,8 @@ export class CalendarView extends ItemView {
 
   private addDayClickHandler(dayEl: HTMLElement, date: Date) {
     dayEl.addEventListener("touchstart", () => { }, { passive: false });
-    dayEl.addEventListener("click", () => this.selectDate(date));
-    dayEl.addEventListener("dblclick", () => this.handleDayDoubleClick(date));
+    dayEl.addEventListener("click", () => { void this.selectDate(date); });
+    dayEl.addEventListener("dblclick", () => { void this.handleDayDoubleClick(date); });
   }
 
   private async handleDayDoubleClick(date: Date) {
@@ -787,9 +787,9 @@ export class CalendarView extends ItemView {
     });
 
     // Add click handler to open or create daily note
-    dailyNoteEl.addEventListener("click", async (e) => {
+    dailyNoteEl.addEventListener("click", (e) => {
       e.stopPropagation();
-      await this.handleDailyNoteClick(date);
+      void this.handleDailyNoteClick(date);
     });
   }
 
@@ -921,14 +921,12 @@ export class CalendarView extends ItemView {
   private addEventClickHandler(eventEl: HTMLElement, event: CalendarEvent) {
     eventEl.addEventListener("touchstart", () => { }, { passive: false });
 
-    eventEl.addEventListener("click", async (e) => {
+    eventEl.addEventListener("click", (e) => {
       e.stopPropagation();
-      try {
-        await this.showEventDetails(event);
-      } catch (error) {
+      this.showEventDetails(event).catch((error) => {
         console.error("Failed to create note:", errorMessage(error));
         new Notice("Failed to create note. Check the console for details.");
-      }
+      });
     });
   }
 
@@ -1014,7 +1012,7 @@ export class CalendarView extends ItemView {
       }
     });
 
-    this.agenda.addEventListener("drop", async (e) => {
+    this.agenda.addEventListener("drop", (e) => {
       e.preventDefault();
       e.stopPropagation();
       this.agenda.removeClass("drag-over");
@@ -1032,31 +1030,35 @@ export class CalendarView extends ItemView {
         return;
       }
 
-      try {
-        // Read the file content
-        const content = await this.readFile(file);
-
-        // Parse and validate single event
-        const filteredAttendeesList = (this.plugin.settings.filteredAttendees || "")
-          .split(",")
-          .map((name) => name.trim().toLowerCase())
-          .filter((name) => name.length > 0);
-        const event = IcsImportService.parseSingleEvent(
-          content,
-          this.plugin.settings.filteredCuTypes,
-          filteredAttendeesList
-        );
-
-        // Create note from the event
-        await this.createNoteFromImportedEvent(event);
-
-        new Notice(`Note created for: ${event.title}`);
-      } catch (error) {
-        const message = errorMessage(error);
-        console.error("Failed to import ICS file:", message);
-        new Notice(`Failed to import: ${message}`);
-      }
+      void this.handleIcsFileDrop(file);
     });
+  }
+
+  private async handleIcsFileDrop(file: File): Promise<void> {
+    try {
+      // Read the file content
+      const content = await this.readFile(file);
+
+      // Parse and validate single event
+      const filteredAttendeesList = (this.plugin.settings.filteredAttendees || "")
+        .split(",")
+        .map((name) => name.trim().toLowerCase())
+        .filter((name) => name.length > 0);
+      const event = IcsImportService.parseSingleEvent(
+        content,
+        this.plugin.settings.filteredCuTypes,
+        filteredAttendeesList
+      );
+
+      // Create note from the event
+      await this.createNoteFromImportedEvent(event);
+
+      new Notice(`Note created for: ${event.title}`);
+    } catch (error) {
+      const message = errorMessage(error);
+      console.error("Failed to import ICS file:", message);
+      new Notice(`Failed to import: ${message}`);
+    }
   }
 
   private readFile(file: File): Promise<string> {

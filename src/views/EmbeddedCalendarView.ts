@@ -80,8 +80,20 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
     this.currentDate = new Date();
   }
 
-  async onload() {
-    await this.render();
+  // Component.onload() declares `: void`; an async override would return
+  // Promise<void>, which violates the supertype contract per
+  // @typescript-eslint/no-misused-promises (checksVoidReturn.inheritedMethods).
+  // The sync wrapper marks the inner async work as intentionally fire-and-forget.
+  onload(): void {
+    void this.loadAndRender();
+  }
+
+  private async loadAndRender(): Promise<void> {
+    try {
+      await this.render();
+    } catch (error) {
+      new Notice(errorMessage(error));
+    }
   }
 
   private async render() {
@@ -113,19 +125,19 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       cls: "memochron-nav-link",
       text: "<",
     });
-    prevButton.addEventListener("click", () => this.navigate(-1));
+    prevButton.addEventListener("click", () => { void this.navigate(-1); });
 
     const todayButton = nav.createEl("span", {
       cls: "memochron-nav-link",
       text: "Today",
     });
-    todayButton.addEventListener("click", () => this.goToToday());
+    todayButton.addEventListener("click", () => { void this.goToToday(); });
 
     const nextButton = nav.createEl("span", {
       cls: "memochron-nav-link",
       text: ">",
     });
-    nextButton.addEventListener("click", () => this.navigate(1));
+    nextButton.addEventListener("click", () => { void this.navigate(1); });
 
     // Create calendar container
     const calendarContainer = this.container.createEl("div", {
@@ -153,8 +165,8 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       this.currentDate,
       events,
       options,
-      (date) => this.handleDateClick(date),
-      (date) => this.handleDateDoubleClick(date)
+      (date) => { void this.handleDateClick(date); },
+      (date) => { void this.handleDateDoubleClick(date); }
     );
   }
 

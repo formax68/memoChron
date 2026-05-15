@@ -15,6 +15,7 @@ import {
 import MemoChron from "../main";
 import { CalendarSource, CalendarNotesSettings } from "./types";
 import { isValidColor } from "../utils/colorValidation";
+import { errorMessage } from "../utils/errors";
 
 export class SettingsTab extends PluginSettingTab {
   private collapsedSections: Map<string, boolean> = new Map();
@@ -348,10 +349,14 @@ export class SettingsTab extends PluginSettingTab {
               new Notice("No ICS files found in vault");
               return;
             }
-            const modal = new FilePickerModal(this.app, files, async (file) => {
+            const modal = new FilePickerModal(this.app, files, (file) => {
               this.plugin.settings.calendarUrls[index].url = file.path;
-              await this.plugin.saveSettings();
-              this.display();
+              this.plugin
+                .saveSettings()
+                .then(() => {
+                  this.display();
+                })
+                .catch((error) => new Notice(errorMessage(error)));
             });
             modal.open();
           })
@@ -968,7 +973,9 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.noteTimeFormat = value as "12h" | "24h";
             await this.plugin.saveSettings();
             // Refresh the calendar view to show the new time format
-            this.plugin.refreshCalendarView();
+            this.plugin
+              .refreshCalendarView()
+              .catch((error) => new Notice(errorMessage(error)));
           });
       });
   }
@@ -1064,7 +1071,9 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.settings.filteredCuTypes.filter(t => t !== value);
         }
         await this.plugin.saveSettings();
-        this.plugin.refreshCalendarView();
+        this.plugin
+          .refreshCalendarView()
+          .catch((error) => new Notice(errorMessage(error)));
       });
     });
 
@@ -1080,7 +1089,9 @@ export class SettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.filteredAttendees = value;
             await this.plugin.saveSettings();
-            this.plugin.refreshCalendarView();
+            this.plugin
+              .refreshCalendarView()
+              .catch((error) => new Notice(errorMessage(error)));
           })
       );
   }
