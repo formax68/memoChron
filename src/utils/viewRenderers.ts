@@ -141,7 +141,7 @@ function renderDailyNoteEntry(
     dailyNoteEl.addClass("with-color");
     const dailyNoteColor =
       options.dailyNoteColor ||
-      getComputedStyle(document.documentElement)
+      getComputedStyle(activeDocument.documentElement)
         .getPropertyValue("--interactive-accent")
         .trim() ||
       "#7c3aed";

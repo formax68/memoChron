@@ -43,7 +43,7 @@ export function defaultColorForIndex(index: number): string {
  * @returns CSS color string from --interactive-accent CSS var, or "#7c3aed" if unavailable
  */
 export function defaultDailyNoteColor(): string {
-  const accent = getComputedStyle(document.documentElement)
+  const accent = getComputedStyle(activeDocument.documentElement)
     .getPropertyValue("--interactive-accent")
     .trim();
   return accent || "#7c3aed";

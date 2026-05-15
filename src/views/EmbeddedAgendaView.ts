@@ -256,7 +256,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
       dailyNoteEl.addClass("with-color");
       const dailyNoteColor =
         options.dailyNoteColor ||
-        getComputedStyle(document.documentElement)
+        getComputedStyle(activeDocument.documentElement)
           .getPropertyValue("--interactive-accent")
           .trim() ||
         "#7c3aed";
@@ -422,7 +422,7 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
       if (cursorPos !== null && createdFile) {
         const pos = cursorPos;
         const file = createdFile;
-        requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
           const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
           if (view?.editor && view.file?.path === file.path) {
             view.editor.setCursor(pos);
