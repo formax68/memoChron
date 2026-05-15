@@ -147,7 +147,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 07-05-PLAN.md — Remove Phase 7 ESLint overrides (DIR-05/06/07/08 acceptance)
+- [x] 07-05-PLAN.md — Remove Phase 7 ESLint overrides (DIR-05/06/07/08 acceptance)
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
@@ -186,5 +186,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 4. UX Enhancements | v1.14.0 | 5/5 | Complete | 2026-05-12 |
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
-| 7. Lifecycle & Compatibility | v1.15 | 4/7 | In Progress|  |
+| 7. Lifecycle & Compatibility | v1.15 | 5/7 | In Progress|  |
 | 8. Type Hygiene & Conventions | v1.15 | 0/TBD | Not started | - |
