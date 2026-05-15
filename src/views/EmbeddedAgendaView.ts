@@ -71,8 +71,20 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     return date;
   }
 
-  async onload() {
-    await this.render();
+  // Component.onload() declares `: void`; an async override would return
+  // Promise<void>, which violates the supertype contract per
+  // @typescript-eslint/no-misused-promises (checksVoidReturn.inheritedMethods).
+  // The sync wrapper marks the inner async work as intentionally fire-and-forget.
+  onload(): void {
+    void this.loadAndRender();
+  }
+
+  private async loadAndRender(): Promise<void> {
+    try {
+      await this.render();
+    } catch (error) {
+      new Notice(errorMessage(error));
+    }
   }
 
   private async render() {
@@ -275,9 +287,9 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     });
 
     // Add click handler
-    dailyNoteEl.addEventListener("click", async (e) => {
+    dailyNoteEl.addEventListener("click", (e) => {
       e.stopPropagation();
-      await this.handleDailyNoteClick(date);
+      void this.handleDailyNoteClick(date);
     });
   }
 
@@ -342,9 +354,9 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
     }
 
     // Add click handler
-    eventEl.addEventListener("click", async (e) => {
+    eventEl.addEventListener("click", (e) => {
       e.stopPropagation();
-      await this.handleEventClick(event);
+      this.handleEventClick(event).catch((error) => new Notice(errorMessage(error)));
     });
   }
 

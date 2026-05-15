@@ -29,7 +29,7 @@ export default class MemoChron extends Plugin {
     this.addSettingTab(new SettingsTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => {
-      this.activateView();
+      void this.activateView();
     });
 
     this.setupAutoRefresh();
@@ -206,7 +206,7 @@ export default class MemoChron extends Plugin {
     // calls clearRefreshTimer + setupAutoRefresh together, which covers reset.
     // See WR-01 in 01-REVIEW.md.
     this.refreshTimer = window.setInterval(
-      () => this.refreshCalendarView(),
+      () => { void this.refreshCalendarView(); },
       intervalMs
     );
   }
