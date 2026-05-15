@@ -4,8 +4,8 @@ milestone: v1.15
 milestone_name: Directory Compliance
 status: executing
 stopped_at: Phase 7 context gathered
-last_updated: "2026-05-15T13:29:23.325Z"
-last_activity: 2026-05-15 -- Phase 07 planning complete
+last_updated: "2026-05-15T13:32:30.044Z"
+last_activity: 2026-05-15 -- Phase 07 execution started
 progress:
   total_phases: 8
   completed_phases: 6
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-13)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 06 — dom-api-refactor
+**Current focus:** Phase 07 — lifecycle-compatibility
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-15 -- Phase 07 planning complete
+Phase: 07 (lifecycle-compatibility) — EXECUTING
+Plan: 1 of 7
+Status: Executing Phase 07
+Last activity: 2026-05-15 -- Phase 07 execution started
 
 ## Performance Metrics
 
