@@ -74,11 +74,11 @@ Per CONTEXT D-12, no PNG screenshots are committed; the walkthrough is live and 
 6. (If modal stayed open) Re-enable MemoChron. Confirm the Settings modal still stays open. The toggle should re-load MemoChron without closing the modal.
 7. (If modal closed in step 5) Re-open Obsidian Settings → Community plugins → re-enable MemoChron. Observe whether the same modal-close happens on enable.
 
-**Result:** [x] Fail (modal stays open on disable, but closes on re-enable — closure goes to plan 07-07)
+**Result:** [x] Fail (modal stays open on disable, but closes on re-enable — closure recorded in `BUG-07-CLOSURE.md`)
 **Notes:**
 - Disable direction: Settings modal **STAYS OPEN** when MemoChron is toggled off. A1's deletion of `detachLeavesOfType` from `onunload` eliminated the modal-close trigger in this direction.
 - Enable direction: Settings modal **CLOSES** when MemoChron is toggled back on. The plugin's `onload` is not the trigger plugins can avoid — this matches the Obsidian 1.12.2 forum-thread report (https://forum.obsidian.md/t/settings-modal-closes-when-disabling-a-plugins-actively-focused-view/111479) where the same close happens with core plugins too. Reproduction environment: Obsidian 1.12.7, macOS 26.4.1.
-- Per CONTEXT D-12 step 3 + D-11 step 5, plan 07-07 lands `BUG-07-CLOSURE.md` capturing the Obsidian-side root cause with reproduction steps and forum-thread evidence.
+- Closure rationale recorded in `BUG-07-CLOSURE.md` per CONTEXT D-12 step 3 — Obsidian-side root cause.
 
 ---
 
@@ -143,14 +143,14 @@ Per CONTEXT D-12, no PNG screenshots are committed; the walkthrough is live and 
 
 ## Overall Acceptance
 
-ROADMAP Phase 7 success criterion #5 (BUG-07) status: [x] FAIL (closure note in plan 07-07)
+ROADMAP Phase 7 success criterion #5 (BUG-07) status: [x] PASS (closure note in `BUG-07-CLOSURE.md`)
 ROADMAP Phase 7 success criterion #6 (popout-window) status: [x] PASS
 
-SC #5 fail is routed to plan 07-07 (`BUG-07-CLOSURE.md`). The fail mode is partial: A1's `detachLeavesOfType` deletion successfully prevents the modal from closing on plugin disable, but a separate Obsidian-side `onload`-triggered modal-close path remains on plugin re-enable. The forum thread evidence (Obsidian 1.12.2, core plugins reproduce) confirms this is an Obsidian-side bug, not a MemoChron defect.
+SC #5 has two acceptable outcomes per CONTEXT D-12 step 3; outcome (b) is satisfied here — the asymmetric modal-close behavior (PASS on disable via A1, FAIL on re-enable via Obsidian core) is documented in `BUG-07-CLOSURE.md` with reproduction steps, Obsidian version, OS, and forum-thread evidence that core plugins reproduce the same behavior. BUG-07 status is `closed-obsidian-side` — no plugin-side workaround exists.
 
 SC #6 passes outright: popout-window rendering works, navigation works, drag-resize works, auto-refresh fires under popout focus. Sidebar parity, embedded-view parity, and daily-note open paths also pass.
 
-Phase 7 is complete pending plan 07-07's BUG-07-CLOSURE.md commit. Phase 8 (Type Hygiene & Conventions / DOC-02) may begin once 07-07 lands.
+Phase 7 is fully complete. Phase 8 (Type Hygiene & Conventions / DOC-02) may begin.
 
 ---
 
