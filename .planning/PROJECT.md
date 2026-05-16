@@ -66,6 +66,11 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - ✓ **`DD-MM-YYYY` (NL/EU) date-format option for note titles** — v1.14.0 / Phase 4 (ENH-04)
 - ✓ **`{{day}}` and `{{month}}` template variables emit named day/month** — v1.14.0 / Phase 4 (ENH-05)
 - ✓ **`{{cursor}}` template marker places editor cursor after note open** — v1.14.0 / Phase 4 (ENH-06)
+- ✓ **DIR-05** — `plugin.calendarView` field removed; `registerView` callback is pure factory; `getCalendarView()` helper uses `instanceof CalendarView` narrowing — Validated in Phase 7 (Lifecycle & Compatibility)
+- ✓ **DIR-06** — `activeDocument.documentElement` for `getComputedStyle` reads in view code; `window.*` prefix on all timers (per amendment A2) — Validated in Phase 7 (Lifecycle & Compatibility)
+- ✓ **DIR-07** — `instanceof TFile` narrowing replaces all 4 `as TFile` casts — Validated in Phase 7 (Lifecycle & Compatibility)
+- ✓ **DIR-08** — Floating + misused promises classified per D-09 buckets (`void` / `.catch` / `await`); `EmbeddedCalendarView` + `EmbeddedAgendaView` use sync `onload(): void` wrappers with internal `try/catch` + `Notice` — Validated in Phase 7 (Lifecycle & Compatibility)
+- ✓ **BUG-07** — Closed Obsidian-side: A1 (deletion of `detachLeavesOfType` from `onunload`) eliminated the disable-direction modal-close; remaining enable-direction trigger is in Obsidian core's plugin-load path and affects core plugins identically. Closure recorded in `.planning/phases/07-lifecycle-compatibility/BUG-07-CLOSURE.md` — Validated in Phase 7 (Lifecycle & Compatibility)
 
 ### Active
 
@@ -76,17 +81,17 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - [x] **DIR-02**: `innerHTML` / `outerHTML` writes replaced with `createEl` / `createDiv` / `setText` / DOM API at every site — Validated in Phase 6 (DOM API Refactor)
 - [x] **DIR-03**: `element.style.*` inline assignments (border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width) replaced with CSS classes or `setCssProps` — Validated in Phase 6 (DOM API Refactor)
 - [x] **DIR-04**: String-literal element-creation patterns replaced with the Obsidian `createEl({ cls, text })` / `createDiv({ cls })` helpers across views (calendar grid, agenda, settings, embedded views) — Validated in Phase 6 (DOM API Refactor)
-- [ ] **DIR-05**: View memory-leak fixed — `plugin.calendarView = view` removed from inside `registerView`; the view is constructed and returned directly
-- [ ] **DIR-06**: Popout-window compatibility — `document` → `activeDocument`, `setTimeout()` → `activeWindow.setTimeout()` (or `this.app.workspace.activeWindow.setTimeout` per Obsidian API)
-- [ ] **DIR-07**: `instanceof TFile` narrowing replaces all `as TFile` casts
-- [ ] **DIR-08**: Promise hygiene — no floating promises; methods overriding `MarkdownRenderChild` lifecycle return the declared type; `.catch` / `void` annotations at fire-and-forget sites
+- [x] **DIR-05**: View memory-leak fixed — `plugin.calendarView = view` removed from inside `registerView`; the view is constructed and returned directly — Validated in Phase 7 (Lifecycle & Compatibility)
+- [x] **DIR-06**: Popout-window compatibility — `document` → `activeDocument`, timers prefixed with `window.*` (per amendment A2) — Validated in Phase 7 (Lifecycle & Compatibility)
+- [x] **DIR-07**: `instanceof TFile` narrowing replaces all `as TFile` casts — Validated in Phase 7 (Lifecycle & Compatibility)
+- [x] **DIR-08**: Promise hygiene — no floating promises; methods overriding `MarkdownRenderChild` lifecycle return the declared type; `.catch` / `void` annotations at fire-and-forget sites — Validated in Phase 7 (Lifecycle & Compatibility)
 - [ ] **DIR-09**: TypeScript hygiene — eliminate `any`, fix nullish-on-lhs of `??`, lexical declarations in `case` blocks, unnecessary escape characters
 - [ ] **DIR-10**: Unused vars/imports cleaned up (~21 named symbols flagged by ESLint via the directory scorecard)
 - [ ] **DIR-11**: `manifest.json` `description` ends with terminating punctuation (`.`, `!`, or `?`)
 - [ ] **DIR-12**: GitHub release workflow attaches artifact attestation to `manifest.json`, `main.js`, `styles.css`
 
 **Bug fixes (open issues from this milestone):**
-- [ ] **BUG-07**: Toggling MemoChron on/off from Obsidian's Community Plugins list does not close the Settings modal — root-cause investigation followed by minimal fix, or, if Obsidian-side, documented closure
+- [x] **BUG-07**: Closed Obsidian-side per `BUG-07-CLOSURE.md`; A1 mitigation applied — Validated in Phase 7 (Lifecycle & Compatibility)
 
 **Documentation & guardrails:**
 - [ ] **DOC-01**: `.eslintrc` (or `eslint.config.js`) installed and wired with rules matching the directory scorecard (no `innerHTML`, no inline styles, no `console.log`, no `as TFile`, no `Promise`-returning `MarkdownRenderChild` overrides, no floating promises, no `any`); `npm run lint` script added; CI runs lint
@@ -162,4 +167,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-14 — Phase 6 (DOM API Refactor) complete: DIR-02 / DIR-03 / DIR-04 closed; v1.14.0 (Stabilization) shipped 2026-05-12*
+*Last updated: 2026-05-15 — Phase 7 (Lifecycle & Compatibility) complete: DIR-05 / DIR-06 / DIR-07 / DIR-08 closed and ESLint override block deleted (now enforceable); BUG-07 closed Obsidian-side per `BUG-07-CLOSURE.md`*
