@@ -564,12 +564,12 @@ export class SettingsTab extends PluginSettingTab {
    */
   private buildColorSwatch(color: string | null): SVGElement {
     const SVG_NS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(SVG_NS, "svg");
+    const svg = activeDocument.createElementNS(SVG_NS, "svg");
     svg.setAttribute("width", "24");
     svg.setAttribute("height", "24");
     svg.setAttribute("viewBox", "0 0 24 24");
 
-    const circle = document.createElementNS(SVG_NS, "circle");
+    const circle = activeDocument.createElementNS(SVG_NS, "circle");
     circle.setAttribute("cx", "12");
     circle.setAttribute("cy", "12");
     circle.setAttribute("r", "10");
@@ -587,7 +587,7 @@ export class SettingsTab extends PluginSettingTab {
       circle.setAttribute("fill", "none");
       svg.appendChild(circle);
 
-      const text = document.createElementNS(SVG_NS, "text");
+      const text = activeDocument.createElementNS(SVG_NS, "text");
       text.setAttribute("x", "12");
       text.setAttribute("y", "17");
       text.setAttribute("text-anchor", "middle");
