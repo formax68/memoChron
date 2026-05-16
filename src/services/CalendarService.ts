@@ -9,7 +9,7 @@ import {
   PathType,
   PathInfo,
 } from "../utils/pathUtils";
-import { convertIcalTimeToDate, convertTimezone } from "../utils/timezoneUtils";
+import { convertIcalTimeToDate } from "../utils/timezoneUtils";
 import { errorMessage } from "../utils/errors";
 
 export interface CalendarEvent {
@@ -528,7 +528,7 @@ export class CalendarService {
           content = await this.plugin.app.vault.adapter.read(
             pathInfo.normalizedPath
           );
-        } catch (error) {
+        } catch {
           return {
             status: 404,
             text: `Cannot read file: ${pathInfo.normalizedPath}`,
