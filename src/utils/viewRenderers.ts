@@ -1,6 +1,5 @@
 import { CalendarEvent } from "../services/CalendarService";
-import { MemoChronSettings } from "../settings/types";
-import { TFile, Notice, App, setIcon } from "obsidian";
+import { setIcon } from "obsidian";
 import MemoChron from "../main";
 
 export interface RenderOptions {

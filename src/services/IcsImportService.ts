@@ -2,7 +2,6 @@ import {
   Component,
   Event as ICalEvent,
   parse,
-  Property,
   TimezoneService,
 } from "ical.js";
 import { CalendarEvent } from "./CalendarService";

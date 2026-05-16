@@ -3,8 +3,6 @@ import {
   PluginSettingTab,
   Setting,
   TextComponent,
-  TextAreaComponent,
-  DropdownComponent,
   ButtonComponent,
   ToggleComponent,
   TFile,
@@ -13,7 +11,7 @@ import {
   SuggestModal,
 } from "obsidian";
 import MemoChron from "../main";
-import { CalendarSource, CalendarNotesSettings } from "./types";
+import { CalendarSource } from "./types";
 import { isValidColor } from "../utils/colorValidation";
 import { errorMessage } from "../utils/errors";
 
@@ -1171,7 +1169,7 @@ export class SettingsTab extends PluginSettingTab {
         text: `Preview: ${previewPath}/`,
         cls: "memochron-preview-text",
       });
-    } catch (error) {
+    } catch {
       container.createEl("small", {
         text: "Invalid template format",
         cls: "memochron-preview-error",

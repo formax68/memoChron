@@ -4,8 +4,8 @@ milestone: v1.15
 milestone_name: Directory Compliance
 status: executing
 stopped_at: Phase 8 context gathered
-last_updated: "2026-05-16T14:55:33.325Z"
-last_activity: 2026-05-16 -- Phase 08 planning complete
+last_updated: "2026-05-16T14:58:46.360Z"
+last_activity: 2026-05-16 -- Phase 08 execution started
 progress:
   total_phases: 8
   completed_phases: 7
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-13)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 8 — type hygiene & conventions
+**Current focus:** Phase 08 — type-hygiene-conventions
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-16 -- Phase 08 planning complete
+Phase: 08 (type-hygiene-conventions) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 08
+Last activity: 2026-05-16 -- Phase 08 execution started
 
 ## Performance Metrics
 

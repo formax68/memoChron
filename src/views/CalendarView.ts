@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile, DropdownComponent, setIcon, MarkdownView, Menu, MenuItem } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, setIcon, MarkdownView, Menu, MenuItem } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
@@ -10,10 +10,6 @@ import {
   getAllDailyNotes,
   appHasDailyNotesPluginLoaded,
 } from "obsidian-daily-notes-interface";
-
-interface DateElements {
-  [key: string]: HTMLElement;
-}
 
 type CalendarViewMode = 'month' | 1 | 2 | 3 | 4 | 5;
 
@@ -197,7 +193,7 @@ export class CalendarView extends ItemView {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
 
-    const controls = this.createControls(container);
+    this.createControls(container);
     this.calendar = container.createEl("div", { cls: "memochron-calendar" });
 
     // Apply saved height
@@ -1098,7 +1094,7 @@ export class CalendarView extends ItemView {
     // Wait, createUI says: calendar = container.createEl("div", { cls: "memochron-calendar" });
     // And renderCalendar empties this.calendar and adds title + grid.
     // So title is inside.
-    const title = this.calendar.querySelector('.memochron-title'); // Assuming title is inside?
+    this.calendar.querySelector('.memochron-title'); // Assuming title is inside?
     // Actually renderCalendar calls updateTitle which finds .memochron-title in containerEl, NOT in this.calendar
     // Let's check createControls... nav has title. createControls is sibling to calendar.
     // So this.calendar ONLY contains the grid.

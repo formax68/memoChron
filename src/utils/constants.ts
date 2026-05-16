@@ -2,7 +2,6 @@
 export const MEMOCHRON_VIEW_TYPE = "memochron-calendar";
 
 // Default settings
-export const DEFAULT_CALENDAR_URLS: string[] = [];
 export const DEFAULT_REFRESH_INTERVAL: number = 30; // in minutes
 export const DEFAULT_VIEW: 'monthly' | 'weekly' = 'monthly';
 export const DEFAULT_NOTE_LOCATION: string = '/';
