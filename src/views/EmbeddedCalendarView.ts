@@ -12,7 +12,6 @@ import {
   getAllDailyNotes,
   appHasDailyNotesPluginLoaded,
 } from "obsidian-daily-notes-interface";
-import { CalendarEvent } from "../services/CalendarService";
 import { errorMessage } from "../utils/errors";
 
 export interface CalendarCodeBlockParams {
@@ -106,7 +105,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       cls: "memochron-embedded-header",
     });
 
-    const title = header.createEl("h3", {
+    header.createEl("h3", {
       cls: "memochron-embedded-title",
       text:
         this.params.title ||
