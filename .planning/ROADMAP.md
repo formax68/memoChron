@@ -173,6 +173,28 @@ Plans:
   5. `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` carry a "Directory Compliance" do/don't section with one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page
   6. Milestone-level: a fresh run of the Obsidian community-plugin Review scorecard against the v1.15 main-branch snapshot shows zero remaining "Avoid …" findings from the v1.13.1 report
 
+
+**Plans**: 5 plans (4 waves; Plans 04 and 05 land sequentially within Wave 4)
+Plans:
+**Wave 1**
+
+- [ ] 08-01-PLAN.md — DIR-10: delete 18 unused vars/imports + convert 2 unused catch bindings to `catch { }`
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 08-02-PLAN.md — DIR-09: TypeScript hygiene — 16 `any` sites (5 typed-import `moment` per Amendment A1, 2 jCal shim additions, 1 `unknown` narrowing, 1 `Pick<>`, ambient `.d.ts` lint-exclude), no-case-declarations + no-useless-escape + `??` audit
+
+**Wave 3** *(blocked on Wave 2 completion — overlaps Plan 02's file set, so sequential)*
+
+- [ ] 08-03-PLAN.md — DIR-01: delete 33 console sites + gate 6 forensic sites behind `const DEBUG = false` in CalendarService.ts and timezoneUtils.ts
+
+**Wave 4** *(blocked on Wave 2 AND Wave 3 completion)*
+
+- [ ] 08-04-PLAN.md — Remove Phase 8 ESLint overrides (DIR-01/09/10 acceptance)
+- [ ] 08-05-PLAN.md — DOC-02: add Directory Compliance section to CONVENTIONS.md + replace TODO block in CLAUDE.md (closing commit of v1.15)
+
+**UI hint**: no
+
 ## Progress
 
 **Execution Order:**
@@ -187,4 +209,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
-| 8. Type Hygiene & Conventions | v1.15 | 0/TBD | Not started | - |
+| 8. Type Hygiene & Conventions | v1.15 | 0/5 | Not started | - |
