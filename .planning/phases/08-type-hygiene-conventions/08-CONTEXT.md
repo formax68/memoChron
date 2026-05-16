@@ -283,5 +283,33 @@ Out of scope (other phases / other milestones): mobile UAT (deferred to v1.16 pe
 
 ---
 
+## Amendments (post-research, 2026-05-16)
+
+These amendments override the noted CONTEXT decisions based on research findings (08-RESEARCH.md). Phase 7 A1/A2 precedent.
+
+### A1 — `(window as any).moment` overridden by typed `import { moment } from "obsidian"` (overrides D-08 `window.moment` sub-rule)
+
+- **Research finding:** `obsidian` exports `moment` directly — `export const moment: typeof Moment` in `node_modules/obsidian/obsidian.d.ts:4415`. The 5 `(window as any).moment` casts (CalendarView.ts:163, 558, 808; EmbeddedCalendarView.ts:224; EmbeddedAgendaView.ts:379) can be replaced with `import { moment } from "obsidian"`, eliminating 5 `any` casts AND 5 dead null-check branches (the typed import is non-nullable). HIGH confidence; matches Phase 7 A2 rule-source-of-truth pattern (rule docs > README).
+- **Decision (user-locked):** Use `import { moment } from "obsidian"` at all 5 sites. Drop the per-line `eslint-disable-next-line @typescript-eslint/no-explicit-any` rationale comments — they're no longer needed.
+- **Impact on D-08:** The `(window as any).moment` sub-rule of D-08 is **superseded** for the 5 sites. The rest of D-08 (ambient `.d.ts` exclude, jCal narrowing, isValidCache → unknown, cosmetic any → real types) is unchanged.
+- **Impact on commits:** The fix joins D-05 commit 2 (`refactor(types): tighten TypeScript hygiene (DIR-09)`).
+- **Impact on CONVENTIONS.md `## Directory Compliance`:** The DIR-09 cluster's `any` rule references `import { moment } from "obsidian"` (typed, preferred) as the canonical pattern. The "intentional escape hatch via per-line disable + rationale" convention still applies for the `(dtstart as any).jCal` site (still using `unknown[]` cast), so it's still documented — just not exemplified by the `window.moment` case.
+
+### A2 — Tighten `ical.d.ts` `getValues()` return type beyond the D-08 lint-exclude default
+
+- **Research finding:** `getValues()` currently returns `any[]`. The real runtime values are one of `Time | Duration | string` depending on the property; the existing call sites handle each case explicitly. Tightening to `Array<Time | Duration | string>` is a one-line edit and removes one ambient `any` site without changing any call-site code.
+- **Decision (user-locked):** Apply the one-line tightening. The other 5 ambient sites in `ical.d.ts` (lines 3, 8, 12, 14, 58) remain `any` and are covered by the `**/*.d.ts` lint-exclude per D-08.
+- **Impact on D-08:** The "ambient `.d.ts` → lint-exclude" default still holds, but `getValues()` specifically is tightened first as a cheap quality win. The lint exclude still lands so the remaining 5 ambient sites don't fail.
+- **Impact on commits:** The fix joins D-05 commit 2 (`refactor(types): tighten TypeScript hygiene (DIR-09)`) alongside the `**/*.d.ts` lint-exclude addition to `eslint.config.mjs`.
+
+### A3 — `eslint.config.mjs` Phase-8 override block line range correction
+
+- **Research finding:** CONTEXT.md says delete lines 66–109; live `eslint.config.mjs` shows the block is actually **lines 65–105**. The `globalIgnores` block at 107–114 (per current state) is unrelated and MUST NOT be deleted.
+- **Decision:** Use lines 65–105 as the delete range in D-05 commit 4. Planner reverifies at implementation time (the planner prompt should include a "read `eslint.config.mjs` first and confirm the contiguous Phase-8 override block before producing the delete diff" instruction).
+- **Impact:** Mechanical — corrects D-10 line range.
+
+---
+
 *Phase: 08-type-hygiene-conventions*
 *Context gathered: 2026-05-16*
+*Amendments: 2026-05-16 (post-research)*
