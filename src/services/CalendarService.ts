@@ -299,8 +299,7 @@ export class CalendarService {
         return cacheData.events;
       }
     } catch (error) {
-      // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
-      if (DEBUG) console.log("MemoChron: No cache found or cache invalid", errorMessage(error));
+      if (DEBUG) console.debug("MemoChron: No cache found or cache invalid", errorMessage(error));
     } finally {
       this.isLoadingCache = false;
     }
@@ -385,7 +384,6 @@ export class CalendarService {
         } else if (response.status === 404) {
           new Notice(`MemoChron: Calendar "${source.name}" not found. Please check the URL.`);
         } else {
-          // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
           if (DEBUG) console.error(
             `Failed to fetch calendar ${source.name}: ${response.status} ${
               response.text || "Unknown error"
@@ -404,7 +402,6 @@ export class CalendarService {
       return this.parseCalendarData(response.text, source);
     } catch (error) {
       const message = errorMessage(error);
-      // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
       if (DEBUG) console.error(`Error fetching calendar ${source.name}:`, message);
 
       // Check for specific error types
@@ -455,7 +452,6 @@ export class CalendarService {
                             (response.text && (response.text.includes('<!DOCTYPE html') || response.text.includes('<html')));
       
       if (isHtmlResponse) {
-        // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
         if (DEBUG) console.error(`Outlook calendar returned HTML error page for ${url.substring(0, 50)}...`);
 
 

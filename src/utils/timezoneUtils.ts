@@ -208,7 +208,6 @@ export function convertIcalTimeToDate(
     );
 
     if (!dt.isValid) {
-      // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
       if (DEBUG) console.warn(
         `MemoChron: Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), falling back to local time`
       );
@@ -218,7 +217,6 @@ export function convertIcalTimeToDate(
     // Convert to local timezone
     return dt.toLocal().toJSDate();
   } catch (error) {
-    // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
     if (DEBUG) console.error("MemoChron: Failed to convert ICAL time:", errorMessage(error), {
       icalTime,
       tzid: normalizedTzid,
