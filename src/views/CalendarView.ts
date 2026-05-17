@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile, setIcon, MarkdownView, Menu, MenuItem } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, setIcon, MarkdownView, Menu, MenuItem, moment } from "obsidian";
 import { CalendarEvent } from "../services/CalendarService";
 import MemoChron from "../main";
 import { MEMOCHRON_VIEW_TYPE } from "../utils/constants";
@@ -156,11 +156,6 @@ export class CalendarView extends ItemView {
     }
 
     try {
-      const moment = (window as any).moment;
-      if (!moment) {
-        return false;
-      }
-
       const momentDate = moment(date);
       const allDailyNotes = getAllDailyNotes();
       const dailyNote = getDailyNote(momentDate, allDailyNotes);
@@ -551,12 +546,7 @@ export class CalendarView extends ItemView {
   }
 
   private renderWeekNumber(grid: HTMLElement, date: Date) {
-    const moment = (window as any).moment;
-    let weekNum = "?";
-
-    if (moment) {
-      weekNum = String(moment(date).week());
-    }
+    const weekNum = String(moment(date).week());
 
     grid.createEl("div", {
       cls: "memochron-week-number",
@@ -801,12 +791,6 @@ export class CalendarView extends ItemView {
       }
 
       // Use moment for date handling (same as Obsidian's daily notes)
-      const moment = (window as any).moment;
-      if (!moment) {
-        new Notice("Moment.js is not available");
-        return;
-      }
-
       const momentDate = moment(date);
 
       // Get all daily notes
