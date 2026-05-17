@@ -186,7 +186,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion — overlaps Plan 02's file set, so sequential)*
 
-- [ ] 08-03-PLAN.md — DIR-01: delete 33 console sites + gate 6 forensic sites behind `const DEBUG = false` in CalendarService.ts and timezoneUtils.ts
+- [x] 08-03-PLAN.md — DIR-01: delete 33 console sites + gate 6 forensic sites behind `const DEBUG = false` in CalendarService.ts and timezoneUtils.ts
 
 **Wave 4** *(blocked on Wave 2 AND Wave 3 completion)*
 
@@ -209,4 +209,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
-| 8. Type Hygiene & Conventions | v1.15 | 2/5 | In Progress|  |
+| 8. Type Hygiene & Conventions | v1.15 | 3/5 | In Progress|  |
