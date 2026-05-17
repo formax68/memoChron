@@ -70,45 +70,23 @@ export default tseslint.config(
     rules: { "@typescript-eslint/no-explicit-any": "off" },
   },
 
-  // ---------------------------------------------------------------------------
-  // Phase 8 — DIR-01 / DIR-09 / DIR-10 will remove these when type-hygiene
-  // and console-discipline land.
-  // ---------------------------------------------------------------------------
+  // D-08-extension — `no-unsafe-*` typed-linting cascade from ical.js's
+  // untyped APIs (`parse`, `getFirstPropertyValue`, `getFirstValue`,
+  // constructor, `fromData`). Same root cause as the existing
+  // `**/*.d.ts` `no-explicit-any: off` exclusion: ical.js is
+  // fundamentally untyped, hand-typing is deferred to FRAG-02. This
+  // silences the consumption-site cascade at the call sites in
+  // CalendarService, IcsImportService, NoteService, CalendarView,
+  // and main.ts. NOT tied to a scorecard finding — `no-unsafe-*`
+  // is not a DIR-NN rule.
   {
     files: ["src/**/*.ts"],
     rules: {
-      // Recommended config gates no-console via obsidianmd/rule-custom-message
-      // and ALLOWS console.warn/.error/.debug. DIR-01 wants ALL console.*
-      // either removed or gated. Override `rule-custom-message` to no-op,
-      // then enforce no-console: "error".
-      "obsidianmd/rule-custom-message": "off",
-      "no-console": "off", // Re-tightened in Phase 8 to "error"
-
-      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-return": "off",
-      "no-case-declarations": "off",
-      "no-useless-escape": "off",
-    },
-  },
-  // Phase 8 — DIR-01 will remove these when type-hygiene lands. Narrow `files`
-  // list (not `src/**/*.ts`) so any NEW unused-var introduced outside this
-  // closed set fails the gate — preserves DOC-01 acceptance for new code.
-  {
-    files: [
-      "src/services/CalendarService.ts",
-      "src/services/IcsImportService.ts",
-      "src/settings/SettingsTab.ts",
-      "src/settings/types.ts",
-      "src/utils/viewRenderers.ts",
-      "src/views/CalendarView.ts",
-      "src/views/EmbeddedCalendarView.ts",
-    ],
-    rules: {
-      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 
