@@ -12,6 +12,7 @@ import {
 } from "obsidian";
 import MemoChron from "../main";
 import { CalendarSource } from "./types";
+import { CalendarEvent } from "../services/CalendarService";
 import { isValidColor } from "../utils/colorValidation";
 import { errorMessage } from "../utils/errors";
 
@@ -1177,7 +1178,10 @@ export class SettingsTab extends PluginSettingTab {
     }
   }
 
-  private generatePreviewPath(template: string, event: any): string {
+  private generatePreviewPath(
+    template: string,
+    event: Pick<CalendarEvent, "title" | "start" | "end" | "source">
+  ): string {
     const monthNames = [
       "January",
       "February",
