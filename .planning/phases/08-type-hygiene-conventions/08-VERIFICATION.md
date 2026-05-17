@@ -1,13 +1,15 @@
 ---
 phase: 08-type-hygiene-conventions
 verified: 2026-05-17T14:00:00Z
-status: human_needed
-score: 5/6 must-haves verified
-overrides_applied: 0
+status: passed
+score: 6/6 must-haves verified
+overrides_applied: 1
 human_verification:
   - test: "Run a fresh Obsidian community-plugin Review scorecard against the v1.15 main-branch snapshot"
     expected: "Zero remaining 'Avoid ...' findings from the v1.13.1 report"
-    why_human: "The scorecard is an external tool that must be run manually against the deployed plugin; cannot be verified programmatically from the source tree alone. Success Criterion 6 (milestone-level scorecard clean) requires running the actual review tool."
+    result: "passed (lint-as-proxy override)"
+    resolved: "2026-05-17T14:05:00Z"
+    notes: "`npm run lint` exits 0 clean. `eslint-plugin-obsidianmd` (`obsidianmd.configs.recommended` in `eslint.config.mjs:41`) codifies the directory-scorecard rules; every lint-checkable scorecard rule is satisfied at the source-tree level. The public 'Risks (1/4)' → 'Excellent' badge update is a release-time event that happens once v1.15 is tagged and Obsidian's community-plugin Review re-evaluates the release. User accepted lint-as-proxy as the milestone-close criterion."
 ---
 
 # Phase 8: Type Hygiene & Conventions Verification Report
@@ -28,9 +30,9 @@ human_verification:
 | 3 | `npm run lint` reports zero `no-unused-vars` violations; all 21 scorecard-named symbols are deleted or genuinely consumed | ✓ VERIFIED | `npm run lint` exits 0; all 18 violation-sites from the research inventory are gone (confirmed by per-symbol greps per 08-01-SUMMARY.md); `convertTimezone`, `DEFAULT_CALENDAR_URLS`, `TextAreaComponent`, `DropdownComponent`, `CalendarNotesSettings`, `Property`, `MemoChronSettings`, `TFile`, `Notice`, `App`, `DropdownComponent`, `DateElements`, `CalendarEvent` imports removed; `controls` and `title` locals inlined |
 | 4 | The Phase-5 ESLint overrides for `no-console`, `no-explicit-any`, `no-unused-vars`, `no-case-declarations`, and `no-useless-escape` are removed; `npm run lint` passes against a clean configuration with no per-rule or per-file disables tied to scorecard findings | ✓ VERIFIED | `grep -c "// Phase 8" eslint.config.mjs` returns 0; `grep -c '"no-console": "off"' eslint.config.mjs` returns 0; `grep -c "no-case-declarations" eslint.config.mjs` returns 0; `grep -c "no-useless-escape" eslint.config.mjs` returns 0; `npm run lint` exits 0 clean. D-08-extension (`no-unsafe-*` off) is present — it is NOT tied to a scorecard finding and is documented as a companion to the existing `**/*.d.ts` exclusion (same root: ical.js untyped APIs, FRAG-02 deferred) |
 | 5 | `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` carry a "Directory Compliance" do/don't section with one short rule per scorecard finding, each with rationale and a docs URL | ✓ VERIFIED | CONVENTIONS.md has `## Directory Compliance` (1 hit), 4 cluster sub-sections (DOM API, Lifecycle & Compatibility, Type Hygiene, Release & Docs), 16 rule blocks each with `**Don't:**`/`**Do:**`/`**Why:**`/`**Docs:**` format, and `### Verifying compliance` bash snippet; CLAUDE.md has `## Directory Compliance` pointer section linking to `CONVENTIONS.md#directory-compliance`; stale TODO block gone |
-| 6 | Milestone-level: a fresh Obsidian community-plugin Review scorecard run shows zero remaining "Avoid ..." findings from the v1.13.1 report | ? UNCERTAIN | Requires running the external Obsidian review tool against the live plugin build — cannot be verified programmatically from the source tree |
+| 6 | Milestone-level: a fresh Obsidian community-plugin Review scorecard run shows zero remaining "Avoid ..." findings from the v1.13.1 report | ✓ RESOLVED (lint-as-proxy) | `npm run lint` exits 0 clean against `obsidianmd.configs.recommended` (which codifies the scorecard rules). User accepted lint-as-proxy override 2026-05-17 — the public badge update is a release-time event when v1.15 is tagged and Obsidian re-evaluates. |
 
-**Score:** 5/6 truths verified
+**Score:** 6/6 truths verified (Truth #6 resolved 2026-05-17 via lint-as-proxy override)
 
 ### Required Artifacts
 
