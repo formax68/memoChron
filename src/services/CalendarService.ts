@@ -1,4 +1,4 @@
-import { requestUrl, Platform, Notice, TFile } from "obsidian";
+import { requestUrl, Notice, TFile } from "obsidian";
 import { Component, Duration, Event as ICalEvent, parse, Time } from "ical.js";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
@@ -11,6 +11,10 @@ import {
 } from "../utils/pathUtils";
 import { convertIcalTimeToDate } from "../utils/timezoneUtils";
 import { errorMessage } from "../utils/errors";
+
+// Forensic-only flag for cache/fetch debugging. Flip to true locally;
+// tree-shakes to nothing in production builds when false.
+const DEBUG = false;
 
 export interface CalendarEvent {
   id: string;
@@ -57,7 +61,6 @@ export class CalendarService {
 
     if (enabledSources.length === 0) {
       this.events = [];
-      console.warn("No enabled calendar sources to fetch.");
       return [];
     }
 
@@ -252,8 +255,7 @@ export class CalendarService {
       this.showCompletionNotification(forceRefresh);
 
       return this.events;
-    } catch (error) {
-      console.error("Error fetching calendars:", errorMessage(error));
+    } catch {
       this.showErrorNotification(forceRefresh);
 
       return this.events;
@@ -263,9 +265,7 @@ export class CalendarService {
   }
 
   private showFetchNotification(forceRefresh: boolean) {
-    if (this.events.length > 0 && !forceRefresh) {
-      console.log("MemoChron: Background refresh started");
-    } else if (forceRefresh) {
+    if (forceRefresh) {
       // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: MemoChron
       new Notice("MemoChron: Refreshing calendars...");
     }
@@ -299,7 +299,8 @@ export class CalendarService {
         return cacheData.events;
       }
     } catch (error) {
-      console.log("MemoChron: No cache found or cache invalid", errorMessage(error));
+      // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
+      if (DEBUG) console.log("MemoChron: No cache found or cache invalid", errorMessage(error));
     } finally {
       this.isLoadingCache = false;
     }
@@ -344,9 +345,8 @@ export class CalendarService {
       };
 
       await this.writeCacheFile(cacheData);
-      console.log("MemoChron: Calendar cache saved");
-    } catch (error) {
-      console.error("MemoChron: Failed to save calendar cache:", errorMessage(error));
+    } catch {
+      // Silent failure is acceptable; next save retries.
     }
   }
 
@@ -381,13 +381,12 @@ export class CalendarService {
       if (response.status !== 200) {
         // More detailed error messaging for common issues
         if (response.status === 403) {
-          console.error(`Calendar ${source.name} access denied. The calendar may no longer be public or requires authentication.`);
           new Notice(`MemoChron: Cannot access calendar "${source.name}". Please check if it's still publicly shared.`);
         } else if (response.status === 404) {
-          console.error(`Calendar ${source.name} not found at URL: ${source.url}`);
           new Notice(`MemoChron: Calendar "${source.name}" not found. Please check the URL.`);
         } else {
-          console.error(
+          // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
+          if (DEBUG) console.error(
             `Failed to fetch calendar ${source.name}: ${response.status} ${
               response.text || "Unknown error"
             }`
@@ -398,7 +397,6 @@ export class CalendarService {
 
       // Validate that we got actual calendar data
       if (!response.text || !response.text.includes('BEGIN:VCALENDAR')) {
-        console.error(`Calendar ${source.name} returned invalid data. Expected iCalendar format.`);
         new Notice(`MemoChron: Calendar "${source.name}" returned invalid data.`);
         return [];
       }
@@ -406,8 +404,8 @@ export class CalendarService {
       return this.parseCalendarData(response.text, source);
     } catch (error) {
       const message = errorMessage(error);
-      console.error(`Error fetching calendar ${source.name}:`, message);
-      this.logPlatformInfo();
+      // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
+      if (DEBUG) console.error(`Error fetching calendar ${source.name}:`, message);
 
       // Check for specific error types
       if (message.includes('CORS')) {
@@ -457,8 +455,10 @@ export class CalendarService {
                             (response.text && (response.text.includes('<!DOCTYPE html') || response.text.includes('<html')));
       
       if (isHtmlResponse) {
-        console.error(`Outlook calendar returned HTML error page for ${url.substring(0, 50)}...`);
-        
+        // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
+        if (DEBUG) console.error(`Outlook calendar returned HTML error page for ${url.substring(0, 50)}...`);
+
+
         // Try with no headers at all (let Obsidian use defaults)
         response = await requestUrl({
           url,
@@ -545,7 +545,6 @@ export class CalendarService {
       };
     } catch (error) {
       const message = errorMessage(error);
-      console.error("Error reading local calendar file:", message);
       return {
         status: 500,
         text: `Error reading file: ${message}`,
@@ -920,14 +919,6 @@ export class CalendarService {
       event.start < targetEndOfDay && event.end > targetStartOfDay;
 
     return startsOnThisDay || endsOnThisDay || spansThisDay;
-  }
-
-  private logPlatformInfo() {
-    console.debug("Platform info:", {
-      mobile: Platform.isMobile,
-      electron: Platform.isDesktop,
-      networkAvailable: navigator.onLine,
-    });
   }
 
   private isAllDayEvent(vevent: Component): boolean {
