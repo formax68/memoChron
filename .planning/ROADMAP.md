@@ -182,7 +182,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 08-02-PLAN.md — DIR-09: TypeScript hygiene — 16 `any` sites (5 typed-import `moment` per Amendment A1, 2 jCal shim additions, 1 `unknown` narrowing, 1 `Pick<>`, ambient `.d.ts` lint-exclude), no-case-declarations + no-useless-escape + `??` audit
+- [x] 08-02-PLAN.md — DIR-09: TypeScript hygiene — 16 `any` sites (5 typed-import `moment` per Amendment A1, 2 jCal shim additions, 1 `unknown` narrowing, 1 `Pick<>`, ambient `.d.ts` lint-exclude), no-case-declarations + no-useless-escape + `??` audit
 
 **Wave 3** *(blocked on Wave 2 completion — overlaps Plan 02's file set, so sequential)*
 
@@ -209,4 +209,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
-| 8. Type Hygiene & Conventions | v1.15 | 1/5 | In Progress|  |
+| 8. Type Hygiene & Conventions | v1.15 | 2/5 | In Progress|  |
