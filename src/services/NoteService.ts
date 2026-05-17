@@ -66,21 +66,16 @@ export class NoteService {
   async createEventNote(event: CalendarEvent): Promise<{ file: TFile; cursor: { line: number; ch: number } | null }> {
     const filePath = this.buildFilePath(event);
 
-    try {
-      await this.ensureParentFolder(filePath);
+    await this.ensureParentFolder(filePath);
 
-      const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (existingFile instanceof TFile) {
-        return { file: existingFile, cursor: null };
-      }
-
-      const { content, cursor } = this.generateNoteContent(event);
-      const file = await this.plugin.app.vault.create(filePath, content);
-      return { file, cursor };
-    } catch (error) {
-      console.error("Error creating note:", errorMessage(error));
-      throw error;
+    const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+    if (existingFile instanceof TFile) {
+      return { file: existingFile, cursor: null };
     }
+
+    const { content, cursor } = this.generateNoteContent(event);
+    const file = await this.plugin.app.vault.create(filePath, content);
+    return { file, cursor };
   }
 
   getExistingEventNote(event: CalendarEvent): TFile | null {
@@ -129,8 +124,7 @@ export class NoteService {
       // Apply folder template to create subfolder structure
       const subfolderPath = this.applyFolderTemplate(folderPathTemplate, event);
       return normalizePath(`${normalizedPath}/${subfolderPath}/${title}.md`);
-    } catch (error) {
-      console.error("Error building file path:", errorMessage(error));
+    } catch {
       // Fallback to basic path structure
       const fallbackPath = this.settings.noteLocation || "calendar-notes";
       const fallbackTitle = this.formatTitle(
@@ -168,8 +162,7 @@ export class NoteService {
 
       const combined = `${frontmatter}\n${content}`;
       return this.extractCursorMarker(combined);
-    } catch (error) {
-      console.error("Error generating note content:", errorMessage(error));
+    } catch {
       // Fallback to basic content
       const fallback = `# ${
         event.title
@@ -312,8 +305,7 @@ export class NoteService {
           result.replace(new RegExp(`{{${key}}}`, "g"), value || ""),
         template
       );
-    } catch (error) {
-      console.error("Error applying template variables:", errorMessage(error));
+    } catch {
       return template;
     }
   }
@@ -334,8 +326,7 @@ export class NoteService {
           this.sanitizeFileName(value || "")
         );
       }, format);
-    } catch (error) {
-      console.error("Error formatting title:", errorMessage(error));
+    } catch {
       return event.title || "Untitled Event";
     }
   }
@@ -593,7 +584,6 @@ export class NoteService {
 
     const calendar = this.settings.calendarUrls.find((s) => s.name === source);
     if (!calendar) {
-      console.warn(`Calendar source "${source}" not found in settings`);
       return { useCustomSettings: false };
     }
 
