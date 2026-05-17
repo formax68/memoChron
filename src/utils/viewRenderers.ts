@@ -367,7 +367,7 @@ export function parseMonthYear(input: string): Date | null {
   ];
 
   // Try YYYY-MM or YYYY/MM format
-  const numericMatch = input.match(/^(\d{4})[-\/](\d{1,2})$/);
+  const numericMatch = input.match(/^(\d{4})[-/](\d{1,2})$/);
   if (numericMatch) {
     const year = parseInt(numericMatch[1]);
     const month = parseInt(numericMatch[2]) - 1; // Month is 0-indexed
