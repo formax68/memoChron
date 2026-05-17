@@ -227,3 +227,169 @@ noteTimeFormat: "12h" | "24h";
 ---
 
 *Convention analysis: 2026-05-09*
+
+## Directory Compliance
+
+Every rule below maps to a finding from the Obsidian community-plugin directory scorecard
+report on v1.13.1. Closing all of them was the goal of milestone v1.15. Rules are grouped
+by cluster, not by individual DIR-NN finding. ESLint enforces each rule via
+`eslint.config.mjs`; intentional, single-site exceptions use a per-line
+`eslint-disable-next-line <rule> -- <reason>` comment.
+
+### DOM API
+
+Closes scorecard findings **DIR-02** (`innerHTML`/`outerHTML`), **DIR-03** (inline
+`element.style.*`), **DIR-04** (`document.createElement` and string-literal HTML).
+
+**Don't:** Use `element.innerHTML = "<div>...</div>"` or `element.outerHTML`.
+**Do:** Use `createDiv({ cls, text })` or `createEl("div", { cls, text, attr })`; for
+        nested children, chain `parent.createEl(...)` returns; for inline rich-text use
+        `appendText("...")` plus `createEl("strong", { text: "..." })`.
+**Why:** Bypasses Obsidian's sanitization and breaks the obsidianmd/no-inner-html
+         rule + `@microsoft/sdl/no-inner-html`.
+**Docs:** https://docs.obsidian.md/Plugins/User+interface/HTML+elements
+
+**Don't:** Write `element.style.border = "1px solid red"` or any other static `.style.*`
+          assignment.
+**Do:** Add a CSS class to `styles.css` and toggle it via `el.toggleClass("memochron-...",
+        condition)`. For dynamic values, use `el.setCssProps({ color: event.color })`.
+**Why:** Bypasses Obsidian theming and breaks the
+         `obsidianmd/no-static-styles-assignment` rule.
+**Docs:** https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/no-static-styles-assignment.md
+
+**Don't:** Call `document.createElement("input")` or `new HTMLInputElement()`.
+**Do:** Call `parent.createEl("input", { type: "color" })` or
+        `parent.createDiv({ cls })`. SVG construction stays on
+        `createElementNS("http://www.w3.org/2000/svg", ...)`.
+**Why:** Bypasses Obsidian's element extension (`.createEl`, `.empty`, `.setText`,
+         `.setCssProps`) and breaks the `obsidianmd/prefer-create-el` rule.
+**Docs:** https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/prefer-create-el.md
+
+### Lifecycle & Compatibility
+
+Closes scorecard findings **DIR-05** (no view refs in plugin), **DIR-06**
+(`activeDocument` + `window.*` timers), **DIR-07** (`instanceof TFile` over
+`as TFile`), **DIR-08** (no floating promises; sync `MarkdownRenderChild` lifecycle).
+
+**Don't:** Assign a view instance to a plugin field inside `registerView`'s callback
+          (e.g., `plugin.calendarView = view`).
+**Do:** Have `registerView` construct and return the view as a pure factory; consumers
+        fetch the view lazily via
+        `app.workspace.getLeavesOfType(...)[0]?.view` plus an `instanceof` guard.
+**Why:** Holding a reference inside the callback creates a memory leak when leaves are
+         detached/re-created; flagged by `obsidianmd/no-view-references-in-plugin`.
+**Docs:** https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/no-view-references-in-plugin.md
+
+**Don't:** Read `document.documentElement` or call `setTimeout(...)` / `setInterval(...)`
+          bare in view code.
+**Do:** Use `activeDocument` for DOM reads (popout-window-safe); prefix timers with
+        `window.` (`window.setTimeout`, `window.setInterval`, `window.requestAnimationFrame`).
+**Why:** `activeDocument` follows popout windows; the bare timer globals don't bind
+         correctly in popouts. Note the asymmetry — `activeDocument` for DOM,
+         `window.*` for timers — both rules auto-fix in opposite directions.
+**Docs:** https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/prefer-active-doc.md
+         and https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/prefer-window-timers.md
+
+**Don't:** Cast `file as TFile` after `app.vault.getAbstractFileByPath(...)`.
+**Do:** Narrow via `if (file instanceof TFile) { ... }`.
+**Why:** A path can resolve to a `TFolder` or `null`; the cast is unsafe and breaks
+         `obsidianmd/no-tfile-tfolder-cast`.
+**Docs:** https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/no-tfile-tfolder-cast.md
+
+**Don't:** Leave a `Promise`-returning call without `await`, `.catch`, or `void`. Don't
+          declare `async onload()` on a `MarkdownRenderChild` subclass.
+**Do:** Use `void promise` for fire-and-forget; `.catch(error => new Notice(errorMessage(error)))`
+        for user-visible failures; `await` when sequencing matters. For
+        `MarkdownRenderChild`, write `onload(): void { void this.initialize(); }` with
+        the async work in an inner helper.
+**Why:** Floating promises silently swallow errors; the async lifecycle violates
+         `MarkdownRenderChild`'s sync return-type contract.
+**Docs:** https://typescript-eslint.io/rules/no-floating-promises/
+
+### Type Hygiene
+
+Closes scorecard findings **DIR-01** (no `console.*` in shipped code), **DIR-09**
+(no `any` in source, no `??` with constant LHS, no lexical decls in `case`, no
+useless escapes), **DIR-10** (no unused vars / imports).
+
+**Don't:** Leave `console.log`, `console.error`, `console.warn`, `console.info`, or
+          `console.debug` in shipped code.
+**Do:** Delete the call. If a forensic log is genuinely useful (cache debugging,
+        fetch failure forensics), wrap it in a compile-time `const DEBUG = false`
+        guard at the top of the file: `if (DEBUG) console.log(...)`. The constant
+        tree-shakes out of production builds.
+**Why:** Default off keeps the user's developer console clean; forensic logs are
+        opt-in via a one-line code edit, not a setting.
+**Docs:** https://eslint.org/docs/latest/rules/no-console
+
+**Don't:** Use `: any` in source code (`src/**/*.ts`). Don't use `as any`.
+**Do:** Use `unknown` for type-guard inputs and narrow inside the guard; use real
+        domain types (`CalendarEvent`, `ical.Time`, etc.); for documented intentional
+        escape hatches at single sites use
+        `// eslint-disable-next-line @typescript-eslint/no-explicit-any -- <reason>`.
+        Ambient `.d.ts` files are excluded by config.
+**Why:** `any` defeats the type system. `unknown` forces narrowing at the use site;
+         per-line disables document intent visibly. Global rule overrides hide intent.
+**Docs:** https://typescript-eslint.io/rules/no-explicit-any/
+
+**Don't:** Declare `let` or `const` directly inside a `case` block.
+**Do:** Wrap the case body in a block scope: `case X: { const y = ...; }`.
+**Why:** Variable declarations leak across cases without the block scope; flagged
+         by `no-case-declarations`.
+**Docs:** https://eslint.org/docs/latest/rules/no-case-declarations
+
+**Don't:** Escape characters in regex character classes that don't need escaping
+          (`/[-\/]/` — the `\/` is unnecessary inside `[…]`).
+**Do:** Write the character literally: `/[-/]/`.
+**Why:** Reduces visual noise; flagged by `no-useless-escape`.
+**Docs:** https://eslint.org/docs/latest/rules/no-useless-escape
+
+**Don't:** Use `??` with a constant left-hand side (`null ?? x`, `undefined ?? x`,
+          `"" ?? x`). The result is always the right-hand side — the `??` is a no-op.
+**Do:** Use the right-hand side directly: `x` (not `null ?? x`).
+**Why:** Constant-LHS `??` is dead code; lint rules surface it as a logic bug.
+**Docs:** https://eslint.org/docs/latest/rules/no-constant-binary-expression
+
+**Don't:** Leave imports, variables, or catch bindings unused.
+**Do:** Delete unused imports and variables. For catch blocks that don't consume the
+        error, use `catch { ... }` (no binding). For catch blocks that consume the
+        error, use `errorMessage(error)` from `src/utils/errors.ts`.
+**Why:** Dead imports inflate bundle parsing; unused bindings hide intent. No
+         `_-prefix` to mark intentionally unused — every flagged name is either
+         deleted or genuinely consumed.
+**Docs:** https://typescript-eslint.io/rules/no-unused-vars/
+
+### Release & Docs
+
+Closes scorecard findings **DIR-11** (`manifest.json` description punctuation),
+**DIR-12** (release artifact attestation), and **DOC-01** (ESLint + CI lint gate).
+
+**Don't:** Leave `manifest.json` `description` without terminating punctuation.
+**Do:** End with `.`, `!`, or `?`.
+**Why:** Obsidian directory scorecard checks the field shape; missing punctuation
+         is flagged as a low-effort polish issue.
+**Docs:** https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin
+
+**Don't:** Publish a release without attached artifact attestation.
+**Do:** Use `actions/attest-build-provenance@v2` after `npm run build` and before
+        `gh release create`. Attest `main.js`, `manifest.json`, and `styles.css`.
+**Why:** Attestation provides supply-chain provenance for downstream users; required
+         by the directory scorecard's release-pipeline check.
+**Docs:** https://docs.obsidian.md/Plugins/Releasing/Release+your+plugin+with+GitHub+Actions
+
+**Don't:** Add new code without `npm run lint` passing.
+**Do:** Keep `eslint.config.mjs` with the obsidianmd recommended preset + DOC-01's
+        rule list. CI runs `npm run lint` on every push and PR (`.github/workflows/lint.yml`).
+**Why:** The lint gate is the only thing keeping the rules in this section from
+         re-growing on future feature work.
+**Docs:** https://eslint.org/docs/latest/use/configure/rules
+
+### Verifying compliance
+
+```bash
+npm run lint                                                          # zero errors
+git ls-files src/ | xargs grep -nE '\.(inner|outer)HTML\s*='          # zero matches
+git ls-files src/ | xargs grep -n 'document\.createElement'           # zero matches
+git ls-files src/ | xargs grep -n 'as TFile'                          # zero matches
+grep -rnE '\b(null|undefined|""|0|false)\s*\?\?' src/                 # zero matches
+```
