@@ -238,8 +238,7 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
         const leaf = this.plugin.app.workspace.getLeaf("tab");
         await leaf.openFile(dailyNote);
       }
-    } catch (error) {
-      console.error("Failed to handle daily note:", errorMessage(error));
+    } catch {
       new Notice(
         // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Daily Notes (Obsidian plugin name)
         "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."

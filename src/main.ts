@@ -106,12 +106,9 @@ export default class MemoChron extends Plugin {
     // SEC-01 (D-03, D-04): validate stored color values against the whitelist.
     // A maliciously crafted data.json can contain a color string designed to
     // break out of an SVG attribute context. Replace invalid values silently
-    // and warn for diagnostics; no Notice (typical user can't act on it).
+    // (DIR-01: no console.warn — typical user can't act on it).
     this.settings.calendarUrls.forEach((source, index) => {
       if (source.color && !isValidColor(source.color)) {
-        console.warn(
-          `MemoChron: Invalid color "${source.color}" on calendar "${source.name}" — replacing with default.`
-        );
         source.color = defaultColorForIndex(index);
       }
     });
@@ -120,9 +117,6 @@ export default class MemoChron extends Plugin {
       this.settings.dailyNoteColor &&
       !isValidColor(this.settings.dailyNoteColor)
     ) {
-      console.warn(
-        `MemoChron: Invalid dailyNoteColor "${this.settings.dailyNoteColor}" — replacing with default.`
-      );
       this.settings.dailyNoteColor = defaultDailyNoteColor();
     }
   }

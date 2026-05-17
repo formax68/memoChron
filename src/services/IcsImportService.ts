@@ -27,17 +27,9 @@ export class IcsImportService {
       vtimezones.forEach((tz) => {
         try {
           TimezoneService.register(tz);
-        } catch (error) {
-          // Only ignore errors if timezone is already registered; log others as warnings
-          const message = errorMessage(error);
-          if (
-            message.includes("already registered") ||
-            message.includes("already exists")
-          ) {
-            console.debug("Timezone registration skipped (may already exist):", message);
-          } else {
-            console.warn("Unexpected error during timezone registration:", message);
-          }
+        } catch {
+          // Silently ignore: timezone may already be registered, or registration
+          // failed and the import will fall back to default handling.
         }
       });
 

@@ -145,8 +145,8 @@ export class CalendarView extends ItemView {
           this.dailyNotes.set(dateStr, file);
         }
       });
-    } catch (error) {
-      console.error("Failed to load daily notes:", errorMessage(error));
+    } catch {
+      // Silent recovery: dailyNotes map remains in last-known state.
     }
   }
 
@@ -161,8 +161,7 @@ export class CalendarView extends ItemView {
       const dailyNote = getDailyNote(momentDate, allDailyNotes);
 
       return dailyNote !== null;
-    } catch (error) {
-      console.error("Error checking daily note:", errorMessage(error));
+    } catch {
       return false;
     }
   }
@@ -334,8 +333,8 @@ export class CalendarView extends ItemView {
         // through the surrounding .catch rather than unhandledrejection.
         void this.showDayAgenda(dateToShow);
       })
-      .catch((error) => {
-        console.error("MemoChron: background refresh failed:", errorMessage(error));
+      .catch(() => {
+        // Silent: fetchCalendars surfaces user-visible Notice on errors.
       });
   }
 
@@ -809,8 +808,7 @@ export class CalendarView extends ItemView {
         const leaf = this.app.workspace.getLeaf("tab");
         await leaf.openFile(dailyNote);
       }
-    } catch (error) {
-      console.error("Failed to handle daily note:", errorMessage(error));
+    } catch {
       new Notice(
         // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper noun: Daily Notes (Obsidian plugin name)
         "Failed to open daily note. Make sure Daily Notes plugin is enabled and configured."
@@ -904,8 +902,7 @@ export class CalendarView extends ItemView {
     eventEl.addEventListener("click", (e) => {
       e.stopPropagation();
       this.showEventDetails(event).catch((error) => {
-        console.error("Failed to create note:", errorMessage(error));
-        new Notice("Failed to create note. Check the console for details.");
+        new Notice(`Failed to create note: ${errorMessage(error)}`);
       });
     });
   }
@@ -1036,7 +1033,6 @@ export class CalendarView extends ItemView {
       new Notice(`Note created for: ${event.title}`);
     } catch (error) {
       const message = errorMessage(error);
-      console.error("Failed to import ICS file:", message);
       new Notice(`Failed to import: ${message}`);
     }
   }

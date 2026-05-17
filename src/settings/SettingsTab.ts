@@ -1536,7 +1536,6 @@ class CalendarNotesSettingsModal extends Modal {
   private renderCustomSettings(container: HTMLElement) {
     const currentSettings = this.source.notesSettings;
     if (!currentSettings) {
-      console.error("Custom settings not found when rendering custom settings");
       return;
     }
 
@@ -1766,7 +1765,6 @@ class CalendarNotesSettingsModal extends Modal {
       this.source.notesSettings.enableAttendeeLinks === undefined;
 
     if (needsRefresh) {
-      console.log("Refreshing custom settings with current defaults");
       this.copyDefaultSettingsToCustom();
     }
   }
