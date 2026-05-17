@@ -190,7 +190,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 2 AND Wave 3 completion)*
 
-- [ ] 08-04-PLAN.md — Remove Phase 8 ESLint overrides (DIR-01/09/10 acceptance)
+- [x] 08-04-PLAN.md — Remove Phase 8 ESLint overrides (DIR-01/09/10 acceptance)
 - [ ] 08-05-PLAN.md — DOC-02: add Directory Compliance section to CONVENTIONS.md + replace TODO block in CLAUDE.md (closing commit of v1.15)
 
 **UI hint**: no
@@ -209,4 +209,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
-| 8. Type Hygiene & Conventions | v1.15 | 3/5 | In Progress|  |
+| 8. Type Hygiene & Conventions | v1.15 | 4/5 | In Progress|  |
