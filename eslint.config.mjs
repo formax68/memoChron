@@ -62,6 +62,14 @@ export default tseslint.config(
     },
   },
 
+  // D-08 — Ambient .d.ts shims are excluded from no-explicit-any. Hand-typing
+  // untyped third-party libraries (ical.js) is out of scope; the cheapest
+  // correct close per CONTEXT.md D-08.
+  {
+    files: ["**/*.d.ts"],
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
+
   // ---------------------------------------------------------------------------
   // Phase 8 — DIR-01 / DIR-09 / DIR-10 will remove these when type-hygiene
   // and console-discipline land.

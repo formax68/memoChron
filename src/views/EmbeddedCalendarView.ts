@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, Notice, TFile } from "obsidian";
+import { MarkdownRenderChild, Notice, TFile, moment } from "obsidian";
 import MemoChron from "../main";
 import {
   renderCalendarGrid,
@@ -220,12 +220,6 @@ export class EmbeddedCalendarView extends MarkdownRenderChild {
       }
 
       // Use moment for date handling (same as Obsidian's daily notes)
-      const moment = (window as any).moment;
-      if (!moment) {
-        new Notice("Moment.js is not available");
-        return;
-      }
-
       const momentDate = moment(date);
 
       // Get all daily notes

@@ -1,5 +1,5 @@
 import { requestUrl, Platform, Notice, TFile } from "obsidian";
-import { Component, Event as ICalEvent, parse, Time } from "ical.js";
+import { Component, Duration, Event as ICalEvent, parse, Time } from "ical.js";
 import { CalendarSource } from "../settings/types";
 import MemoChron from "../main";
 import {
@@ -314,9 +314,12 @@ export class CalendarService {
     return JSON.parse(cacheFile);
   }
 
-  private isValidCache(cache: any): cache is CacheData {
+  private isValidCache(cache: unknown): cache is CacheData {
+    if (!cache || typeof cache !== "object") return false;
+    const c = cache as Record<string, unknown>;
     return (
-      cache && cache.timestamp && cache.events && Array.isArray(cache.events)
+      typeof c.timestamp === "number" &&
+      Array.isArray(c.events)
     );
   }
 
@@ -768,8 +771,8 @@ export class CalendarService {
     const exdateProps = vevent.getAllProperties("exdate");
     for (const exdateProp of exdateProps) {
       const values = exdateProp.getValues();
-      values.forEach((value: any) => {
-        if (value?.toJSDate) {
+      values.forEach((value: Time | Duration | string) => {
+        if (value instanceof Time) {
           excludedDates.push(value.toJSDate());
         }
       });
@@ -937,7 +940,7 @@ export class CalendarService {
     
     // Also check if the type is 'date' in the jCal representation
     // This handles cases where ical.js represents date-only values differently
-    const jcal = (dtstart as any).jCal;
+    const jcal = dtstart.jCal;
     if (jcal && jcal[2] === "date") return true;
     
     return false;

@@ -97,7 +97,7 @@ export class IcsImportService {
 
     // Also check if the type is 'date' in the jCal representation
     // This handles cases where ical.js represents date-only values differently
-    const jcal = (dtstart as any).jCal;
+    const jcal = dtstart.jCal;
     if (jcal && jcal[2] === "date") return true;
 
     return false;

@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, MarkdownView, Notice, setIcon, TFile } from "obsidian";
+import { MarkdownRenderChild, MarkdownView, Notice, setIcon, TFile, moment } from "obsidian";
 import MemoChron from "../main";
 import {
   parseDate,
@@ -373,12 +373,6 @@ export class EmbeddedAgendaView extends MarkdownRenderChild {
           // eslint-disable-next-line obsidianmd/ui/sentence-case -- proper nouns: Daily Notes, Settings, Core plugins (Obsidian UI labels)
           "Daily Notes core plugin is not enabled. Please enable it in Settings > Core plugins."
         );
-        return;
-      }
-
-      const moment = (window as any).moment;
-      if (!moment) {
-        new Notice("Moment.js is not available");
         return;
       }
 

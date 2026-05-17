@@ -44,7 +44,7 @@ export function detectPathType(path: string): PathType {
 
 export function normalizeFilePath(path: string, type: PathType): string {
   switch (type) {
-    case PathType.FILE_URL:
+    case PathType.FILE_URL: {
       // Remove file:// or file:/// prefix and decode URI components
       // Windows often uses file:///C:/path, Unix uses file:///path
       let normalized = decodeURIComponent(path.replace(/^file:\/\/\/?/, ""));
@@ -54,7 +54,9 @@ export function normalizeFilePath(path: string, type: PathType): string {
         normalized = "/" + normalized;
       }
       return normalized;
-    
+    }
+
+
     case PathType.VAULT_RELATIVE:
       // Normalize path for Obsidian
       return normalizePath(path);

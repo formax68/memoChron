@@ -11,7 +11,8 @@ declare module "ical.js" {
   export class Property {
     getFirstValue(): any;
     getParameter(name: string): string;
-    getValues(): any[];
+    getValues(): Array<Time | Duration | string>;
+    jCal: unknown[];
   }
 
   export class Event {
