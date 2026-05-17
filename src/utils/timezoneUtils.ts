@@ -2,6 +2,10 @@ import { DateTime } from "luxon";
 import { Time } from "ical.js";
 import { errorMessage } from "./errors";
 
+// Forensic-only flag for timezone debugging. Flip to true locally;
+// tree-shakes to nothing in production builds when false.
+const DEBUG = false;
+
 // Single source of truth for timezone mappings
 // Comprehensive mapping of Windows/Exchange timezone names to IANA timezone identifiers
 export const TIMEZONE_MAP: Record<string, string> = {
@@ -175,11 +179,7 @@ export function convertIcalTimeToDate(
     // This is safer than manual construction as it respects the original format
     try {
       return icalTime.toJSDate();
-    } catch (error) {
-      console.warn(
-        "Failed to use ical.js toJSDate(), falling back to manual construction:",
-        errorMessage(error)
-      );
+    } catch {
       // Fallback to original behavior for floating times
       return new Date(year, month - 1, day, hour, minute, second);
     }
@@ -196,11 +196,7 @@ export function convertIcalTimeToDate(
     if (!mappedZone) {
       try {
         return icalTime.toJSDate();
-      } catch (error) {
-        console.warn(
-          "toJSDate failed for custom TZID, falling back to manual conversion:",
-          errorMessage(error)
-        );
+      } catch {
         // Continue to Luxon fallback below
       }
     }
@@ -212,8 +208,9 @@ export function convertIcalTimeToDate(
     );
 
     if (!dt.isValid) {
-      console.warn(
-        `Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), falling back to local time`
+      // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
+      if (DEBUG) console.warn(
+        `MemoChron: Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), falling back to local time`
       );
       return new Date(year, month - 1, day, hour, minute, second);
     }
@@ -221,7 +218,8 @@ export function convertIcalTimeToDate(
     // Convert to local timezone
     return dt.toLocal().toJSDate();
   } catch (error) {
-    console.error("Failed to convert ICAL time:", errorMessage(error), {
+    // eslint-disable-next-line no-console -- DEBUG flag (Phase 8 D-07)
+    if (DEBUG) console.error("MemoChron: Failed to convert ICAL time:", errorMessage(error), {
       icalTime,
       tzid: normalizedTzid,
       mappedZone: mappedZone,
@@ -263,9 +261,6 @@ export function convertTimezone(date: Date, tzid: string | null): Date {
   );
 
   if (!dt.isValid) {
-    console.warn(
-      `Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), using original date`
-    );
     return date;
   }
 
