@@ -9,7 +9,7 @@ Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian c
 
 ### Directory scorecard findings
 
-- [ ] **DIR-01**: No `console.log` / `console.info` / `console.debug` / `console.warn` / `console.error` calls remain in shipped code at the four flagged sites (`CalendarService.ts:249, 282, 324` and `SettingsTab.ts:1720`); the codebase is audited for the same pattern and any remaining sites are either removed or gated behind a developer-only debug flag that is `false` by default
+- [x] **DIR-01**: No `console.log` / `console.info` / `console.debug` / `console.warn` / `console.error` calls remain in shipped code at the four flagged sites (`CalendarService.ts:249, 282, 324` and `SettingsTab.ts:1720`); the codebase is audited for the same pattern and any remaining sites are either removed or gated behind a developer-only debug flag that is `false` by default
 - [ ] **DIR-02**: No `.innerHTML` or `.outerHTML` write occurs anywhere in shipped code; every site is rewritten using `createEl({ cls, text, attr })`, `createDiv({ cls })`, `setText()`, or `createElementNS` for SVG
 - [ ] **DIR-03**: No `element.style.<property>` assignment occurs in shipped code; every flagged property (`border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width`) is replaced with a CSS class addition / removal or `setCssProps({ ... })` for dynamic values
 - [ ] **DIR-04**: All DOM-construction sites in `CalendarView`, `EmbeddedCalendarView`, `EmbeddedAgendaView`, `SettingsTab`, and `viewRenderers` use the Obsidian `createEl` / `createDiv` / `createSpan` helpers exclusively — no `document.createElement(...)` and no string-literal HTML
@@ -17,8 +17,8 @@ Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian c
 - [ ] **DIR-06**: All `document` references that should reflect the active popout use `activeDocument`; all `setTimeout` / `setInterval` calls that fire in a view context use `activeWindow.setTimeout` / `activeWindow.setInterval` (or the workspace-aware equivalent)
 - [ ] **DIR-07**: No `as TFile` cast occurs in shipped code; every site that consumes a `TAbstractFile` narrows via `instanceof TFile` first
 - [ ] **DIR-08**: No floating promise occurs in shipped code; every `Promise`-returning call is either `await`ed, given an explicit `.catch` handler, or marked with the `void` operator. `EmbeddedCalendarView` and `EmbeddedAgendaView` lifecycle methods (`onload`, `onunload`) match the synchronous return type required by `MarkdownRenderChild`
-- [ ] **DIR-09**: No `any` type appears in shipped source code (test fixtures and `.d.ts` shims excepted); `??` operators do not appear with a constant left-hand side; no lexical declarations appear inside `case` blocks without a block scope; no unnecessary escape characters remain in regular expression literals
-- [ ] **DIR-10**: ESLint reports zero `@typescript-eslint/no-unused-vars` violations across the source tree (the 21 names flagged by the scorecard — `App`, `CalendarEvent`, `CalendarNotesSettings`, `controls`, `convertTimezone`, `date`, `DateElements`, `DEFAULT_CALENDAR_URLS`, `DropdownComponent`, `e`, `error`, `isNewNote`, `MemoChronSettings`, `Notice`, `plugin`, `Property`, `renderAgendaList`, `target`, `TextAreaComponent`, `TFile`, `title` — are all either deleted or genuinely used)
+- [x] **DIR-09**: No `any` type appears in shipped source code (test fixtures and `.d.ts` shims excepted); `??` operators do not appear with a constant left-hand side; no lexical declarations appear inside `case` blocks without a block scope; no unnecessary escape characters remain in regular expression literals
+- [x] **DIR-10**: ESLint reports zero `@typescript-eslint/no-unused-vars` violations across the source tree (the 21 names flagged by the scorecard — `App`, `CalendarEvent`, `CalendarNotesSettings`, `controls`, `convertTimezone`, `date`, `DateElements`, `DEFAULT_CALENDAR_URLS`, `DropdownComponent`, `e`, `error`, `isNewNote`, `MemoChronSettings`, `Notice`, `plugin`, `Property`, `renderAgendaList`, `target`, `TextAreaComponent`, `TFile`, `title` — are all either deleted or genuinely used)
 - [x] **DIR-11**: `manifest.json` `description` field ends with `.`, `!`, or `?`
 - [x] **DIR-12**: The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset
 
@@ -29,7 +29,7 @@ Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian c
 ### Documentation & guardrails
 
 - [x] **DOC-01**: A working ESLint configuration (`.eslintrc.json` or `eslint.config.js`) is installed and enforces — at minimum — `no-console`, `no-inner-html`, the Obsidian community linting rules (no inline styles, no `as TFile` cast, no view-in-`registerView`, popout-window helpers), `@typescript-eslint/no-floating-promises`, `@typescript-eslint/no-explicit-any`, and `@typescript-eslint/no-unused-vars`. `npm run lint` is a script in `package.json`. CI (`.github/workflows/`) runs lint on every push and PR. A failing lint blocks the build
-- [ ] **DOC-02**: `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` (new or merged into existing codebase docs) carry a "Directory Compliance" do/don't section — one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page — so future plans land compliant by default
+- [x] **DOC-02**: `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` (new or merged into existing codebase docs) carry a "Directory Compliance" do/don't section — one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page — so future plans land compliant by default
 
 ## v2 Requirements
 
@@ -94,7 +94,7 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DIR-01 | Phase 8 | Pending |
+| DIR-01 | Phase 8 | Complete |
 | DIR-02 | Phase 6 | Pending |
 | DIR-03 | Phase 6 | Pending |
 | DIR-04 | Phase 6 | Pending |
@@ -102,13 +102,13 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 | DIR-06 | Phase 7 | Pending |
 | DIR-07 | Phase 7 | Pending |
 | DIR-08 | Phase 7 | Pending |
-| DIR-09 | Phase 8 | Pending |
-| DIR-10 | Phase 8 | Pending |
+| DIR-09 | Phase 8 | Complete |
+| DIR-10 | Phase 8 | Complete |
 | DIR-11 | Phase 5 | Complete |
 | DIR-12 | Phase 5 | Complete |
 | BUG-07 | Phase 7 | Pending |
 | DOC-01 | Phase 5 | Complete |
-| DOC-02 | Phase 8 | Pending |
+| DOC-02 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 15 total
