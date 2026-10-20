@@ -220,7 +220,175 @@ async function checkTracer() {
   assert.equal(bodyOf(jan.content), "1|01|53|2027");
 }
 
-const CHECKS = [checkTracer];
+// [y, monthIndex, d, h, min] -> expected getEventDateVariables output (local time).
+const BOUNDARY_CASES = [
+  [[2026, 11, 31, 12, 0], { week: "53", dd: "31", d: "31", year: "2026" }],
+  [[2027, 0, 3, 12, 0], { week: "53", dd: "03", d: "3", year: "2027" }],
+  [[2027, 0, 4, 12, 0], { week: "1", dd: "04", d: "4", year: "2027" }],
+  [[2025, 11, 29, 12, 0], { week: "1", dd: "29", d: "29", year: "2025" }],
+  [[2026, 0, 1, 12, 0], { week: "1", dd: "01", d: "1", year: "2026" }],
+  [[2021, 0, 3, 12, 0], { week: "53", dd: "03", d: "3", year: "2021" }],
+  [[2026, 4, 3, 23, 30], { week: "18", dd: "03", d: "3", year: "2026" }],
+  [[2026, 4, 4, 0, 0], { week: "19", dd: "04", d: "4", year: "2026" }],
+  [[2026, 4, 4, 0, 30], { week: "19", dd: "04", d: "4", year: "2026" }],
+  [[2026, 4, 9, 12, 0], { week: "19", dd: "09", d: "9", year: "2026" }],
+  [[2026, 4, 10, 12, 0], { week: "19", dd: "10", d: "10", year: "2026" }],
+];
+
+const TRACER_DATES = [
+  [2026, 4, 4, 12, 0],
+  [2027, 0, 1, 12, 0],
+];
+
+async function checkBoundaries() {
+  const mod = await loadBundle();
+  for (const [[y, m0, d, h, min], expected] of BOUNDARY_CASES) {
+    assert.deepEqual(
+      mod.getEventDateVariables(new Date(y, m0, d, h, min)),
+      expected,
+      `boundary case ${y}-${m0 + 1}-${d} ${h}:${min}`
+    );
+  }
+}
+
+async function checkPrecision() {
+  const mod = await loadBundle();
+  const dates = [...BOUNDARY_CASES.map(([parts]) => parts), ...TRACER_DATES];
+  for (const [y, m0, d, h, min] of dates) {
+    const label = `${y}-${m0 + 1}-${d} ${h}:${min}`;
+    const v = mod.getEventDateVariables(new Date(y, m0, d, h, min));
+    assert.match(v.week, /^[1-9][0-9]*$/, `week precision ${label}`);
+    assert.match(v.d, /^[1-9][0-9]*$/, `d precision ${label}`);
+    assert.match(v.dd, /^[0-9]{2}$/, `dd precision ${label}`);
+    assert.match(v.year, /^[0-9]{4}$/, `year precision ${label}`);
+  }
+}
+
+async function checkAdjacency() {
+  const mod = await loadBundle();
+  const event = makeEvent(2026, 4, 4, 12, 0);
+  // Pre-existing UTC-based {{date}} value (A-UTC): expected unchanged, not "fixed".
+  const iso = event.start.toISOString().split("T")[0];
+
+  const body = await createNote(
+    mod,
+    patch({
+      defaultFrontmatter: "",
+      defaultTags: [],
+      noteTemplate:
+        "{{d}} {{dd}} {{date}}|{{d}}{{dd}}|{{ d }} {{D}} {{ddd}}|{{week}}{{year}}",
+    }),
+    event
+  );
+  assert.equal(
+    bodyOf(body.content),
+    `4 04 ${iso}|404|{{ d }} {{D}} {{ddd}}|192026`
+  );
+
+  const fm = await createNote(
+    mod,
+    patch({
+      defaultFrontmatter: "---\nline: {{d}}{{dd}} {{week}}\n---",
+      defaultTags: [],
+      noteTemplate: "",
+    }),
+    event
+  );
+  assert.ok(
+    fm.content.split("\n").includes("line: 404 19"),
+    `frontmatter adjacency line missing in:\n${fm.content}`
+  );
+}
+
+async function checkSanitizedTitle() {
+  const mod = await loadBundle();
+  const note = await createNote(
+    mod,
+    patch({ noteTitleFormat: "{{year}}-W{{week}} {{dd}} {{event_title}}" }),
+    makeEvent(2026, 4, 4, 12, 0, { title: "a/b:c*?" })
+  );
+  const name = basename(note.path);
+  assert.equal(name, "2026-W19 04 a-b-c--.md");
+  assert.doesNotMatch(name, /[\\/:*?"<>|]/);
+}
+
+async function checkDateFormatIndependence() {
+  const mod = await loadBundle();
+  const event = makeEvent(2026, 4, 4, 12, 0);
+  const template = "{{dd}}|{{d}}|{{year}}|{{week}}";
+  const us = await createNote(
+    mod,
+    patch({ noteDateFormat: "US", noteTemplate: template }),
+    event
+  );
+  const iso = await createNote(
+    mod,
+    patch({ noteDateFormat: "ISO", noteTemplate: template }),
+    event
+  );
+  assert.equal(bodyOf(us.content), "04|4|2026|19");
+  assert.equal(bodyOf(iso.content), bodyOf(us.content));
+}
+
+async function checkParity() {
+  const current = await loadBundle();
+  const baseline = await loadBundle("1.15.0");
+
+  const tokenText = {
+    description: "Agenda {{week}} {{d}}",
+    location: "Room {{year}}",
+    attendees: ["Ann {{dd}}"],
+  };
+
+  const corpus = [
+    { name: "a-defaults", settings: patch(), extra: {} },
+    {
+      name: "b-existing-vars-with-token-text",
+      settings: patch({
+        noteTitleFormat: "{{start_date}} {{day}} {{month}} {{event_title}}",
+        noteTemplate:
+          "{{date}} {{date-iso}} {{start_time}}-{{end_time}} {{day}} {{month}} {{source}} {{description}} {{location}} {{attendees}}",
+      }),
+      extra: tokenText,
+    },
+    {
+      name: "c-per-calendar-override",
+      settings: {
+        calendarUrls: [
+          workCalendar({
+            notesSettings: {
+              useCustomSettings: true,
+              noteTitleFormat: "{{event_title}} {{source}}",
+              defaultFrontmatter: "---\nkind: meeting\n---",
+            },
+          }),
+        ],
+      },
+      extra: {},
+    },
+  ];
+
+  for (const { name, settings, extra } of corpus) {
+    for (const [y, m0, d, h, min] of TRACER_DATES) {
+      const ev = () => makeEvent(y, m0, d, h, min, extra);
+      assert.deepEqual(
+        await createNote(current, settings, ev()),
+        await createNote(baseline, settings, ev()),
+        `parity ${name} ${y}-${m0 + 1}-${d}`
+      );
+    }
+  }
+}
+
+const CHECKS = [
+  checkTracer,
+  checkBoundaries,
+  checkPrecision,
+  checkAdjacency,
+  checkSanitizedTitle,
+  checkDateFormatIndependence,
+  checkParity,
+];
 
 // ---------------------------------------------------------------------------
 // Runner: parent fans out one child per timezone; child runs CHECKS.
@@ -241,7 +409,12 @@ if (process.env.VERIFY09_TZ_CHILD !== "1") {
   process.exit(0);
 } else {
   const zone = process.env.TZ;
-  for (const check of CHECKS) {
+  // Optional debugging filter: VERIFY09_ONLY=checkBoundaries,checkParity
+  const only = (process.env.VERIFY09_ONLY ?? "").split(",").filter(Boolean);
+  const selected = only.length
+    ? CHECKS.filter((check) => only.includes(check.name))
+    : CHECKS;
+  for (const check of selected) {
     try {
       await check();
     } catch (error) {
