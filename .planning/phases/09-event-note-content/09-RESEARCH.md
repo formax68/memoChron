@@ -533,13 +533,15 @@ console.log("verify-09: all checks passed");
 | A4 | Placing merger/date code in new `src/utils/*.ts` files (rather than NoteService private methods) is acceptable under "Claude's Discretion: structure of the tag merger" | Project Structure | Low. Only affects automated verifiability, not behavior |
 | A5 | `~`/`null`/`""`/`''` values are treated as an empty `tags` key and replaced by a block list | Pattern 1 | Very low. The alternative (D-03 skip) loses calendar tags |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Pre-existing UTC `{{date}}`/`{{date-iso}}` off-by-one for all-day events in UTC+ zones**
    - What we know: `formatDate` ISO and `*-iso` use `toISOString()`. All-day events start at local midnight. In Europe/Athens, `{{date}}` = `2026-05-03` while `{{dd}}` = `04`.
    - What's unclear: whether the user wants it fixed in this phase. It is not in BUG-08..ENH-12, and success criterion 4 says the side-by-side template "renders all three correctly".
    - Recommendation: Do not fix in Phase 9. Run criterion-4 UAT with a timed midday event, and log a backlog item. If the user wants it fixed, it is a separate change to `formatDate`/`date-iso`, and it changes existing users' filenames, so it needs its own decision.
+   - RESOLVED: Not fixed in Phase 9. Plan 09-01 makes it a prohibition (no pre-existing variable changes its rendered value) and records it as assumption A-UTC. The harness expects the unchanged `toISOString()` value, UAT uses a timed midday event, and the 09-01 SUMMARY logs it under "Known pre-existing issues" for a separate follow-up decision.
 2. **Should `{{week}}` docs warn that it can differ from the calendar grid's week column?** That decision belongs to Phase 11 (DOC-03). Noted in CONTEXT specifics; nothing to do here.
+   - RESOLVED: Deferred to Phase 11 (DOC-03), which writes the README and settings-tab text for `{{week}}`. Phase 9 does not change the calendar view's week column (CONTEXT Deferred Ideas), and no Phase 9 plan writes docs for the new variables.
 
 ## Environment Availability
 
