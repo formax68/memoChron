@@ -3,6 +3,7 @@ import MemoChron from "../main";
 import { MemoChronSettings, CalendarNotesSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
 import { errorMessage } from "../utils/errors";
+import { getEventDateVariables } from "../utils/eventDateVariables";
 
 interface EventTemplateVariables {
   event_title: string;
@@ -18,6 +19,14 @@ interface EventTemplateVariables {
   day: string;
   // Full English month name (e.g. "January") — locale hard-coded to "en-US"
   month: string;
+  // ISO 8601 week number of the event start (e.g. "19") — unpadded, local time
+  week: string;
+  // Zero-padded day of month of the event start (e.g. "04")
+  dd: string;
+  // Unpadded day of month of the event start (e.g. "4")
+  d: string;
+  // Four-digit calendar year of the event start (e.g. "2026") — not the ISO week-year
+  year: string;
   source: string;
   location: string;
   locationText: string;
@@ -278,6 +287,7 @@ export class NoteService {
       end_time: this.formatTime(event.end, event.source),
       day: event.start.toLocaleDateString("en-US", { weekday: "long" }),
       month: event.start.toLocaleDateString("en-US", { month: "long" }),
+      ...getEventDateVariables(event.start),
       source: event.source,
       location: event.location || "",
       locationText: this.formatLocationText(event.location),
