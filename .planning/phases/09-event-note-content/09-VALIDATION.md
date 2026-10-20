@@ -3,9 +3,9 @@ phase: "9"
 slug: "event-note-content"
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-20"
 ---
 
@@ -40,10 +40,10 @@ created: "2026-10-20"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 09-01-T1 | 09-01 | 1 | ENH-09, ENH-10, ENH-11, ENH-12 | T-09-01, T-09-SC | Lockfile-only install; new title values pass through `sanitizeFileName` | tracer (harness drives real `createEventNote`, 4 TZ) + source-order gates | `npm run lint && npm run build && node .planning/phases/09-event-note-content/verify-09.mjs` | ❌ W0 (created by this task) | ⬜ pending |
-| 09-01-T2 | 09-01 | 1 | ENH-09, ENH-10, ENH-11, ENH-12 | T-09-01, T-09-02 | Byte-parity with 1.15.0 for users not using new tokens; no cross-substitution | unit + integration (harness, 4 TZ) + `<human-check>` | `node .planning/phases/09-event-note-content/verify-09.mjs && npm run lint && npm run build` | ✅ after 09-01-T1 | ⬜ pending |
-| 09-02-T1 | 09-02 | 2 | BUG-08, BUG-09 | T-09-04, T-09-05, T-09-SC | Exactly one `tags` key; no YAML round-trip of user frontmatter | tracer (harness fixtures T1-T11 + no-key parity vs tag 1.15.0) + grep guards | `npm run lint && npm run build && node .planning/phases/09-event-note-content/verify-09.mjs` | ✅ | ⬜ pending |
-| 09-02-T2 | 09-02 | 2 | BUG-08, BUG-09 | T-09-04, T-09-05, T-09-06 | Unsafe shapes untouched (D-03); `yamlSafeTag` quoting | tdd (harness F1-F18, U1-U6; dual YAML parsers) + `<human-check>` | `node .planning/phases/09-event-note-content/verify-09.mjs && npm run lint && npm run build` | ✅ | ⬜ pending |
+| 09-01-T1 | 09-01 | 1 | ENH-09, ENH-10, ENH-11, ENH-12 | T-09-01, T-09-SC | Lockfile-only install; new title values pass through `sanitizeFileName` | tracer (harness drives real `createEventNote`, 4 TZ) + source-order gates | `npm run lint && npm run build && node .planning/phases/09-event-note-content/verify-09.mjs` | ✅ | ✅ green |
+| 09-01-T2 | 09-01 | 1 | ENH-09, ENH-10, ENH-11, ENH-12 | T-09-01, T-09-02 | Byte-parity with 1.15.0 for users not using new tokens; no cross-substitution | unit + integration (harness, 4 TZ) + `<human-check>` | `node .planning/phases/09-event-note-content/verify-09.mjs && npm run lint && npm run build` | ✅ | ✅ green |
+| 09-02-T1 | 09-02 | 2 | BUG-08, BUG-09 | T-09-04, T-09-05, T-09-SC | Exactly one `tags` key; no YAML round-trip of user frontmatter | tracer (harness fixtures T1-T11 + no-key parity vs tag 1.15.0) + grep guards | `npm run lint && npm run build && node .planning/phases/09-event-note-content/verify-09.mjs` | ✅ | ✅ green |
+| 09-02-T2 | 09-02 | 2 | BUG-08, BUG-09 | T-09-04, T-09-05, T-09-06 | Unsafe shapes untouched (D-03); `yamlSafeTag` quoting | tdd (harness F1-F18, U1-U6; dual YAML parsers) + `<human-check>` | `node .planning/phases/09-event-note-content/verify-09.mjs && npm run lint && npm run build` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -51,8 +51,8 @@ created: "2026-10-20"
 
 ## Wave 0 Requirements
 
-- [ ] `npm ci` — node_modules absent from working tree. Run by 09-01-T1, and by 09-02-T1 when it executes in a fresh worktree
-- [ ] `.planning/phases/09-event-note-content/verify-09.mjs` — created by 09-01-T1. It esbuild-bundles the REAL `NoteService` with an `obsidian` stub and drives `createEventNote`, fans out over 4 timezones, and checks byte-parity against git tag `1.15.0`. Extended by 09-01-T2 (date boundaries/adjacency/parity) and 09-02-T1/T2 (tag-merge fixtures)
+- [x] `npm ci` — node_modules absent from working tree. Run by 09-01-T1, and by 09-02-T1 when it executes in a fresh worktree
+- [x] `.planning/phases/09-event-note-content/verify-09.mjs` — created by 09-01-T1. It esbuild-bundles the REAL `NoteService` with an `obsidian` stub and drives `createEventNote`, fans out over 4 timezones, and checks byte-parity against git tag `1.15.0`. Extended by 09-01-T2 (date boundaries/adjacency/parity) and 09-02-T1/T2 (tag-merge fixtures)
 - [ ] `.planning/phases/09-event-note-content/09-HUMAN-UAT.md` — produced at end of phase by the verifier from the `<human-check>` blocks in 09-01-T2 and 09-02-T2 (`workflow.human_verify_mode` defaults to end-of-phase, so no mid-flight checkpoints)
 
 ---
@@ -68,11 +68,19 @@ created: "2026-10-20"
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-10-20 (all 4 tasks green; Obsidian UAT remains manual-only)
+
+## Validation Audit 2026-10-20
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
