@@ -9,8 +9,8 @@ Requirements for the v1.16 Issue Sweep milestone. Closes the four open user-repo
 
 ### Note creation — frontmatter (#61)
 
-- [ ] **BUG-08**: When the default frontmatter (global or per-calendar) already contains a `tags` property, the event's calendar tags are merged into that existing property in place — no second `tags` key is emitted. Handles block-list (`tags:\n  - a`), inline-array (`tags: [a, b]`), and scalar (`tags: a`) forms
-- [ ] **BUG-09**: Merged tags are deduplicated; the user's other frontmatter keys, their order, and existing tag values are preserved unchanged. When no `tags` key exists, a `tags` block is appended exactly as in 1.15.0
+- [x] **BUG-08**: When the default frontmatter (global or per-calendar) already contains a `tags` property, the event's calendar tags are merged into that existing property in place — no second `tags` key is emitted. Handles block-list (`tags:\n  - a`), inline-array (`tags: [a, b]`), and scalar (`tags: a`) forms
+- [x] **BUG-09**: Merged tags are deduplicated; the user's other frontmatter keys, their order, and existing tag values are preserved unchanged. When no `tags` key exists, a `tags` block is appended exactly as in 1.15.0
 
 ### Note creation — focus (#62)
 
@@ -57,8 +57,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUG-08 | Phase 9 | Pending |
-| BUG-09 | Phase 9 | Pending |
+| BUG-08 | Phase 9 | Complete |
+| BUG-09 | Phase 9 | Complete |
 | ENH-09 | Phase 9 | Complete |
 | ENH-10 | Phase 9 | Complete |
 | ENH-11 | Phase 9 | Complete |

@@ -4,18 +4,18 @@ milestone: v1.16
 milestone_name: Issue Sweep
 current_phase: 09
 current_phase_name: Event Note Content
-status: executing
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-10-20T14:02:36.987Z"
+status: verifying
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-10-20T14:09:33.064Z"
 last_activity: 2026-10-20
 last_activity_desc: Phase 09 execution started
-state_head: 8e44b509258f917a95042a77dacdcdb57e4f0416
+state_head: 102152f935aa87315973b712f3a39c1153148072
 progress:
   total_phases: 3
   completed_phases: 8
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -31,10 +31,10 @@ See: .planning/PROJECT.md (updated 2026-10-20)
 
 Phase: 09 (Event Note Content) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-20 — Phase 09 execution started
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [█████░░░░░] 50%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 09 P01 | 5 min | 2 tasks | 3 files |
+| Phase 09 P02 | 4 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Phase 09]: 09-01: {{week}} is ISO 8601 via luxon weekNumber (not localWeekNumber); {{year}} is getFullYear() calendar year; new keys placed after month, before source
 - [Phase 09]: 09-01: pre-existing UTC-based {{date}}/{{date-iso}} left unchanged (A-UTC known issue, follow-up decision)
 - [Phase 09]: 09-01: phase commits live on branch gsd/phase-09-event-note-content because the executor guard treats main as protected
+- [Phase 09]: 09-02: calendar tags merge into an existing top-level tags key (block, inline, scalar, empty/null-ish) via pure line scanner src/utils/frontmatterTags.ts; no-key path keeps 1.15.0 formatTagsYaml append byte-for-byte
+- [Phase 09]: 09-02: unsafe tags shapes (multi-line flow, flow mapping, block scalar, anchor/alias, mixed indents, duplicate tags keys, escaped quotes) are left untouched and calendar tags skipped silently (D-03); document workaround in Phase 11 DOC-03
 
 ### Pending Todos
 
@@ -116,6 +119,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-20T14:02:36.975Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-10-20T14:09:33.051Z
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
