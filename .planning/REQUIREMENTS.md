@@ -1,119 +1,68 @@
-# Requirements: MemoChron — v1.15 Directory Compliance
+# Requirements: MemoChron — v1.16 Issue Sweep
 
-**Defined:** 2026-05-13
+**Defined:** 2026-10-20
 **Core Value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
 
 ## v1 Requirements
 
-Requirements for the v1.15 Directory Compliance milestone. Closes the Obsidian community-plugin Review scorecard findings (currently "Risks" on v1.13.1) and installs lint/doc guardrails to prevent regression. Every requirement maps to a roadmap phase.
+Requirements for the v1.16 Issue Sweep milestone. Closes the four open user-reported GitHub issues against 1.15.0 (#61, #62, #63, #54). All work must pass the v1.15 ESLint/CI gate and follow `## Directory Compliance` in `.planning/codebase/CONVENTIONS.md`. Previous milestone archived at `.planning/milestones/v1.15-REQUIREMENTS.md`.
 
-### Directory scorecard findings
+### Note creation — frontmatter (#61)
 
-- [x] **DIR-01**: No `console.log` / `console.info` / `console.debug` / `console.warn` / `console.error` calls remain in shipped code at the four flagged sites (`CalendarService.ts:249, 282, 324` and `SettingsTab.ts:1720`); the codebase is audited for the same pattern and any remaining sites are either removed or gated behind a developer-only debug flag that is `false` by default
-- [ ] **DIR-02**: No `.innerHTML` or `.outerHTML` write occurs anywhere in shipped code; every site is rewritten using `createEl({ cls, text, attr })`, `createDiv({ cls })`, `setText()`, or `createElementNS` for SVG
-- [ ] **DIR-03**: No `element.style.<property>` assignment occurs in shipped code; every flagged property (`border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width`) is replaced with a CSS class addition / removal or `setCssProps({ ... })` for dynamic values
-- [ ] **DIR-04**: All DOM-construction sites in `CalendarView`, `EmbeddedCalendarView`, `EmbeddedAgendaView`, `SettingsTab`, and `viewRenderers` use the Obsidian `createEl` / `createDiv` / `createSpan` helpers exclusively — no `document.createElement(...)` and no string-literal HTML
-- [ ] **DIR-05**: `registerView` callback constructs and returns the `CalendarView` instance directly; no `plugin.calendarView = view` assignment occurs inside the callback; the view is fetched lazily from the workspace when other components need it
-- [ ] **DIR-06**: All `document` references that should reflect the active popout use `activeDocument`; all `setTimeout` / `setInterval` calls that fire in a view context use `activeWindow.setTimeout` / `activeWindow.setInterval` (or the workspace-aware equivalent)
-- [ ] **DIR-07**: No `as TFile` cast occurs in shipped code; every site that consumes a `TAbstractFile` narrows via `instanceof TFile` first
-- [ ] **DIR-08**: No floating promise occurs in shipped code; every `Promise`-returning call is either `await`ed, given an explicit `.catch` handler, or marked with the `void` operator. `EmbeddedCalendarView` and `EmbeddedAgendaView` lifecycle methods (`onload`, `onunload`) match the synchronous return type required by `MarkdownRenderChild`
-- [x] **DIR-09**: No `any` type appears in shipped source code (test fixtures and `.d.ts` shims excepted); `??` operators do not appear with a constant left-hand side; no lexical declarations appear inside `case` blocks without a block scope; no unnecessary escape characters remain in regular expression literals
-- [x] **DIR-10**: ESLint reports zero `@typescript-eslint/no-unused-vars` violations across the source tree (the 21 names flagged by the scorecard — `App`, `CalendarEvent`, `CalendarNotesSettings`, `controls`, `convertTimezone`, `date`, `DateElements`, `DEFAULT_CALENDAR_URLS`, `DropdownComponent`, `e`, `error`, `isNewNote`, `MemoChronSettings`, `Notice`, `plugin`, `Property`, `renderAgendaList`, `target`, `TextAreaComponent`, `TFile`, `title` — are all either deleted or genuinely used)
-- [x] **DIR-11**: `manifest.json` `description` field ends with `.`, `!`, or `?`
-- [x] **DIR-12**: The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset
+- [ ] **BUG-08**: When the default frontmatter (global or per-calendar) already contains a `tags` property, the event's calendar tags are merged into that existing property in place — no second `tags` key is emitted. Handles block-list (`tags:\n  - a`), inline-array (`tags: [a, b]`), and scalar (`tags: a`) forms
+- [ ] **BUG-09**: Merged tags are deduplicated; the user's other frontmatter keys, their order, and existing tag values are preserved unchanged. When no `tags` key exists, a `tags` block is appended exactly as in 1.15.0
 
-### Bugs
+### Note creation — focus (#62)
 
-- [ ] **BUG-07**: Toggling the MemoChron plugin on/off from Obsidian's Community Plugins list does not close the Settings modal. If root cause is in MemoChron (e.g. `onunload` triggers a workspace event that detaches the active modal leaf), the fix preserves the modal. If root cause is in Obsidian core behavior, BUG-07 is closed with a written explanation and a regression-test note
+- [ ] **ENH-07**: A new setting "Focus new event note" (default ON) makes a newly created event note open in a focused, active tab even when Obsidian's global "Always focus new tabs" option is disabled
+- [ ] **ENH-08**: With the setting ON, the `{{cursor}}` marker places the caret in the focused editor so the user can type immediately; with the setting OFF, behavior is identical to 1.15.0
 
-### Documentation & guardrails
+### Template variables (#63)
 
-- [x] **DOC-01**: A working ESLint configuration (`.eslintrc.json` or `eslint.config.js`) is installed and enforces — at minimum — `no-console`, `no-inner-html`, the Obsidian community linting rules (no inline styles, no `as TFile` cast, no view-in-`registerView`, popout-window helpers), `@typescript-eslint/no-floating-promises`, `@typescript-eslint/no-explicit-any`, and `@typescript-eslint/no-unused-vars`. `npm run lint` is a script in `package.json`. CI (`.github/workflows/`) runs lint on every push and PR. A failing lint blocks the build
-- [x] **DOC-02**: `CLAUDE.md` and `.planning/codebase/CONVENTIONS.md` (new or merged into existing codebase docs) carry a "Directory Compliance" do/don't section — one short rule per scorecard finding, each with a one-line rationale and a link to the relevant Obsidian docs page — so future plans land compliant by default
+- [ ] **ENH-09**: `{{week}}` renders the ISO 8601 week number of the event start date, unpadded (e.g. `1`, `19`)
+- [ ] **ENH-10**: `{{dd}}` renders the zero-padded day of month (`04`) and `{{d}}` renders the unpadded day of month (`4`) for the event start date
+- [ ] **ENH-11**: `{{year}}` renders the four-digit calendar year of the event start date (calendar year, not ISO week-year)
+- [ ] **ENH-12**: All four new variables work in note titles (sanitized), note templates, and default frontmatter; `{{d}}` substitution never corrupts `{{dd}}` or `{{date}}`
+
+### Calendar view (#54)
+
+- [ ] **BUG-10**: The sidebar calendar's view mode (Month or 1–N weeks, whether set via the dropdown or via drag-resize) is restored after an Obsidian restart and when the view is reopened
+- [ ] **BUG-11**: The v1.14 BUG-02 (fast month/week arrow navigation) and BUG-03 (drag-resize syncs the view-mode dropdown; Today recenters) fixes are re-verified against 1.15.0 and still hold
+
+### Docs & issue closure
+
+- [ ] **DOC-03**: README and the settings-tab help text (note title format, note template) list `{{week}}`, `{{dd}}`, `{{d}}`, `{{year}}` and document the "Focus new event note" setting
+- [ ] **ISSUE-01**: GitHub issues #61, #62, #63, and #54 each receive a closing comment referencing the release that fixes them; issues are closed only after the user confirms at release time
 
 ## v2 Requirements
 
-Acknowledged and deferred. Tracked but not in this milestone.
+Deferred. Tracked but not in current roadmap.
 
-### Calendar protocols
-
-- **PROTO-01**: CalDAV protocol support for two-way / authenticated calendar feeds (#30)
-- **PROTO-02**: Real-time / push-based Apple Calendar integration (#37)
-- **PROTO-03**: Bulk / automated event import workflow (#38)
-
-### Note feature requests deferred from #56
-
-- **NOTE-01**: Locale customization — calendar weekday/month names and template variable output in non-English locales
-- **NOTE-02**: Template-file support — point a setting at a Markdown template file used as the starting body for new event notes
-- **NOTE-03**: Outlook/Exchange compatibility — make the Attendees field functional and fix Description-field handling for Outlook calendar feeds
-
-### Quality
-
-- **QA-01**: Unit and integration test suite — at minimum: `CalendarService.parseCalendarData`, `timezoneUtils.convertIcalTimeToDate`, `NoteService.buildFilePath`, `viewRenderers` rendering helpers
-- **QA-02**: Accessibility — keyboard navigation across the calendar grid, ARIA roles/labels, focus management, screen-reader landmarks
-
-### Performance
-
-- **PERF-01**: Settings change debouncing — `saveSettings` does not trigger a calendar refresh on every keystroke
-- **PERF-02**: Cache the enabled-source `Set<string>` derivation in `getEventsForWidget` / `getAllEventsForWidget` and invalidate on settings change
-- **PERF-03**: Incremental `SettingsTab.display()` — cache the folder list and avoid full DOM teardown on each open
-- **PERF-04**: Replace magic 50ms / 100ms `setTimeout` calls with `requestAnimationFrame` / `requestIdleCallback` and document the rationale
-
-### Fragility / API hygiene
-
-- **FRAG-01**: Wrap `(window as any).moment` in a single utility with absence detection at plugin load
-- **FRAG-02**: Replace `(dtstart as any).jCal[2]` all-day detection with the RFC 5545 `VALUE=DATE` parameter check alone
-- **FRAG-03**: Use `sourceId` (URL) as canonical identity in both `hasSourceMismatch` and `getEventsForWidget` filters; remove name-based comparison
-
-> `FRAG-04` (`innerHTML` → `createEl`) has been folded into v1.15 (DIR-02 / DIR-04).
+- **TMPL-01**: User-chosen date format tokens in templates (e.g. `{{date:WW}}`, `{{date:dddd D MMMM}}`) — generalizes #63 beyond fixed variables
+- **I18N-01**: Locale-aware `{{day}}` / `{{month}}` names (part of #56 locale customization)
 
 ## Out of Scope
 
-Explicitly excluded for this milestone. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| CalDAV protocol support (#30) | Substantial architectural change (auth, write paths, sync); deserves its own feature milestone |
-| Real-time Apple Calendar (#37) | Needs OS-level integration outside the plugin sandbox; not a plugin concern |
-| Auto/bulk event import (#38) | Defer; partial functionality already exists via `IcsImportService` |
-| Locale customization (#56) | Full i18n is its own milestone |
-| Template-file support (#56) | Bigger templating system; defer until other note-template improvements stabilize |
-| Outlook/Exchange attendees (#56) | Needs real Outlook ICS samples to verify correctness |
-| Test suite | Significant work, deserves a dedicated milestone |
-| Accessibility (keyboard nav / ARIA) | Significant UX work, deserves a dedicated milestone |
-| Settings tab incremental rendering | Non-critical perf — defer to perf milestone |
-| Widget event-fetch Set caching | Non-critical perf — defer to perf milestone |
-| Settings-change debouncing | Non-critical perf — defer to perf milestone |
-| Replacing magic 50/100ms timeouts | Functional today; defer to perf milestone (not flagged by scorecard) |
-| `window.moment` utility wrapper | Stable in practice; defer to fragility milestone (not flagged by scorecard) |
-| `jCal[2]` → `VALUE=DATE` cleanup | Stable in practice; defer to fragility milestone (not flagged by scorecard) |
-| `hasSourceMismatch` URL-canonical refactor | Edge-case-only; defer to fragility milestone |
-| Cosmetic README / image / changelog overhauls | Not flagged by directory scorecard; defer to a marketing pass |
+| Locale customization (#56) | Full i18n is large; dedicated localization milestone |
+| Arbitrary moment-format tokens in templates | Fixed variables satisfy #63; general format tokens deferred to TMPL-01 |
+| Full YAML parse/re-serialize of user frontmatter | Risk of reformatting/reordering user-authored frontmatter; BUG-08/09 only touch the `tags` key |
+| CalDAV (#30), Apple Calendar (#37), bulk import (#38) | Unchanged from v1.15 — each needs its own feature milestone |
+| Test suite | Still zero tests; separate milestone |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DIR-01 | Phase 8 | Complete |
-| DIR-02 | Phase 6 | Pending |
-| DIR-03 | Phase 6 | Pending |
-| DIR-04 | Phase 6 | Pending |
-| DIR-05 | Phase 7 | Pending |
-| DIR-06 | Phase 7 | Pending |
-| DIR-07 | Phase 7 | Pending |
-| DIR-08 | Phase 7 | Pending |
-| DIR-09 | Phase 8 | Complete |
-| DIR-10 | Phase 8 | Complete |
-| DIR-11 | Phase 5 | Complete |
-| DIR-12 | Phase 5 | Complete |
-| BUG-07 | Phase 7 | Pending |
-| DOC-01 | Phase 5 | Complete |
-| DOC-02 | Phase 8 | Complete |
 
 **Coverage:**
-- v1 requirements: 15 total
-- Mapped to phases: 15
-- Unmapped: 0
+- v1 requirements: 12 total
+- Mapped to phases: 0
+- Unmapped: 12 ⚠️
 
 ---
-*Requirements defined: 2026-05-13*
+*Requirements defined: 2026-10-20*
+*Last updated: 2026-10-20 after initial definition*
