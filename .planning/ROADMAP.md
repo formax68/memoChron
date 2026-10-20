@@ -132,11 +132,11 @@ Full phase details: `.planning/milestones/v1.15-ROADMAP.md`. Phase artifacts: `.
   3. For an event starting Monday 2026-05-04, `{{week}}` renders `19`, `{{dd}}` renders `04`, `{{d}}` renders `4`, and `{{year}}` renders `2026`. For an event starting Friday 2027-01-01, `{{week}}` renders `53` (ISO week) and `{{year}}` renders `2027` (calendar year, not the ISO week-year `2026`)
   4. The four new variables resolve in the note title format (the resulting filename is sanitized and valid), in the note template body, and in default frontmatter. A template that places `{{d}}`, `{{dd}}`, and `{{date}}` side by side renders all three correctly, with no partial or cross-substitution
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 09-01-PLAN.md — `{{week}}`/`{{dd}}`/`{{d}}`/`{{year}}` template variables end-to-end, plus the `verify-09.mjs` harness (real NoteService via esbuild, 4 timezones, 1.15.0 parity) (ENH-09..ENH-12)
+- [x] 09-01-PLAN.md — `{{week}}`/`{{dd}}`/`{{d}}`/`{{year}}` template variables end-to-end, plus the `verify-09.mjs` harness (real NoteService via esbuild, 4 timezones, 1.15.0 parity) (ENH-09..ENH-12)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 09-02-PLAN.md — Calendar tags merged in place into an existing `tags` key (block/inline/scalar), deduped, unsafe shapes untouched, no-key path byte-identical to 1.15.0 (BUG-08, BUG-09)
@@ -191,6 +191,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 6. DOM API Refactor | v1.15 | 5/5 | Complete | 2026-05-14 |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete | 2026-05-16 |
 | 8. Type Hygiene & Conventions | v1.15 | 5/5 | Complete | 2026-05-17 |
-| 9. Event Note Content | v1.16 | 0/2 | Planned | - |
+| 9. Event Note Content | v1.16 | 1/2 | In Progress | - |
 | 10. Focus New Event Note | v1.16 | 0/TBD | Not started | - |
 | 11. View Mode Persistence & Issue Closure | v1.16 | 0/TBD | Not started | - |

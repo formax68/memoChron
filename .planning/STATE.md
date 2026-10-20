@@ -5,17 +5,17 @@ milestone_name: Issue Sweep
 current_phase: 09
 current_phase_name: Event Note Content
 status: executing
-stopped_at: Phase 9 context gathered
-last_updated: "2026-10-20T13:55:09.893Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-10-20T14:02:36.987Z"
 last_activity: 2026-10-20
-last_activity_desc: v1.16 roadmap created (Phases 9–11, 12/12 requirements mapped)
-state_head: 02f247ea8a2a3137fc197ff9114a0511386d4925
+last_activity_desc: Phase 09 execution started
+state_head: 8e44b509258f917a95042a77dacdcdb57e4f0416
 progress:
   total_phases: 3
   completed_phases: 8
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -25,16 +25,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-20)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 9 — Event Note Content (v1.16 Issue Sweep)
+**Current focus:** Phase 09 — Event Note Content
 
 ## Current Position
 
-Phase: 09 (Event Note Content) — READY TO EXECUTE
-Plan: — (not yet planned)
+Phase: 09 (Event Note Content) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-10-20 — v1.16 roadmap created (Phases 9–11, 12/12 requirements mapped)
+Last activity: 2026-10-20 — Phase 09 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -66,6 +66,11 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 09 P01 | 5 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -78,6 +83,9 @@ Recent decisions affecting current work:
 - Roadmap (v1.16): #61 (BUG-08/09) and #63 (ENH-09..12) share Phase 09. Both live in `NoteService` (`generateFrontmatter`, `getEventTemplateVariables`) and the same title/template/frontmatter substitution path.
 - Roadmap (v1.16): #62 (ENH-07/08) is its own Phase 10. It touches the note-open paths in `CalendarView` (~L932) and `EmbeddedAgendaView` (~L422) plus a new setting, not `NoteService`. It has no dependency on Phase 09, so the two can be executed in parallel.
 - Roadmap (v1.16): #54 (BUG-10/11) lands in Phase 11 with DOC-03 and ISSUE-01, rather than a standalone docs phase. DOC-03 documents the output of Phases 09 and 10, and ISSUE-01 needs every fix in the release, so Phase 11 depends on both.
+- [Phase 09]: 09-01: {{week}} is ISO 8601 via luxon weekNumber (not localWeekNumber); {{year}} is getFullYear() calendar year; new keys placed after month, before source
+- [Phase 09]: 09-01: pre-existing UTC-based {{date}}/{{date-iso}} left unchanged (A-UTC known issue, follow-up decision)
+- [Phase 09]: 09-01: phase commits live on branch gsd/phase-09-event-note-content because the executor guard treats main as protected
 
 ### Pending Todos
 
@@ -108,6 +116,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-20T13:16:49.305Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-event-note-content/09-CONTEXT.md
+Last session: 2026-10-20T14:02:36.975Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: None

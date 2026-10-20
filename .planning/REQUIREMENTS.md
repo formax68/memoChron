@@ -19,10 +19,10 @@ Requirements for the v1.16 Issue Sweep milestone. Closes the four open user-repo
 
 ### Template variables (#63)
 
-- [ ] **ENH-09**: `{{week}}` renders the ISO 8601 week number of the event start date, unpadded (e.g. `1`, `19`)
-- [ ] **ENH-10**: `{{dd}}` renders the zero-padded day of month (`04`) and `{{d}}` renders the unpadded day of month (`4`) for the event start date
-- [ ] **ENH-11**: `{{year}}` renders the four-digit calendar year of the event start date (calendar year, not ISO week-year)
-- [ ] **ENH-12**: All four new variables work in note titles (sanitized), note templates, and default frontmatter; `{{d}}` substitution never corrupts `{{dd}}` or `{{date}}`
+- [x] **ENH-09**: `{{week}}` renders the ISO 8601 week number of the event start date, unpadded (e.g. `1`, `19`)
+- [x] **ENH-10**: `{{dd}}` renders the zero-padded day of month (`04`) and `{{d}}` renders the unpadded day of month (`4`) for the event start date
+- [x] **ENH-11**: `{{year}}` renders the four-digit calendar year of the event start date (calendar year, not ISO week-year)
+- [x] **ENH-12**: All four new variables work in note titles (sanitized), note templates, and default frontmatter; `{{d}}` substitution never corrupts `{{dd}}` or `{{date}}`
 
 ### Calendar view (#54)
 
@@ -59,10 +59,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | BUG-08 | Phase 9 | Pending |
 | BUG-09 | Phase 9 | Pending |
-| ENH-09 | Phase 9 | Pending |
-| ENH-10 | Phase 9 | Pending |
-| ENH-11 | Phase 9 | Pending |
-| ENH-12 | Phase 9 | Pending |
+| ENH-09 | Phase 9 | Complete |
+| ENH-10 | Phase 9 | Complete |
+| ENH-11 | Phase 9 | Complete |
+| ENH-12 | Phase 9 | Complete |
 | ENH-07 | Phase 10 | Pending |
 | ENH-08 | Phase 10 | Pending |
 | BUG-10 | Phase 11 | Pending |
