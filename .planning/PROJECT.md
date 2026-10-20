@@ -8,24 +8,15 @@ MemoChron is an Obsidian plugin that integrates public iCalendar (`.ics`) feeds 
 
 Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
 
-## Current Milestone: v1.15 Directory Compliance
+## Current Milestone: v1.16 Issue Sweep
 
-**Goal:** Close every finding on the Obsidian community-plugin Review scorecard (lift the badge from "Risks" → "Excellent") and install lint/doc guardrails so the same rules cannot lapse on future work.
+**Goal:** Close the four open user-reported GitHub issues (#61, #62, #63, #54) against 1.15.0 so every outstanding user report is resolved.
 
 **Target features:**
-- Console-logging cleanup at flagged sites + codebase audit for the same pattern
-- Eliminate `innerHTML` / `outerHTML` writes; adopt `createEl` / `createDiv` / `setText` everywhere
-- Replace `element.style.*` inline styles with CSS classes / `setCssProps`
-- Remove the view-in-`registerView` memory-leak pattern (`plugin.calendarView = view`)
-- Popout-window compatibility (`activeDocument`, `activeWindow.setTimeout()`)
-- `instanceof TFile` narrowing instead of `as TFile` casts
-- Promise hygiene (no floating promises; no `Promise`-returning methods on `void`-typed interfaces)
-- TypeScript hygiene (no `any`, fix nullish-on-lhs of `??`, lexical decls in `case`, unnecessary escape chars)
-- Unused vars/imports cleanup (~21 named symbols flagged by the scorecard)
-- Manifest description punctuation
-- GitHub release artifact attestation (workflow change)
-- Lint guardrails (`.eslintrc` with Obsidian plugin rules + CI hook) and updated `CLAUDE.md` / `.planning/codebase/` conventions to prevent regression
-- Fix `BUG-07`: toggling the plugin in Obsidian Settings closes the Settings modal
+- #61 — Per-calendar tags merge into an existing `tags` property in the default frontmatter (list, inline, scalar forms; deduplicated) instead of emitting a duplicate `tags` key
+- #62 — "Focus new event note" setting (default ON) that focuses the newly created event note's tab regardless of Obsidian's global "Always focus new tabs", so `{{cursor}}` is useful
+- #63 — New template variables `{{week}}` (ISO 8601 week), `{{dd}}` (zero-padded day), `{{d}}` (unpadded day), `{{year}}`
+- #54 — Sidebar calendar view mode (Month / N-week) persists across Obsidian restarts; BUG-02/BUG-03 fixes re-verified so the issue can close
 
 ## Requirements
 
@@ -71,31 +62,16 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - ✓ **DIR-07** — `instanceof TFile` narrowing replaces all 4 `as TFile` casts — Validated in Phase 7 (Lifecycle & Compatibility)
 - ✓ **DIR-08** — Floating + misused promises classified per D-09 buckets (`void` / `.catch` / `await`); `EmbeddedCalendarView` + `EmbeddedAgendaView` use sync `onload(): void` wrappers with internal `try/catch` + `Notice` — Validated in Phase 7 (Lifecycle & Compatibility)
 - ✓ **BUG-07** — Closed Obsidian-side: A1 (deletion of `detachLeavesOfType` from `onunload`) eliminated the disable-direction modal-close; remaining enable-direction trigger is in Obsidian core's plugin-load path and affects core plugins identically. Closure recorded in `.planning/phases/07-lifecycle-compatibility/BUG-07-CLOSURE.md` — Validated in Phase 7 (Lifecycle & Compatibility)
+- ✓ **v1.15 Directory Compliance (DIR-01..DIR-12, DOC-01, DOC-02, BUG-07)** — v1.15.0 / Phases 5–8: scorecard findings closed, ESLint + CI lint gate (`npm run lint`), release artifact attestation, manifest punctuation, Directory Compliance conventions in `.planning/codebase/CONVENTIONS.md`
 
 ### Active
 
-<!-- v1.15 Directory Compliance milestone — close Obsidian community-plugin scorecard findings + add guardrails. -->
+<!-- v1.16 Issue Sweep — close GitHub issues #61, #62, #63, #54. Detailed REQ-IDs in REQUIREMENTS.md. -->
 
-**Directory scorecard findings (Obsidian Review):**
-- [x] **DIR-01**: Console logging — 33 sites deleted, 6 forensic sites gated behind `const DEBUG = false` in `CalendarService.ts` and `timezoneUtils.ts` — Validated in Phase 8 (Type Hygiene & Conventions)
-- [x] **DIR-02**: `innerHTML` / `outerHTML` writes replaced with `createEl` / `createDiv` / `setText` / DOM API at every site — Validated in Phase 6 (DOM API Refactor)
-- [x] **DIR-03**: `element.style.*` inline assignments (border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width) replaced with CSS classes or `setCssProps` — Validated in Phase 6 (DOM API Refactor)
-- [x] **DIR-04**: String-literal element-creation patterns replaced with the Obsidian `createEl({ cls, text })` / `createDiv({ cls })` helpers across views (calendar grid, agenda, settings, embedded views) — Validated in Phase 6 (DOM API Refactor)
-- [x] **DIR-05**: View memory-leak fixed — `plugin.calendarView = view` removed from inside `registerView`; the view is constructed and returned directly — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-06**: Popout-window compatibility — `document` → `activeDocument`, timers prefixed with `window.*` (per amendment A2) — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-07**: `instanceof TFile` narrowing replaces all `as TFile` casts — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-08**: Promise hygiene — no floating promises; methods overriding `MarkdownRenderChild` lifecycle return the declared type; `.catch` / `void` annotations at fire-and-forget sites — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-09**: TypeScript hygiene — 16 `any` sites closed, `no-case-declarations` fixed, `no-useless-escape` fixed, `??`-with-constant-LHS audit clean; `(window as any).moment` migrated to typed `import { moment } from "obsidian"` — Validated in Phase 8 (Type Hygiene & Conventions)
-- [x] **DIR-10**: 18 `@typescript-eslint/no-unused-vars` sites resolved (all 21 scorecard-named symbols deleted or genuinely consumed); 2 catch bindings converted to `catch { }` — Validated in Phase 8 (Type Hygiene & Conventions)
-- [ ] **DIR-11**: `manifest.json` `description` ends with terminating punctuation (`.`, `!`, or `?`)
-- [ ] **DIR-12**: GitHub release workflow attaches artifact attestation to `manifest.json`, `main.js`, `styles.css`
-
-**Bug fixes (open issues from this milestone):**
-- [x] **BUG-07**: Closed Obsidian-side per `BUG-07-CLOSURE.md`; A1 mitigation applied — Validated in Phase 7 (Lifecycle & Compatibility)
-
-**Documentation & guardrails:**
-- [ ] **DOC-01**: `.eslintrc` (or `eslint.config.js`) installed and wired with rules matching the directory scorecard (no `innerHTML`, no inline styles, no `console.log`, no `as TFile`, no `Promise`-returning `MarkdownRenderChild` overrides, no floating promises, no `any`); `npm run lint` script added; CI runs lint
-- [x] **DOC-02**: `## Directory Compliance` section landed in `.planning/codebase/CONVENTIONS.md` (4 clusters, 16 rule blocks in `Don't:`/`Do:`/`Why:`/`Docs:` format); `CLAUDE.md` pointer section replaces stale TODO block; `### Beta Release Strategy` and `### Memory Reminders` preserved verbatim — Validated in Phase 8 (Type Hygiene & Conventions)
+- [ ] Per-calendar tags merge into existing frontmatter `tags` property (#61)
+- [ ] Optional forced focus on newly created event note, default ON (#62)
+- [ ] `{{week}}`, `{{dd}}`, `{{d}}`, `{{year}}` template variables (#63)
+- [ ] Sidebar view mode persists across restarts; #54 closable (#54)
 
 ### Out of Scope
 
@@ -167,4 +143,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-17 — Phase 8 (Type Hygiene & Conventions) complete: DIR-01 / DIR-09 / DIR-10 / DOC-02 closed; Phase-8 ESLint override block deleted and replaced with narrow D-08-extension `no-unsafe-*: off` for ical.js consumption-site cascade (FRAG-02 still deferred); `## Directory Compliance` section now canonical in `.planning/codebase/CONVENTIONS.md` with `CLAUDE.md` pointer. Milestone v1.15 closed — ready to tag release.*
+*Last updated: 2026-10-20 — Milestone v1.16 Issue Sweep started (v1.15 Directory Compliance shipped as 1.15.0 and moved to Validated)*
