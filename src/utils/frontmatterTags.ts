@@ -75,6 +75,46 @@ export function splitComment(value: string): [string, string] {
 }
 
 /**
+ * Split flow-sequence text on commas outside single or double quotes. Items are
+ * trimmed and empty items dropped, which also absorbs a trailing comma.
+ * @param text The text inside the brackets, or a plain scalar value
+ * @returns The items, or null on an unquoted [ ] { } or an unterminated quote
+ */
+function splitFlowItems(text: string): string[] | null {
+  const items: string[] = [];
+  let quote: string | null = null;
+  let current = "";
+  for (const c of text) {
+    if (quote) {
+      current += c;
+      if (c === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      quote = c;
+      current += c;
+      continue;
+    }
+    if ("[]{}".includes(c)) {
+      return null;
+    }
+    if (c === ",") {
+      items.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += c;
+  }
+  if (quote) {
+    return null;
+  }
+  items.push(current.trim());
+  return items.filter((item) => item.length > 0);
+}
+
+/**
  * Quote a calendar tag only when it would not be a valid plain YAML scalar.
  * Ordinary tags are returned unchanged.
  * @param tag The calendar tag to write
@@ -202,7 +242,48 @@ export function mergeCalendarTags(
     return { found: true, content: out.join("\n") };
   }
 
-  // Inline arrays and scalars are not merged yet: leave them untouched so a
-  // second `tags` key is never emitted.
-  return untouched;
+  // A scalar or flow value followed by non-comment lines is a multi-line value.
+  if (region.some((line) => !/^\s*$/.test(line) && !/^\s*#/.test(line))) {
+    return untouched;
+  }
+  // Flow mapping, block scalar, anchor, alias or explicit tag.
+  if (/^[{|>&*!]/.test(body)) {
+    return untouched;
+  }
+
+  if (body.startsWith("[")) {
+    // Inline array: insert new tags before the closing bracket.
+    if (!body.endsWith("]")) {
+      return untouched;
+    }
+    const inner = body.slice(1, -1);
+    const items = splitFlowItems(inner);
+    if (items === null) {
+      return untouched;
+    }
+    const add = pickNew(items);
+    if (add.length === 0) {
+      return untouched;
+    }
+    const head = inner.trimEnd();
+    const sep = head.trim() === "" ? "" : head.endsWith(",") ? " " : ", ";
+    const added = add.map((tag) => yamlSafeTag(tag, true)).join(", ");
+    const out = [...lines];
+    out[i] = `${keyPart}${leadingWs}[${head}${sep}${added}]${commentSuffix}`;
+    return { found: true, content: out.join("\n") };
+  }
+
+  // Scalar, including the legacy comma form: rewrite as an inline array.
+  const items = splitFlowItems(body);
+  if (items === null) {
+    return untouched;
+  }
+  const add = pickNew(items);
+  if (add.length === 0) {
+    return untouched;
+  }
+  const merged = [...items, ...add.map((tag) => yamlSafeTag(tag, true))];
+  const out = [...lines];
+  out[i] = `${keyPart} [${merged.join(", ")}]${commentSuffix}`;
+  return { found: true, content: out.join("\n") };
 }
