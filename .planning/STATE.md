@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v1.16
 milestone_name: Issue Sweep
 status: planning
-last_updated: "2026-10-20T12:59:15.197Z"
+last_updated: "2026-10-20T13:08:22.000Z"
 last_activity: 2026-10-20
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,25 +17,27 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-13)
+See: .planning/PROJECT.md (updated 2026-10-20)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Milestone complete
+**Current focus:** Phase 9 — Event Note Content (v1.16 Issue Sweep)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-10-20 — Milestone v1.16 started
+Phase: 9 of 11 (Event Note Content) — first of 3 v1.16 phases (9–11)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-10-20 — v1.16 roadmap created (Phases 9–11, 12/12 requirements mapped)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 40 (v1.14.0)
+- Total plans completed: 44 (v1.14.0: 23, v1.15: 21, v1.16: 0)
 - Average duration: -
-- Total execution time: 0 hours (v1.15)
+- Total execution time: -
 
 **By Phase:**
 
@@ -45,18 +47,20 @@ Last activity: 2026-10-20 — Milestone v1.16 started
 | 02 | 5 | - | - |
 | 03 | 3 | - | - |
 | 04 | 5 | - | - |
-| 05 | TBD | - | - |
+| 05 | 4 | - | - |
 | 06 | 5 | - | - |
 | 07 | 7 | - | - |
 | 08 | 5 | - | - |
+| 09 | TBD | - | - |
+| 10 | TBD | - | - |
+| 11 | TBD | - | - |
 
 **Recent Trend:**
 
-- Last 5 plans: 04-01 through 04-05 (v1.14.0 Phase 4, all complete)
+- Last 5 plans: 08-01 through 08-05 (v1.15 Phase 8, all complete)
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 05 P01 | 5m | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -65,22 +69,23 @@ Last activity: 2026-10-20 — Milestone v1.16 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Roadmap (v1.15): Phase 05 lands ESLint + CI lint gate FIRST, before any code-touching phase, so the rules being enforced are the same rules subsequent phases are fixing. ESLint is wired with per-file/per-rule overrides that name the phase responsible for removing them — no rule is silently disabled.
-- Roadmap (v1.15): DIR-02, DIR-03, DIR-04 travel together in Phase 06 because they touch the same files (CalendarView, EmbeddedCalendarView, EmbeddedAgendaView, SettingsTab, viewRenderers). Splitting them would double-touch the same lines and produce avoidable merge churn.
-- Roadmap (v1.15): BUG-07 joins Phase 07 (Lifecycle & Compatibility), not its own phase, because root-cause analysis points at the same view-lifecycle area as DIR-05. The bug either falls out of DIR-05's fix or closes with a documented Obsidian-side explanation.
-- Roadmap (v1.15): DOC-02 (CLAUDE.md + CONVENTIONS update) is the FINAL deliverable of the milestone, landing in Phase 08. Ending with the conventions document captures every rule actually used during the milestone, rather than aspirational rules written at planning time.
-- Roadmap (v1.15): Phases 01–04 are preserved as historical entries in the active ROADMAP.md (collapsed in `<details>`). Phase numbering is monotonic — v1.15 starts at Phase 05.
-- [Phase ?]: One-character diff closes the terminating punctuation scorecard finding.
+- Roadmap (v1.16): Coarse granularity gives 3 phases. Numbering continues monotonically at Phase 09, and v1.14.0 (01–04) and v1.15 (05–08) are collapsed into shipped `<details>` blocks placed before the v1.16 milestone heading, so roadmap tooling edits only the v1.16 window.
+- Roadmap (v1.16): #61 (BUG-08/09) and #63 (ENH-09..12) share Phase 09. Both live in `NoteService` (`generateFrontmatter`, `getEventTemplateVariables`) and the same title/template/frontmatter substitution path.
+- Roadmap (v1.16): #62 (ENH-07/08) is its own Phase 10. It touches the note-open paths in `CalendarView` (~L932) and `EmbeddedAgendaView` (~L422) plus a new setting, not `NoteService`. It has no dependency on Phase 09, so the two can be executed in parallel.
+- Roadmap (v1.16): #54 (BUG-10/11) lands in Phase 11 with DOC-03 and ISSUE-01, rather than a standalone docs phase. DOC-03 documents the output of Phases 09 and 10, and ISSUE-01 needs every fix in the release, so Phase 11 depends on both.
 
 ### Pending Todos
 
-None yet (Phase 05 not yet planned).
+None yet (Phase 09 not yet planned).
 
 ### Blockers/Concerns
 
-- Phase 05 (DOC-01): The ESLint configuration must use temporary overrides so the lint gate passes against the v1.15 starting tree, but every override must be commented with the phase that will remove it. Silent rule disables would defeat the milestone.
-- Phase 07 (DIR-06): Popout-window compatibility cannot be fully verified without a manual test in an Obsidian popout window. UAT step is mandatory.
-- Phase 07 (BUG-07): Root cause may be in Obsidian core, not MemoChron. If so, close with a written explanation under `.planning/phases/07-*/` rather than forcing a workaround.
+- Phase 09 (BUG-08/09): Edit only the `tags` key. Full YAML parse/re-serialize of user frontmatter is explicitly Out of Scope. The merge must handle block-list, inline-array, and scalar forms and leave every other line unchanged. Edge cases to settle in planning: empty `tags:`, quoted values, `#`-prefixed tags, and per-calendar vs global default frontmatter.
+- Phase 09 (ENH-09/11/12): `{{week}}` is the ISO week (moment `W` / luxon `weekNumber`). `{{year}}` is the calendar year (`YYYY`, not ISO week-year `GGGG`). Boundary check: 2027-01-01 must give week 53 and year 2027. The substitution mechanism must not let `{{d}}` touch `{{dd}}` or `{{date}}`.
+- Phase 10 (ENH-07/08): Focus must be forced independently of Obsidian's "Always focus new tabs", e.g. via an active/focus open option or `setActiveLeaf(..., { focus: true })`. It must cover both note-open paths and work on mobile. Default ON must reach upgrading users through the `DEFAULT_SETTINGS` merge.
+- Phase 11 (BUG-10): `viewMode` currently lives only in memory on `CalendarView`. Drag-resize derives the mode from calendar height (`recalculateViewModeFromHeight` / `snapToCurrentViewMode`), so the first layout or resize pass could overwrite a restored mode, and the restored mode needs a matching calendar height. Where the mode is persisted matters too. Workspace view state (`getState`/`setState`) covers restart but not closing and reopening the view; plugin `data.json` covers both.
+- Phase 11 (ISSUE-01): Draft the closing comments, but post them and close the issues only after the user confirms at release time. Per CLAUDE.md, commit messages, release notes, and issue comments must not reference AI assistance.
+- Milestone-wide: All work must pass `npm run lint` (v1.15 CI gate) and follow `## Directory Compliance` in `.planning/codebase/CONVENTIONS.md`. There is no test suite this milestone, so verification is manual UAT.
 
 ### Quick Tasks Completed
 
@@ -98,6 +103,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-16T14:08:31.857Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-type-hygiene-conventions/08-CONTEXT.md
+Last session: 2026-10-20T13:08:22.000Z
+Stopped at: v1.16 roadmap created (ROADMAP.md, STATE.md, REQUIREMENTS.md traceability)
+Resume file: None

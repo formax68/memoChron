@@ -57,12 +57,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| BUG-08 | Phase 9 | Pending |
+| BUG-09 | Phase 9 | Pending |
+| ENH-09 | Phase 9 | Pending |
+| ENH-10 | Phase 9 | Pending |
+| ENH-11 | Phase 9 | Pending |
+| ENH-12 | Phase 9 | Pending |
+| ENH-07 | Phase 10 | Pending |
+| ENH-08 | Phase 10 | Pending |
+| BUG-10 | Phase 11 | Pending |
+| BUG-11 | Phase 11 | Pending |
+| DOC-03 | Phase 11 | Pending |
+| ISSUE-01 | Phase 11 | Pending |
 
 **Coverage:**
 - v1 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12 ⚠️
+- Mapped to phases: 12
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-10-20*
-*Last updated: 2026-10-20 after initial definition*
+*Last updated: 2026-10-20 after v1.16 roadmap creation (traceability mapped to Phases 9–11)*
