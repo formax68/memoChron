@@ -574,6 +574,119 @@ async function checkTagsTracer() {
   });
 }
 
+async function checkTagsShapes() {
+  const one = (tags) => ({ defaultTags: tags, sourceTags: [] });
+
+  // Inline arrays (D-01): new tags inserted before the closing bracket.
+  await expectTags(
+    "F1",
+    ["type: event", "tags: [a, b]", "date: x"],
+    ["type: event", "tags: [a, b, event, meeting, Work]", "date: x"]
+  );
+  await expectTags(
+    "F2",
+    ["tags: []", "date: x"],
+    ["tags: [event, meeting, Work]", "date: x"]
+  );
+  await expectTags("F3", ["tags: [a, b,]"], ["tags: [a, b, event, meeting, Work]"]);
+  await expectTags(
+    "F4",
+    ['tags: ["x, y", b] # c'],
+    ['tags: ["x, y", b, event, meeting, Work] # c']
+  );
+
+  // Scalars and legacy comma scalars become an inline array (D-01).
+  await expectTags(
+    "F5",
+    ["tags: a", "date: x"],
+    ["tags: [a, event, meeting, Work]", "date: x"]
+  );
+  await expectTags("F6", ["tags: a, b"], ["tags: [a, b, event, meeting, Work]"]);
+
+  // Null-ish values and a comment-only value become a block list.
+  await expectTags(
+    "F7",
+    ["tags: ~", "date: x"],
+    ["tags:", "  - event", "  - meeting", "  - Work", "date: x"]
+  );
+  await expectTags("F8", ["tags: ''"], ["tags:", "  - c"], one(["c"]));
+  await expectTags(
+    "F9",
+    ["tags: #a", "date: x"],
+    ["tags: #a", "  - event", "  - meeting", "  - Work", "date: x"]
+  );
+
+  // Dedup against user tags (D-05) and quoted keys (A3).
+  await expectTags(
+    "F10",
+    ["tags: [event, meeting, work]"],
+    ["tags: [event, meeting, work]"]
+  );
+  await expectTags(
+    "F11",
+    ['"tags": [a]'],
+    ['"tags": [a, event, meeting, Work]']
+  );
+  await expectTags("F12", ["'tags' : a"], ["'tags' : [a, c]"], one(["c"]));
+
+  // Order and user form are kept (D-04, D-06).
+  await expectTags("F13", ["tags: [Work, a]"], ["tags: [Work, a, event, meeting]"], {
+    defaultTags: ["event", "meeting"],
+    sourceTags: ["work"],
+  });
+  await expectTags(
+    "F14",
+    [`tags: ["a", 'b']`],
+    [`tags: ["a", 'b', c]`],
+    one(["A", "B", "c"])
+  );
+
+  // Calendar tags that are not plain-safe are quoted in flow form (A2).
+  const unsafe = one(["#urgent", "a: b"]);
+  await expectTags("F15a", ["tags: [a]"], ['tags: [a, "#urgent", "a: b"]'], unsafe);
+  await expectTags("F15b", ["tags: a"], ['tags: [a, "#urgent", "a: b"]'], unsafe);
+
+  // Leading whitespace kept; whitespace before a trailing comment collapses (D-10).
+  await expectTags(
+    "F16",
+    ["tags:   [a]   # keep"],
+    ["tags:   [a, b] # keep"],
+    one(["b"])
+  );
+
+  // Only a column-0 `tags` key merges: `tag:` keeps the 1.15.0 append (D-08).
+  await expectTags(
+    "F17",
+    ["tag: a"],
+    ["tag: a", "tags:", "  - event", "  - meeting", "  - Work"]
+  );
+
+  // The merge runs after template-variable substitution (D-07).
+  await expectTags("F18", ["tags: [{{source}}]"], ["tags: [Work, event]"], {
+    defaultTags: ["event"],
+    sourceTags: ["work"],
+  });
+
+  // Shapes the merger cannot edit safely stay byte-identical (D-03).
+  const unsafeShapes = [
+    ["U1", ["tags: [a,", "  b]", "date: x"]],
+    ["U2", ["tags: {a: 1}"]],
+    ["U3", ["tags: |", "  a"]],
+    ["U4", ["tags: &x [a]"]],
+    ["U5", ["tags:", "  - a", "    - b"]],
+  ];
+  for (const [label, lines] of unsafeShapes) {
+    await expectTags(label, lines, lines);
+  }
+  const u6 = ["tags: a", "x: 1", "tags: b"];
+  const u6fm = await expectTags("U6", u6, u6, { single: false });
+  assert.equal(
+    u6fm.split("\n").filter((l) => /^(["']?)tags\1[ \t]*:/.test(l)).length,
+    2,
+    "U6 keeps exactly its two user-written tags lines"
+  );
+}
+
 const CHECKS = [
   checkTracer,
   checkBoundaries,
@@ -583,6 +696,7 @@ const CHECKS = [
   checkDateFormatIndependence,
   checkParity,
   checkTagsTracer,
+  checkTagsShapes,
 ];
 
 // ---------------------------------------------------------------------------
