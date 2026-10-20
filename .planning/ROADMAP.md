@@ -135,7 +135,10 @@ Full phase details: `.planning/milestones/v1.15-ROADMAP.md`. Phase artifacts: `.
 **Plans**: 2 plans
 
 Plans:
+**Wave 1**
 - [ ] 09-01-PLAN.md — `{{week}}`/`{{dd}}`/`{{d}}`/`{{year}}` template variables end-to-end, plus the `verify-09.mjs` harness (real NoteService via esbuild, 4 timezones, 1.15.0 parity) (ENH-09..ENH-12)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 09-02-PLAN.md — Calendar tags merged in place into an existing `tags` key (block/inline/scalar), deduped, unsafe shapes untouched, no-key path byte-identical to 1.15.0 (BUG-08, BUG-09)
 
 ### Phase 10: Focus New Event Note
