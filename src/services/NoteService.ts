@@ -4,6 +4,7 @@ import { MemoChronSettings, CalendarNotesSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
 import { errorMessage } from "../utils/errors";
 import { getEventDateVariables } from "../utils/eventDateVariables";
+import { mergeCalendarTags } from "../utils/frontmatterTags";
 
 interface EventTemplateVariables {
   event_title: string;
@@ -235,11 +236,16 @@ export class NoteService {
 
     const tags = this.getTagsForEvent(event);
     if (tags.length > 0) {
-      const tagsYaml = this.formatTagsYaml(tags);
-      if (frontmatterContent) {
-        frontmatterContent += "\n";
+      const merged = mergeCalendarTags(frontmatterContent, tags);
+      if (merged.found) {
+        frontmatterContent = merged.content;
+      } else {
+        const tagsYaml = this.formatTagsYaml(tags);
+        if (frontmatterContent) {
+          frontmatterContent += "\n";
+        }
+        frontmatterContent += tagsYaml;
       }
-      frontmatterContent += tagsYaml;
     }
 
     return `${NoteService.FRONTMATTER_DELIMITER}\n${frontmatterContent}\n${NoteService.FRONTMATTER_DELIMITER}`;

@@ -15,6 +15,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import esbuild from "esbuild";
+import YAML from "yaml";
+import jsyaml from "js-yaml";
 
 const SELF = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(SELF), "..", "..", "..");
@@ -38,8 +40,8 @@ export function normalizePath(p) {
 const bundleCache = new Map();
 
 /**
- * Bundle NoteService (+ DEFAULT_SETTINGS and getEventDateVariables) with the
- * obsidian import stubbed. When baselineRef is given, NoteService.ts is read
+ * Bundle NoteService (+ DEFAULT_SETTINGS, getEventDateVariables and the
+ * frontmatterTags helpers) with the obsidian import stubbed. When baselineRef is given, NoteService.ts is read
  * from that git ref instead of the working tree.
  */
 async function loadBundle(baselineRef) {
@@ -85,6 +87,7 @@ async function loadBundle(baselineRef) {
         'export { NoteService } from "./src/services/NoteService.ts";',
         'export { DEFAULT_SETTINGS } from "./src/settings/types.ts";',
         'export { getEventDateVariables } from "./src/utils/eventDateVariables.ts";',
+        'export { mergeCalendarTags, normalizeTag, yamlSafeTag } from "./src/utils/frontmatterTags.ts";',
       ].join("\n"),
       resolveDir: ROOT,
       loader: "ts",
@@ -168,6 +171,65 @@ function bodyOf(content) {
 
 function basename(p) {
   return p.slice(p.lastIndexOf("/") + 1);
+}
+
+/** Text between the opening `---` line and the next `---` line. */
+function frontmatterOf(content) {
+  const lines = content.split("\n");
+  assert.equal(lines[0], "---", "content does not start with a frontmatter delimiter");
+  const close = lines.indexOf("---", 1);
+  assert.notEqual(close, -1, "content has no closing frontmatter delimiter");
+  return lines.slice(1, close).join("\n");
+}
+
+/**
+ * Create a note on the 2026-05-04 12:00 Work event with the given default
+ * frontmatter body, global default tags, Work calendar tags and optional
+ * per-calendar notesSettings; return the generated frontmatter body.
+ */
+async function fmFor(body, defaultTags, sourceTags, notesSettings) {
+  const mod = await loadBundle();
+  const calendar = workCalendar({ tags: sourceTags });
+  if (notesSettings !== undefined) calendar.notesSettings = notesSettings;
+  const note = await createNote(
+    mod,
+    {
+      calendarUrls: [calendar],
+      defaultFrontmatter: `---\n${body}\n---`,
+      defaultTags,
+    },
+    makeEvent(2026, 4, 4, 12, 0)
+  );
+  return frontmatterOf(note.content);
+}
+
+/** Valid under two strict YAML parsers and exactly one top-level tags key. */
+function assertSingleTagsKey(fm, label = "") {
+  assert.doesNotThrow(
+    () => YAML.parse(fm, { uniqueKeys: true }),
+    `yaml (uniqueKeys) rejects ${label}:\n${fm}`
+  );
+  assert.doesNotThrow(() => jsyaml.load(fm), `js-yaml rejects ${label}:\n${fm}`);
+  const keys = fm.split("\n").filter((l) => /^(["']?)tags\1[ \t]*:/.test(l));
+  assert.equal(keys.length, 1, `expected one top-level tags key ${label}:\n${fm}`);
+}
+
+/** Calendar tags [event, meeting, Work] unless a fixture overrides them. */
+const CAL = { defaultTags: ["event", "meeting"], sourceTags: ["Work"] };
+
+/**
+ * Run one tag fixture: input body lines -> expected frontmatter body lines.
+ * opts: { defaultTags, sourceTags, notesSettings, single (default true) }.
+ */
+async function expectTags(label, input, expected, opts = {}) {
+  const { defaultTags, sourceTags, notesSettings, single = true } = {
+    ...CAL,
+    ...opts,
+  };
+  const fm = await fmFor(input.join("\n"), defaultTags, sourceTags, notesSettings);
+  assert.equal(fm, expected.join("\n"), `tag fixture ${label}`);
+  if (single) assertSingleTagsKey(fm, label);
+  return fm;
 }
 
 // ---------------------------------------------------------------------------
@@ -368,6 +430,27 @@ async function checkParity() {
     },
   ];
 
+  // No top-level tags key (D-02, D-08): output must stay byte-identical to
+  // 1.15.0, with and without calendar tags on the Work source.
+  const noKeyBodies = [
+    ["d-empty", null],
+    ["e-type-only", "type: event"],
+    ["f-tag-Tags-nested", "tag: a\nTags: b\nnested:\n  tags: c"],
+    ["g-commented-tags", "a: 1\n# tags: x\nb: 2"],
+  ];
+  for (const [label, body] of noKeyBodies) {
+    for (const sourceTags of [[], ["x"]]) {
+      corpus.push({
+        name: `${label} sourceTags=[${sourceTags.join(",")}]`,
+        settings: {
+          calendarUrls: [workCalendar({ tags: sourceTags })],
+          defaultFrontmatter: body === null ? "" : `---\n${body}\n---`,
+        },
+        extra: {},
+      });
+    }
+  }
+
   for (const { name, settings, extra } of corpus) {
     for (const [y, m0, d, h, min] of TRACER_DATES) {
       const ev = () => makeEvent(y, m0, d, h, min, extra);
@@ -380,6 +463,117 @@ async function checkParity() {
   }
 }
 
+async function checkTagsTracer() {
+  const mod = await loadBundle();
+
+  // T1: block list, items appended after the last item with the same indent.
+  await expectTags(
+    "T1",
+    ["type: event", "tags:", "  - a", "  - b", "date: 2026-05-04"],
+    [
+      "type: event",
+      "tags:",
+      "  - a",
+      "  - b",
+      "  - event",
+      "  - meeting",
+      "  - Work",
+      "date: 2026-05-04",
+    ]
+  );
+  // T2: indentless (column-0) block list.
+  await expectTags(
+    "T2",
+    ["type: event", "tags:", "- a", "date: x"],
+    ["type: event", "tags:", "- a", "- event", "- meeting", "- Work", "date: x"]
+  );
+  // T3: empty key at the end.
+  await expectTags(
+    "T3",
+    ["type: event", "tags:"],
+    ["type: event", "tags:", "  - event", "  - meeting", "  - Work"]
+  );
+  // T4: empty key directly followed by another key.
+  await expectTags(
+    "T4",
+    ["tags:", "date: x"],
+    ["tags:", "  - event", "  - meeting", "  - Work", "date: x"]
+  );
+  // T5: every calendar tag dedups against a user tag (quotes, #, case).
+  await expectTags(
+    "T5",
+    ["tags:", '  - "Event"', "  - '#meeting'", "  - work"],
+    ["tags:", '  - "Event"', "  - '#meeting'", "  - work"]
+  );
+  // T6: comments and blank lines inside the block are kept.
+  await expectTags(
+    "T6",
+    ["tags:", "  - a # mine", "", "  # c", "  - b", "next: 1"],
+    ["tags:", "  - a # mine", "", "  # c", "  - b", "  - c", "next: 1"],
+    { defaultTags: ["c"], sourceTags: [] }
+  );
+
+  // T7: the shipped 1.15.0 defaults (no tags key) keep the appended block.
+  const event = makeEvent(2026, 4, 4, 12, 0);
+  const iso = event.start.toISOString().split("T")[0];
+  const t7 = frontmatterOf(
+    (
+      await createNote(
+        mod,
+        patch({
+          defaultFrontmatter: mod.DEFAULT_SETTINGS.defaultFrontmatter,
+          defaultTags: ["event", "meeting"],
+        }),
+        event
+      )
+    ).content
+  );
+  assert.equal(
+    t7,
+    ["type: event", `date: ${iso}`, "tags:", "  - event", "  - meeting"].join("\n"),
+    "tag fixture T7"
+  );
+  assertSingleTagsKey(t7, "T7");
+
+  // T8: no tags key -> 1.15.0 append.
+  await expectTags(
+    "T8",
+    ["type: event", "date: x"],
+    ["type: event", "date: x", "tags:", "  - event", "  - meeting", "  - Work"]
+  );
+  // T9: per-calendar default frontmatter replaces the global one (D-09).
+  await expectTags("T9", ["tags: [g]"], ["tags:", "  - p", "  - event"], {
+    defaultTags: ["event"],
+    sourceTags: [],
+    notesSettings: {
+      useCustomSettings: true,
+      defaultFrontmatter: "---\ntags:\n  - p\n---",
+    },
+  });
+  // T10: no calendar tags -> frontmatter untouched.
+  await expectTags("T10", ["tags:", "  - a"], ["tags:", "  - a"], {
+    defaultTags: [],
+    sourceTags: [],
+  });
+  // T11: calendar tags that are not plain-safe are quoted in a block list.
+  await expectTags(
+    "T11",
+    ["tags:", "  - a"],
+    ["tags:", "  - a", '  - "#urgent"', '  - "a: b"'],
+    { defaultTags: ["#urgent", "a: b"], sourceTags: [] }
+  );
+
+  // Direct unit sanity on the exported helpers.
+  assert.equal(mod.normalizeTag(' "#Work" '), "work");
+  assert.equal(mod.yamlSafeTag("work", true), "work");
+  assert.equal(mod.yamlSafeTag("a,b", true), '"a,b"');
+  assert.equal(mod.yamlSafeTag("a,b", false), "a,b");
+  assert.deepEqual(mod.mergeCalendarTags("type: event", ["x"]), {
+    found: false,
+    content: "type: event",
+  });
+}
+
 const CHECKS = [
   checkTracer,
   checkBoundaries,
@@ -388,6 +582,7 @@ const CHECKS = [
   checkSanitizedTitle,
   checkDateFormatIndependence,
   checkParity,
+  checkTagsTracer,
 ];
 
 // ---------------------------------------------------------------------------
