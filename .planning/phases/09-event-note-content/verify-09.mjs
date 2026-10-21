@@ -244,12 +244,14 @@ async function checkTracer() {
     dd: "04",
     d: "4",
     year: "2026",
+    weekyear: "2026",
   });
   assert.deepEqual(mod.getEventDateVariables(new Date(2027, 0, 1, 12)), {
     week: "53",
     dd: "01",
     d: "1",
     year: "2027",
+    weekyear: "2026",
   });
 
   const settings = patch({
@@ -280,21 +282,28 @@ async function checkTracer() {
   assert.ok(janLines.includes("week: 53"), "missing frontmatter line week: 53");
   assert.ok(janLines.includes("year: 2027"), "missing frontmatter line year: 2027");
   assert.equal(bodyOf(jan.content), "1|01|53|2027");
+
+  // IN-01: {{weekyear}} gives a correct ISO week label across New Year.
+  const isoWeek = patch({
+    noteTitleFormat: "{{weekyear}}-W{{week}} {{event_title}}",
+  });
+  const janIso = await createNote(mod, isoWeek, makeEvent(2027, 0, 1, 12, 0));
+  assert.equal(basename(janIso.path), "2026-W53 Standup.md");
 }
 
 // [y, monthIndex, d, h, min] -> expected getEventDateVariables output (local time).
 const BOUNDARY_CASES = [
-  [[2026, 11, 31, 12, 0], { week: "53", dd: "31", d: "31", year: "2026" }],
-  [[2027, 0, 3, 12, 0], { week: "53", dd: "03", d: "3", year: "2027" }],
-  [[2027, 0, 4, 12, 0], { week: "1", dd: "04", d: "4", year: "2027" }],
-  [[2025, 11, 29, 12, 0], { week: "1", dd: "29", d: "29", year: "2025" }],
-  [[2026, 0, 1, 12, 0], { week: "1", dd: "01", d: "1", year: "2026" }],
-  [[2021, 0, 3, 12, 0], { week: "53", dd: "03", d: "3", year: "2021" }],
-  [[2026, 4, 3, 23, 30], { week: "18", dd: "03", d: "3", year: "2026" }],
-  [[2026, 4, 4, 0, 0], { week: "19", dd: "04", d: "4", year: "2026" }],
-  [[2026, 4, 4, 0, 30], { week: "19", dd: "04", d: "4", year: "2026" }],
-  [[2026, 4, 9, 12, 0], { week: "19", dd: "09", d: "9", year: "2026" }],
-  [[2026, 4, 10, 12, 0], { week: "19", dd: "10", d: "10", year: "2026" }],
+  [[2026, 11, 31, 12, 0], { week: "53", dd: "31", d: "31", year: "2026", weekyear: "2026" }],
+  [[2027, 0, 3, 12, 0], { week: "53", dd: "03", d: "3", year: "2027", weekyear: "2026" }],
+  [[2027, 0, 4, 12, 0], { week: "1", dd: "04", d: "4", year: "2027", weekyear: "2027" }],
+  [[2025, 11, 29, 12, 0], { week: "1", dd: "29", d: "29", year: "2025", weekyear: "2026" }],
+  [[2026, 0, 1, 12, 0], { week: "1", dd: "01", d: "1", year: "2026", weekyear: "2026" }],
+  [[2021, 0, 3, 12, 0], { week: "53", dd: "03", d: "3", year: "2021", weekyear: "2020" }],
+  [[2026, 4, 3, 23, 30], { week: "18", dd: "03", d: "3", year: "2026", weekyear: "2026" }],
+  [[2026, 4, 4, 0, 0], { week: "19", dd: "04", d: "4", year: "2026", weekyear: "2026" }],
+  [[2026, 4, 4, 0, 30], { week: "19", dd: "04", d: "4", year: "2026", weekyear: "2026" }],
+  [[2026, 4, 9, 12, 0], { week: "19", dd: "09", d: "9", year: "2026", weekyear: "2026" }],
+  [[2026, 4, 10, 12, 0], { week: "19", dd: "10", d: "10", year: "2026", weekyear: "2026" }],
 ];
 
 const TRACER_DATES = [
@@ -323,6 +332,7 @@ async function checkPrecision() {
     assert.match(v.d, /^[1-9][0-9]*$/, `d precision ${label}`);
     assert.match(v.dd, /^[0-9]{2}$/, `dd precision ${label}`);
     assert.match(v.year, /^[0-9]{4}$/, `year precision ${label}`);
+    assert.match(v.weekyear, /^[0-9]{4}$/, `weekyear precision ${label}`);
   }
 }
 

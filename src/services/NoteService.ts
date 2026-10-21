@@ -11,7 +11,7 @@ import { mergeCalendarTags, yamlSafeTag } from "../utils/frontmatterTags";
 //   note date format is ISO (all from `toISOString()`). For events near local
 //   midnight in zones ahead of UTC (e.g. all-day events) they show the previous day.
 // - Local time: `date`/`start_date`/`end_date` in the US, UK and Long formats,
-//   plus `start_time`, `end_time`, `day`, `month`, `week`, `dd`, `d` and `year`.
+//   plus `start_time`, `end_time`, `day`, `month`, `week`, `dd`, `d`, `year` and `weekyear`.
 // The UTC values are kept unchanged on purpose: changing them would rename notes
 // and break note-exists matching for existing users. Fixing them is a separate decision.
 interface EventTemplateVariables {
@@ -42,6 +42,9 @@ interface EventTemplateVariables {
   d: string;
   // Four-digit calendar year of the event start (e.g. "2026") — not the ISO week-year
   year: string;
+  // ISO 8601 week-numbering year that `week` belongs to (e.g. "2026" for
+  // 2027-01-01, ISO week 53). Pair it with `week` for ISO week labels.
+  weekyear: string;
   source: string;
   location: string;
   locationText: string;
