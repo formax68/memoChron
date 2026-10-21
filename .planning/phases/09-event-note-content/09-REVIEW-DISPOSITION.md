@@ -9,19 +9,19 @@ findings:
     title: "A quote in the middle of a plain `tags` scalar hides its comment, so valid YAML is rewritten as invalid YAML"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: fixed
     title: "`{{week}}` and `{{year}}` disagree at year boundaries (carried forward)"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Calendar tags are silently dropped when the `tags` shape is unsupported (carried forward)"
   - id: IN-03
     severity: info
-    disposition: open
+    disposition: fixed
     title: "CRLF frontmatter is not recognized, so a duplicate `tags` key is emitted (carried forward)"
   - id: IN-05
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The scalar path changes the meaning of a quoted comma string (carried forward)"
   - id: IN-06
     severity: info
@@ -47,9 +47,9 @@ findings:
     severity: info
     disposition: open
     title: "New variables are expanded inside earlier-substituted remote values"
-open: 5
+open: 1
 total: 11
-recorded: 2026-10-21T06:34:41.494Z
+recorded: 2026-10-21T06:34:51.324Z
 ---
 
 # Phase 09: Code Review Disposition
@@ -57,10 +57,10 @@ recorded: 2026-10-21T06:34:41.494Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-01 | warning | fixed | 09-REVIEW-FIX.md |
-| IN-01 | info | open | - |
-| IN-02 | info | open | - |
-| IN-03 | info | open | - |
-| IN-05 | info | open | - |
+| IN-01 | info | fixed | 09-REVIEW-FIX.md |
+| IN-02 | info | fixed | 09-REVIEW-FIX.md |
+| IN-03 | info | fixed | 09-REVIEW-FIX.md |
+| IN-05 | info | fixed | 09-REVIEW-FIX.md |
 | IN-06 | info | fixed | 09-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 09-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 09-REVIEW-FIX.md (not in the current review) |
