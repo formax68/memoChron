@@ -46,7 +46,7 @@ status: all_fixed
 **Commit:** 7613289
 **Applied fix:** **Documentation only. Behavior is unchanged.** The review's code fix (deriving ISO dates from local time) is explicitly barred by the recorded A-UTC prohibition (09-01-PLAN.md, 09-RESEARCH.md Open Question 1, 09-01-SUMMARY.md "Known pre-existing issues"). It would rename future notes and break note-exists matching. The harness's `checkAdjacency` also expects the `toISOString()` value. So I applied the review's stated alternative. A comment block on `EventTemplateVariables` and per-field comments now say which variables are UTC and which are local. The README variables section has a new **Time zone** note. The mismatch itself is still there. Whether to fix A-UTC remains the open human decision recorded in 09-VERIFICATION.md / 09-UAT.md.
 
-### WR-05: `String.replace` replacement patterns in event data corrupt note content
+### WR-05: `String.replace` replacement patterns in event data corrupt note content (pre-existing, now on the new variables' path)
 
 **Files modified:** `src/services/NoteService.ts`, `.planning/phases/09-event-note-content/verify-09.mjs`
 **Commit:** 2dd53f0
