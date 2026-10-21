@@ -39,7 +39,7 @@ Three fixes change parsing or merge logic (WR-01, IN-02, IN-05). One adds a new 
 
 **Fuzz evidence:** The fuzz built every value of 1 to 6 characters from `a ' " # , [ ] space \`. Each value was used both as `tags: <v>` and as `tags:\n  - <v>`, and only inputs valid in both parsers were kept (474,600 inputs). Merging the tag `zz` into these inputs gave invalid YAML 5,880 times before the fix and 0 times after.
 
-### IN-01: `{{week}}` and `{{year}}` disagree at year boundaries
+### IN-01: `{{week}}` and `{{year}}` disagree at year boundaries (carried forward)
 
 **Status:** fixed: requires human verification (adds a new public template variable)
 **Files modified:** `src/utils/eventDateVariables.ts`, `src/services/NoteService.ts`, `README.md`, `.planning/phases/09-event-note-content/verify-09.mjs`
@@ -51,7 +51,7 @@ Three fixes change parsing or merge logic (WR-01, IN-02, IN-05). One adds a new 
 - **Fixtures.** The boundary and tracer fixtures now include the expected `weekyear` (for example 2025-12-29 gives `2026`, and 2021-01-03 gives `2020`). A title-format fixture checks `2026-W53`.
 - **Not done here.** The optional zero-padded `ww` was not added. The full README variable entry belongs to Phase 11 (DOC-03). DOC-03 should list `{{weekyear}}` with the other new variables.
 
-### IN-02: Calendar tags are silently dropped when the `tags` shape is unsupported
+### IN-02: Calendar tags are silently dropped when the `tags` shape is unsupported (carried forward)
 
 **Status:** fixed: requires human verification (new user-visible notice)
 **Files modified:** `src/utils/frontmatterTags.ts`, `src/services/NoteService.ts`, `.planning/phases/09-event-note-content/verify-09.mjs`
@@ -62,14 +62,14 @@ Three fixes change parsing or merge logic (WR-01, IN-02, IN-05). One adds a new 
 - **Why not `console.warn`.** The review suggested `console.warn` as one option, but DIR-01 (Phase 8) bans ungated console output in shipped code. The text passes the `obsidianmd/ui/sentence-case` lint rule.
 - **Harness.** The obsidian stub now records `Notice` messages. Each unsafe shape U1 to U9 must raise exactly one notice, and N1/N2 (a merge, and an already-complete key) must raise none.
 
-### IN-03: CRLF frontmatter is not recognized, so a duplicate `tags` key is emitted
+### IN-03: CRLF frontmatter is not recognized, so a duplicate `tags` key is emitted (carried forward)
 
 **Status:** fixed
 **Files modified:** `src/services/NoteService.ts`, `.planning/phases/09-event-note-content/verify-09.mjs`
 **Commit:** 546dec6
 **Applied fix:** `cleanFrontmatter` now converts `\r\n` to `\n` before anything else. The `tags:` key is then found and merged, and the note gets consistent LF line endings. Fixture F27 (CRLF block list) expects one merged `tags` key.
 
-### IN-05: The scalar path changes the meaning of a quoted comma string
+### IN-05: The scalar path changes the meaning of a quoted comma string (carried forward)
 
 **Status:** fixed: requires human verification (merge semantics)
 **Files modified:** `src/utils/frontmatterTags.ts`, `.planning/phases/09-event-note-content/verify-09.mjs`
