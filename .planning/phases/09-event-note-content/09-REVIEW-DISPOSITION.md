@@ -6,7 +6,27 @@ findings:
   - id: WR-01
     severity: warning
     disposition: fixed
-    title: "`yamlSafeTag` leaves tags unquoted that YAML parses as mappings, booleans, numbers or null"
+    title: "A quote in the middle of a plain `tags` scalar hides its comment, so valid YAML is rewritten as invalid YAML"
+  - id: IN-01
+    severity: info
+    disposition: open
+    title: "`{{week}}` and `{{year}}` disagree at year boundaries (carried forward)"
+  - id: IN-02
+    severity: info
+    disposition: open
+    title: "Calendar tags are silently dropped when the `tags` shape is unsupported (carried forward)"
+  - id: IN-03
+    severity: info
+    disposition: open
+    title: "CRLF frontmatter is not recognized, so a duplicate `tags` key is emitted (carried forward)"
+  - id: IN-05
+    severity: info
+    disposition: open
+    title: "The scalar path changes the meaning of a quoted comma string (carried forward)"
+  - id: IN-06
+    severity: info
+    disposition: fixed
+    title: "`NON_STRING_SCALAR` misses two forms that `js-yaml` reads as non-strings"
   - id: WR-02
     severity: warning
     disposition: fixed
@@ -23,29 +43,13 @@ findings:
     severity: warning
     disposition: fixed
     title: "`String.replace` replacement patterns in event data corrupt note content (pre-existing, now on the new variables' path)"
-  - id: IN-01
-    severity: info
-    disposition: open
-    title: "`{{week}}` and `{{year}}` disagree at year boundaries"
-  - id: IN-02
-    severity: info
-    disposition: open
-    title: "Calendar tags are silently dropped when the `tags` shape is unsupported"
-  - id: IN-03
-    severity: info
-    disposition: open
-    title: "CRLF frontmatter is not recognized, so a duplicate `tags` key is emitted"
   - id: IN-04
     severity: info
     disposition: open
     title: "New variables are expanded inside earlier-substituted remote values"
-  - id: IN-05
-    severity: info
-    disposition: open
-    title: "The scalar path rewrites a quoted comma string's meaning"
 open: 5
-total: 10
-recorded: 2026-10-21T05:41:00.363Z
+total: 11
+recorded: 2026-10-21T06:34:41.494Z
 ---
 
 # Phase 09: Code Review Disposition
@@ -53,15 +57,16 @@ recorded: 2026-10-21T05:41:00.363Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-01 | warning | fixed | 09-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 09-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 09-REVIEW-FIX.md |
-| WR-04 | warning | fixed | 09-REVIEW-FIX.md |
-| WR-05 | warning | fixed | 09-REVIEW-FIX.md |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |
-| IN-04 | info | open | - |
 | IN-05 | info | open | - |
+| IN-06 | info | fixed | 09-REVIEW-FIX.md |
+| WR-02 | warning | fixed | 09-REVIEW-FIX.md (not in the current review) |
+| WR-03 | warning | fixed | 09-REVIEW-FIX.md (not in the current review) |
+| WR-04 | warning | fixed | 09-REVIEW-FIX.md (not in the current review) |
+| WR-05 | warning | fixed | 09-REVIEW-FIX.md (not in the current review) |
+| IN-04 | info | open | - (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
