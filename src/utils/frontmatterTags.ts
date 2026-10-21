@@ -58,12 +58,17 @@ export function normalizeTag(tag: string): string {
 
 /**
  * Split a YAML value into its body and trailing comment. A comment starts at a
- * `#` that is at index 0 or preceded by whitespace, outside quotes.
+ * `#` that is at index 0 or preceded by whitespace, outside quotes. A quote
+ * only opens a quoted scalar at the start of a node (index 0, or the first
+ * non-space character after `[`, `{` or a flow `,`); inside a plain scalar such
+ * as `o'reilly` it is an ordinary character, as in YAML.
  * @param value The raw value text after the key's colon
  * @returns [body (right-trimmed), comment (including the leading `#`, or "")]
  */
 export function splitComment(value: string): [string, string] {
   let quote: string | null = null;
+  let atNodeStart = true;
+  let flowDepth = 0;
   for (let i = 0; i < value.length; i++) {
     const c = value[i];
     if (quote) {
@@ -75,18 +80,31 @@ export function splitComment(value: string): [string, string] {
       }
       continue;
     }
-    if (c === '"' || c === "'") {
+    if ((c === '"' || c === "'") && atNodeStart) {
       quote = c;
     } else if (c === "#" && (i === 0 || /\s/.test(value[i - 1]))) {
       return [value.slice(0, i).trimEnd(), value.slice(i)];
+    }
+    if (c === "[" || c === "{") {
+      flowDepth++;
+      atNodeStart = true;
+    } else if (c === "]" || c === "}") {
+      flowDepth = Math.max(0, flowDepth - 1);
+      atNodeStart = false;
+    } else if (c === "," && flowDepth > 0) {
+      atNodeStart = true;
+    } else if (!/\s/.test(c)) {
+      atNodeStart = false;
     }
   }
   return [value.trimEnd(), ""];
 }
 
 /**
- * Split flow-sequence text on commas outside single or double quotes. Items are
- * trimmed and empty items dropped, which also absorbs a trailing comma.
+ * Split flow-sequence text on commas outside single or double quotes. A quote
+ * only opens a quoted item at the start of the item; inside a plain item such
+ * as `don't-forget` it is an ordinary character. Items are trimmed and empty
+ * items dropped, which also absorbs a trailing comma.
  * @param text The text inside the brackets, or a plain scalar value
  * @returns The items, or null on an unquoted [ ] { } or an unterminated quote
  */
@@ -110,7 +128,7 @@ function splitFlowItems(text: string): string[] | null {
       }
       continue;
     }
-    if (c === '"' || c === "'") {
+    if ((c === '"' || c === "'") && current.trim() === "") {
       quote = c;
       current += c;
       continue;
@@ -130,6 +148,30 @@ function splitFlowItems(text: string): string[] | null {
   }
   items.push(current.trim());
   return items.filter((item) => item.length > 0);
+}
+
+/**
+ * Whether an existing item can be moved verbatim into a flow sequence: a
+ * complete quoted scalar, or a plain scalar that is still plain in flow context.
+ * @param item A trimmed item from splitFlowItems
+ * @returns false when moving the item into `[...]` could change or break the YAML
+ */
+function isFlowSafeItem(item: string): boolean {
+  if (item[0] === "'") {
+    return /^'(?:[^']|'')*'$/.test(item);
+  }
+  if (item[0] === '"') {
+    // Only YAML's legal escapes: `"\["` is literal text in a plain scalar but an
+    // invalid escape once it becomes a double-quoted flow item.
+    return /^"(?:[^"\\]|\\(?:[0abtnvfre "/\\N_LP\t]|x[\da-fA-F]{2}|u[\da-fA-F]{4}|U[\da-fA-F]{8}))*"$/.test(
+      item
+    );
+  }
+  return (
+    !/^[#&*!|>%@`]/.test(item) &&
+    !/^[-?:](\s|$)/.test(item) &&
+    !/:(\s|$)|\s#/.test(item)
+  );
 }
 
 /**
@@ -296,7 +338,9 @@ export function mergeCalendarTags(
 
   // Scalar, including the legacy comma form: rewrite as an inline array.
   const items = splitFlowItems(body);
-  if (items === null) {
+  if (items === null || !items.every(isFlowSafeItem)) {
+    // An item that is not a valid flow node (e.g. `a, #b` or `a, ''b` in a
+    // plain scalar) would make the rewritten `[...]` invalid YAML.
     return untouched;
   }
   const add = pickNew(items);

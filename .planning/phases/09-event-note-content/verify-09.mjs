@@ -744,6 +744,27 @@ async function checkTagsShapes() {
     one(["c"])
   );
 
+  // A quote inside a plain scalar is an ordinary character: it neither hides a
+  // trailing comment nor blocks the merge (WR-01 re-review).
+  const midQuote = [
+    ["F22", ["tags: o'reilly # author's pick"], ["tags: [o'reilly, c] # author's pick"], ["o'reilly", "c"]],
+    ["F23", ["tags: don't-forget"], ["tags: [don't-forget, c]"], ["don't-forget", "c"]],
+    ["F24", ['tags: say"hi # a"b'], ['tags: [say"hi, c] # a"b'], ['say"hi', "c"]],
+    ["F25", ["tags: [o'reilly, x] # it's"], ["tags: [o'reilly, x, c] # it's"], ["o'reilly", "x", "c"]],
+    [
+      "F26",
+      ["tags:", "  - o'reilly # it's"],
+      ["tags:", "  - o'reilly # it's", "  - c"],
+      ["o'reilly", "c"],
+      ["O'Reilly", "c"],
+    ],
+  ];
+  for (const [label, input, expected, parsed, cal = ["c"]] of midQuote) {
+    const fm = await expectTags(label, input, expected, one(cal));
+    assert.deepEqual(YAML.parse(fm).tags, parsed, `${label} (yaml)`);
+    assert.deepEqual(jsyaml.load(fm).tags, parsed, `${label} (js-yaml)`);
+  }
+
   // Shapes the merger cannot edit safely stay byte-identical (D-03).
   const unsafeShapes = [
     ["U1", ["tags: [a,", "  b]", "date: x"]],
@@ -751,6 +772,10 @@ async function checkTagsShapes() {
     ["U3", ["tags: |", "  a"]],
     ["U4", ["tags: &x [a]"]],
     ["U5", ["tags:", "  - a", "    - b"]],
+    // Comma-scalar items that are not valid flow nodes (WR-01 re-review).
+    ["U7", ["tags: a,#b"]],
+    ["U8", ["tags: a,''b"]],
+    ["U9", ['tags: a,"\\["']],
   ];
   for (const [label, lines] of unsafeShapes) {
     await expectTags(label, lines, lines);
