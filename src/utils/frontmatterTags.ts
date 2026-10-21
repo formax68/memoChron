@@ -18,10 +18,11 @@ const NULL_VALUES = new Set(["~", "null", "Null", "NULL", '""', "''"]);
 
 // Module-private regex for plain scalars that YAML resolves to a non-string
 // type (null, boolean, integer, float, infinity/NaN) under the core schema, or
-// to a timestamp under js-yaml's default schema. A calendar tag matching it
+// to a timestamp under js-yaml's default schema (including js-yaml's looser
+// `._0` float and tab-separated timestamp forms). A calendar tag matching it
 // must be quoted so it stays a string.
 const NON_STRING_SCALAR =
-  /^(?:~|null|Null|NULL|true|True|TRUE|false|False|FALSE|[-+]?(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][-+]?\d+)?|[-+]?0b[01_]+|[-+]?0o[0-7_]+|[-+]?0x[0-9a-fA-F_]+|[-+]?\.(?:inf|Inf|INF)|\.(?:nan|NaN|NAN)|\d{4}-\d\d?-\d\d?(?:[Tt ].*)?)$/;
+  /^(?:~|null|Null|NULL|true|True|TRUE|false|False|FALSE|[-+]?(?:\d[\d_]*(?:\.[\d_]*)?|\.[\d_]+)(?:[eE][-+]?\d+)?|[-+]?0b[01_]+|[-+]?0o[0-7_]+|[-+]?0x[0-9a-fA-F_]+|[-+]?\.(?:inf|Inf|INF)|\.(?:nan|NaN|NAN)|\d{4}-\d\d?-\d\d?(?:[Tt \t].*)?)$/;
 
 // Module-private regex for a block sequence item: indent, dash, optional value.
 const BLOCK_ITEM_LINE = /^([ \t]*)-(?:[ \t]+(.*))?$/;

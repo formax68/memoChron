@@ -640,6 +640,16 @@ async function checkTagsTracer() {
   assert.equal(mod.yamlSafeTag("work", true), "work");
   assert.equal(mod.yamlSafeTag("a,b", true), '"a,b"');
   assert.equal(mod.yamlSafeTag("a,b", false), "a,b");
+  // IN-06: js-yaml-only non-string forms are quoted and round-trip as strings.
+  for (const tag of ["._0", "._1", "2026-01-01\t10:00:00"]) {
+    for (const flow of [false, true]) {
+      const quoted = mod.yamlSafeTag(tag, flow);
+      assert.equal(quoted, JSON.stringify(tag), `IN-06 quotes ${JSON.stringify(tag)}`);
+      const doc = flow ? `tags: [${quoted}]` : `tags:\n  - ${quoted}`;
+      assert.deepEqual(jsyaml.load(doc).tags, [tag]);
+      assert.deepEqual(YAML.parse(doc).tags, [tag]);
+    }
+  }
   assert.deepEqual(mod.mergeCalendarTags("type: event", ["x"]), {
     found: false,
     skipped: false,
