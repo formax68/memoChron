@@ -686,6 +686,26 @@ async function checkTagsShapes() {
     sourceTags: ["work"],
   });
 
+  // Backslash escapes inside double quotes do not end the string (WR-02).
+  await expectTags(
+    "F19",
+    ['tags: "a\\" #b"'],
+    ['tags: ["a\\" #b", c]'],
+    one(["c"])
+  );
+  await expectTags(
+    "F20",
+    ['tags: ["a\\", b", x]'],
+    ['tags: ["a\\", b", x, c]'],
+    one(["c"])
+  );
+  await expectTags(
+    "F21",
+    ["tags:", '  - "a\\" #b" # note'],
+    ["tags:", '  - "a\\" #b" # note', "  - c"],
+    one(["c"])
+  );
+
   // Shapes the merger cannot edit safely stay byte-identical (D-03).
   const unsafeShapes = [
     ["U1", ["tags: [a,", "  b]", "date: x"]],

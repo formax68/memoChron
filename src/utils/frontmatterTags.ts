@@ -67,7 +67,10 @@ export function splitComment(value: string): [string, string] {
   for (let i = 0; i < value.length; i++) {
     const c = value[i];
     if (quote) {
-      if (c === quote) {
+      if (quote === '"' && c === "\\") {
+        // Backslash escape inside a double-quoted scalar: skip the next char.
+        i++;
+      } else if (c === quote) {
         quote = null;
       }
       continue;
@@ -91,10 +94,18 @@ function splitFlowItems(text: string): string[] | null {
   const items: string[] = [];
   let quote: string | null = null;
   let current = "";
-  for (const c of text) {
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
     if (quote) {
       current += c;
-      if (c === quote) {
+      if (quote === '"' && c === "\\") {
+        // Backslash escape inside a double-quoted scalar: keep the escaped
+        // character as-is so an escaped `"` does not close the string.
+        if (i + 1 < text.length) {
+          current += text[i + 1];
+          i++;
+        }
+      } else if (c === quote) {
         quote = null;
       }
       continue;
