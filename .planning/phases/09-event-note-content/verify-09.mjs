@@ -374,6 +374,34 @@ async function checkSanitizedTitle() {
   assert.doesNotMatch(name, /[\\/:*?"<>|]/);
 }
 
+// WR-05 / IN-04: remote values are inserted literally in one pass, so `$`
+// replacement patterns are not expanded and `{{...}}` inside a value is kept.
+async function checkLiteralSubstitution() {
+  const mod = await loadBundle();
+  const note = await createNote(
+    mod,
+    patch({
+      noteTitleFormat: "{{event_title}} {{dd}}",
+      noteTemplate: "{{event_title}}|{{description}}\nEND",
+      defaultFrontmatter: "---\ntitle: {{event_title}}\n---",
+      defaultTags: [],
+    }),
+    makeEvent(2026, 4, 4, 12, 0, {
+      title: "Budget $$5 and $& {{week}}",
+      description: "see $' here",
+    })
+  );
+  assert.equal(basename(note.path), "Budget $$5 and $& {{week}} 04.md");
+  assert.equal(
+    bodyOf(note.content),
+    "Budget $$5 and $& {{week}}|see $' here\nEND"
+  );
+  assert.ok(
+    note.content.split("\n").includes("title: Budget $$5 and $& {{week}}"),
+    `frontmatter title not literal in:\n${note.content}`
+  );
+}
+
 async function checkDateFormatIndependence() {
   const mod = await loadBundle();
   const event = makeEvent(2026, 4, 4, 12, 0);
@@ -742,6 +770,7 @@ const CHECKS = [
   checkPrecision,
   checkAdjacency,
   checkSanitizedTitle,
+  checkLiteralSubstitution,
   checkDateFormatIndependence,
   checkParity,
   checkTagsTracer,

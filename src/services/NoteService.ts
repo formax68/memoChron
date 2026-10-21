@@ -40,6 +40,9 @@ interface EventTemplateVariables {
   attendees_count: string;
 }
 
+// Matches one `{{key}}` template placeholder; group 1 is the variable name.
+const TEMPLATE_PLACEHOLDER = /\{\{([\w-]+)\}\}/g;
+
 interface FolderTemplateVariables {
   YYYY: string;
   YY: string;
@@ -321,10 +324,13 @@ export class NoteService {
     }
 
     try {
-      return Object.entries(variables).reduce(
-        (result, [key, value]) =>
-          result.replace(new RegExp(`{{${key}}}`, "g"), value || ""),
-        template
+      // Single pass with a replacer function: values (remote calendar data) are
+      // inserted literally, so `$&`/`$'`-style patterns are not expanded and
+      // `{{...}}` text inside a substituted value is never rescanned.
+      return template.replace(TEMPLATE_PLACEHOLDER, (placeholder, key: string) =>
+        Object.prototype.hasOwnProperty.call(variables, key)
+          ? variables[key as keyof EventTemplateVariables] || ""
+          : placeholder
       );
     } catch {
       return template;
@@ -339,14 +345,15 @@ export class NoteService {
     try {
       const variables = this.getEventTemplateVariables(event);
 
-      // Apply all template variables, sanitizing each value for use in filenames
-      return Object.entries(variables).reduce((title, [key, value]) => {
-        const placeholder = `{{${key}}}`;
-        return title.replace(
-          new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
-          this.sanitizeFileName(value || "")
-        );
-      }, format);
+      // Apply all template variables in a single pass, sanitizing each value for
+      // use in filenames and inserting it literally (see applyTemplateVariables)
+      return format.replace(TEMPLATE_PLACEHOLDER, (placeholder, key: string) =>
+        Object.prototype.hasOwnProperty.call(variables, key)
+          ? this.sanitizeFileName(
+              variables[key as keyof EventTemplateVariables] || ""
+            )
+          : placeholder
+      );
     } catch {
       return event.title || "Untitled Event";
     }
