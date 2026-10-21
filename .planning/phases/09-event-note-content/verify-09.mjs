@@ -744,6 +744,15 @@ async function checkTagsShapes() {
     sourceTags: ["work"],
   });
 
+  // CRLF frontmatter is normalized, so its tags key merges instead of getting
+  // a duplicate appended (IN-03).
+  await expectTags(
+    "F27",
+    ["tags:\r", "  - a\r", "title: x"],
+    ["tags:", "  - a", "  - c", "title: x"],
+    one(["c"])
+  );
+
   // Backslash escapes inside double quotes do not end the string (WR-02).
   await expectTags(
     "F19",

@@ -294,7 +294,9 @@ export class NoteService {
   }
 
   private cleanFrontmatter(frontmatter: string): string {
-    let cleaned = frontmatter.trim();
+    // Normalize CRLF (e.g. a hand-edited or synced data.json) so the tags merger
+    // recognizes `tags:` lines and the note gets consistent LF line endings.
+    let cleaned = frontmatter.replace(/\r\n/g, "\n").trim();
 
     if (cleaned.startsWith(NoteService.FRONTMATTER_DELIMITER)) {
       cleaned = cleaned.substring(3);
