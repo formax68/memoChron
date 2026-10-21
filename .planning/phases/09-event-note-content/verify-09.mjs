@@ -562,6 +562,25 @@ async function checkTagsTracer() {
     ["tags:", "  - a", '  - "#urgent"', '  - "a: b"'],
     { defaultTags: ["#urgent", "a: b"], sourceTags: [] }
   );
+  // T12 (WR-01): tags YAML would read as a mapping, boolean or number are quoted
+  // in both block and flow form, and every merged tag parses as a string.
+  const typed = { defaultTags: ["foo:", "true", "123"], sourceTags: [] };
+  const t12 = await expectTags(
+    "T12",
+    ["tags:", "  - a"],
+    ["tags:", "  - a", '  - "foo:"', '  - "true"', '  - "123"'],
+    typed
+  );
+  const t12f = await expectTags(
+    "T12f",
+    ["tags: [a]"],
+    ['tags: [a, "foo:", "true", "123"]'],
+    typed
+  );
+  for (const fm of [t12, t12f]) {
+    assert.deepEqual(YAML.parse(fm).tags, ["a", "foo:", "true", "123"]);
+    assert.deepEqual(jsyaml.load(fm).tags, ["a", "foo:", "true", "123"]);
+  }
 
   // Direct unit sanity on the exported helpers.
   assert.equal(mod.normalizeTag(' "#Work" '), "work");

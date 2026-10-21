@@ -16,6 +16,13 @@ const TAGS_KEY_LINE = /^((["']?)tags\2[ \t]*:)(.*)$/;
 // holding one of these is treated like an empty key and receives a block list.
 const NULL_VALUES = new Set(["~", "null", "Null", "NULL", '""', "''"]);
 
+// Module-private regex for plain scalars that YAML resolves to a non-string
+// type (null, boolean, integer, float, infinity/NaN) under the core schema, or
+// to a timestamp under js-yaml's default schema. A calendar tag matching it
+// must be quoted so it stays a string.
+const NON_STRING_SCALAR =
+  /^(?:~|null|Null|NULL|true|True|TRUE|false|False|FALSE|[-+]?(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][-+]?\d+)?|[-+]?0b[01_]+|[-+]?0o[0-7_]+|[-+]?0x[0-9a-fA-F_]+|[-+]?\.(?:inf|Inf|INF)|\.(?:nan|NaN|NAN)|\d{4}-\d\d?-\d\d?(?:[Tt ].*)?)$/;
+
 // Module-private regex for a block sequence item: indent, dash, optional value.
 const BLOCK_ITEM_LINE = /^([ \t]*)-(?:[ \t]+(.*))?$/;
 
@@ -115,7 +122,8 @@ function splitFlowItems(text: string): string[] | null {
 }
 
 /**
- * Quote a calendar tag only when it would not be a valid plain YAML scalar.
+ * Quote a calendar tag only when it would not parse as a plain YAML string
+ * (indicator characters, `: `/trailing `:`, ` #`, or a null/bool/number form).
  * Ordinary tags are returned unchanged.
  * @param tag The calendar tag to write
  * @param flow true when the tag is written inside a flow sequence ([a, b])
@@ -123,8 +131,10 @@ function splitFlowItems(text: string): string[] | null {
  */
 export function yamlSafeTag(tag: string, flow: boolean): string {
   const needsQuote =
+    tag !== tag.trim() ||
+    NON_STRING_SCALAR.test(tag) ||
     /^[-?:,[\]{}#&*!|>'"%@`]/.test(tag) ||
-    /: |\s#/.test(tag) ||
+    /:(\s|$)|\s#/.test(tag) ||
     (flow && /[,[\]{}]/.test(tag));
   return needsQuote ? JSON.stringify(tag) : tag;
 }
