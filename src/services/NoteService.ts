@@ -1,4 +1,4 @@
-import { TFile, TFolder, normalizePath } from "obsidian";
+import { Notice, TFile, TFolder, normalizePath } from "obsidian";
 import MemoChron from "../main";
 import { MemoChronSettings, CalendarNotesSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
@@ -86,6 +86,10 @@ export class NoteService {
     VIRTUAL: "💻",
     PHYSICAL: "📍",
   };
+
+  // Set once the "calendar tags skipped" notice has been shown, so a template
+  // with an unsupported `tags` shape does not raise it on every new note.
+  private tagsSkippedNoticeShown = false;
 
   constructor(private plugin: MemoChron) {}
 
@@ -259,6 +263,9 @@ export class NoteService {
       const merged = mergeCalendarTags(frontmatterContent, tags);
       if (merged.found) {
         frontmatterContent = merged.content;
+        if (merged.skipped) {
+          this.notifyTagsSkipped();
+        }
       } else {
         const tagsYaml = this.formatTagsYaml(tags);
         if (frontmatterContent) {
@@ -269,6 +276,21 @@ export class NoteService {
     }
 
     return `${NoteService.FRONTMATTER_DELIMITER}\n${frontmatterContent}\n${NoteService.FRONTMATTER_DELIMITER}`;
+  }
+
+  /**
+   * Tell the user (once per session) that calendar tags were not added because
+   * the `tags` value in the default frontmatter cannot be edited safely.
+   */
+  private notifyTagsSkipped(): void {
+    if (this.tagsSkippedNoticeShown) {
+      return;
+    }
+    this.tagsSkippedNoticeShown = true;
+    new Notice(
+      "Calendar tags were not added to the new note. The tags value in your default frontmatter uses a format that can't be edited safely. Use a list (- tag) or [tag1, tag2] instead.",
+      10000
+    );
   }
 
   private cleanFrontmatter(frontmatter: string): string {

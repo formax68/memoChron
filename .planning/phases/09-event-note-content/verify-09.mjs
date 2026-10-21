@@ -29,6 +29,11 @@ const TIMEZONES = [
 ];
 
 const OBSIDIAN_STUB = `
+export class Notice {
+  constructor(message) {
+    (globalThis.__verify09Notices ??= []).push(String(message));
+  }
+}
 export class TFile {}
 export class TFolder {}
 export function normalizePath(p) {
@@ -637,8 +642,13 @@ async function checkTagsTracer() {
   assert.equal(mod.yamlSafeTag("a,b", false), "a,b");
   assert.deepEqual(mod.mergeCalendarTags("type: event", ["x"]), {
     found: false,
+    skipped: false,
     content: "type: event",
   });
+  // IN-02: an unsafe shape reports skipped; an already-complete key does not.
+  assert.equal(mod.mergeCalendarTags("tags: {a: 1}", ["x"]).skipped, true);
+  assert.equal(mod.mergeCalendarTags("tags: [x]", ["X"]).skipped, false);
+  assert.equal(mod.mergeCalendarTags("tags: [a]", ["x"]).skipped, false);
 }
 
 async function checkTagsShapes() {
@@ -788,8 +798,17 @@ async function checkTagsShapes() {
     ["U9", ['tags: a,"\\["']],
   ];
   for (const [label, lines] of unsafeShapes) {
+    globalThis.__verify09Notices = [];
     await expectTags(label, lines, lines);
+    // IN-02: the skip is reported to the user, not silent.
+    assert.equal(globalThis.__verify09Notices.length, 1, `${label} raises one notice`);
+    assert.match(globalThis.__verify09Notices[0], /calendar tags were not added/i);
   }
+  // A merge that succeeds, or has nothing to add, raises no notice.
+  globalThis.__verify09Notices = [];
+  await expectTags("N1", ["tags: [a]"], ["tags: [a, c]"], one(["c"]));
+  await expectTags("N2", ["tags: [c]"], ["tags: [c]"], one(["C"]));
+  assert.deepEqual(globalThis.__verify09Notices, [], "no notice for N1/N2");
   const u6 = ["tags: a", "x: 1", "tags: b"];
   const u6fm = await expectTags("U6", u6, u6, { single: false });
   assert.equal(

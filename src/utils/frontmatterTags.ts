@@ -34,6 +34,11 @@ const TAGS_REGION_LINE = /^(\s*$|[ \t]|-(\s|$)|#)/;
 export interface TagMergeResult {
   /** true when a top-level `tags` key exists (merged, already complete, or left untouched as unsafe) */
   found: boolean;
+  /**
+   * true when the `tags` shape could not be edited safely, so it was left
+   * untouched and the calendar tags were NOT added (callers should tell the user)
+   */
+  skipped: boolean;
   /** The frontmatter body, merged or unchanged */
   content: string;
 }
@@ -199,7 +204,8 @@ export function yamlSafeTag(tag: string, flow: boolean): string {
  * in their given order. Only the `tags` key's own lines are edited.
  * @param frontmatter The frontmatter body, after template-variable substitution
  * @param calendarTags The event's calendar tags, in getTagsForEvent order
- * @returns found=false when there is no top-level `tags` key (content unchanged)
+ * @returns found=false when there is no top-level `tags` key (content unchanged);
+ *   skipped=true when the key exists but its shape is left untouched as unsafe
  */
 export function mergeCalendarTags(
   frontmatter: string,
@@ -213,9 +219,20 @@ export function mergeCalendarTags(
     }
   });
   if (keyIdx.length === 0) {
-    return { found: false, content: frontmatter };
+    return { found: false, skipped: false, content: frontmatter };
   }
-  const untouched: TagMergeResult = { found: true, content: frontmatter };
+  // Unsafe shape: calendar tags are skipped (D-03).
+  const untouched: TagMergeResult = {
+    found: true,
+    skipped: true,
+    content: frontmatter,
+  };
+  // Every calendar tag is already present: nothing to add, nothing skipped.
+  const complete: TagMergeResult = {
+    found: true,
+    skipped: false,
+    content: frontmatter,
+  };
   if (keyIdx.length > 1) {
     // The user already has duplicate keys: never add another one.
     return untouched;
@@ -284,7 +301,7 @@ export function mergeCalendarTags(
     }
     const add = pickNew(existing);
     if (add.length === 0) {
-      return untouched;
+      return complete;
     }
     const out = [...lines];
     if (lastItem === -1) {
@@ -302,7 +319,7 @@ export function mergeCalendarTags(
         ...add.map((tag) => `${indent ?? ""}- ${yamlSafeTag(tag, false)}`)
       );
     }
-    return { found: true, content: out.join("\n") };
+    return { found: true, skipped: false, content: out.join("\n") };
   }
 
   // A scalar or flow value followed by non-comment lines is a multi-line value.
@@ -326,14 +343,14 @@ export function mergeCalendarTags(
     }
     const add = pickNew(items);
     if (add.length === 0) {
-      return untouched;
+      return complete;
     }
     const head = inner.trimEnd();
     const sep = head.trim() === "" ? "" : head.endsWith(",") ? " " : ", ";
     const added = add.map((tag) => yamlSafeTag(tag, true)).join(", ");
     const out = [...lines];
     out[i] = `${keyPart}${leadingWs}[${head}${sep}${added}]${commentSuffix}`;
-    return { found: true, content: out.join("\n") };
+    return { found: true, skipped: false, content: out.join("\n") };
   }
 
   // Scalar, including the legacy comma form: rewrite as an inline array.
@@ -345,10 +362,10 @@ export function mergeCalendarTags(
   }
   const add = pickNew(items);
   if (add.length === 0) {
-    return untouched;
+    return complete;
   }
   const merged = [...items, ...add.map((tag) => yamlSafeTag(tag, true))];
   const out = [...lines];
   out[i] = `${keyPart} [${merged.join(", ")}]${commentSuffix}`;
-  return { found: true, content: out.join("\n") };
+  return { found: true, skipped: false, content: out.join("\n") };
 }
