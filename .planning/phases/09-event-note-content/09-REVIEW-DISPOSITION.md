@@ -21,7 +21,7 @@ findings:
     title: "New local-time variables disagree with the default `{{start_date}}` / `{{date-iso}}` (UTC)"
   - id: WR-05
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`String.replace` replacement patterns in event data corrupt note content (pre-existing, now on the new variables' path)"
   - id: IN-01
     severity: info
@@ -43,9 +43,9 @@ findings:
     severity: info
     disposition: open
     title: "The scalar path rewrites a quoted comma string's meaning"
-open: 6
+open: 5
 total: 10
-recorded: 2026-10-21T05:40:51.920Z
+recorded: 2026-10-21T05:41:00.363Z
 ---
 
 # Phase 09: Code Review Disposition
@@ -56,7 +56,7 @@ recorded: 2026-10-21T05:40:51.920Z
 | WR-02 | warning | fixed | 09-REVIEW-FIX.md |
 | WR-03 | warning | fixed | 09-REVIEW-FIX.md |
 | WR-04 | warning | fixed | 09-REVIEW-FIX.md |
-| WR-05 | warning | open | - |
+| WR-05 | warning | fixed | 09-REVIEW-FIX.md |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |
