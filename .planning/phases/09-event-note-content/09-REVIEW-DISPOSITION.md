@@ -5,19 +5,19 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`yamlSafeTag` leaves tags unquoted that YAML parses as mappings, booleans, numbers or null"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Backslash escapes in double-quoted values are ignored, so valid YAML is rewritten as invalid YAML"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The fallback path still writes calendar tags unquoted, so `#meeting` becomes `null`"
   - id: WR-04
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "New local-time variables disagree with the default `{{start_date}}` / `{{date-iso}}` (UTC)"
   - id: WR-05
     severity: warning
@@ -43,19 +43,19 @@ findings:
     severity: info
     disposition: open
     title: "The scalar path rewrites a quoted comma string's meaning"
-open: 10
+open: 6
 total: 10
-recorded: 2026-10-20T14:16:32.525Z
+recorded: 2026-10-21T05:40:51.920Z
 ---
 
 # Phase 09: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
-| WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
-| WR-04 | warning | open | - |
+| WR-01 | warning | fixed | 09-REVIEW-FIX.md |
+| WR-02 | warning | fixed | 09-REVIEW-FIX.md |
+| WR-03 | warning | fixed | 09-REVIEW-FIX.md |
+| WR-04 | warning | fixed | 09-REVIEW-FIX.md |
 | WR-05 | warning | open | - |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
