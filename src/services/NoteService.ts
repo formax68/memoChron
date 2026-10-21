@@ -6,13 +6,27 @@ import { errorMessage } from "../utils/errors";
 import { getEventDateVariables } from "../utils/eventDateVariables";
 import { mergeCalendarTags, yamlSafeTag } from "../utils/frontmatterTags";
 
+// Time zone of the date variables (known issue A-UTC / code review WR-04):
+// - UTC: the three `*-iso` variables, and `date`/`start_date`/`end_date` when the
+//   note date format is ISO (all from `toISOString()`). For events near local
+//   midnight in zones ahead of UTC (e.g. all-day events) they show the previous day.
+// - Local time: `date`/`start_date`/`end_date` in the US, UK and Long formats,
+//   plus `start_time`, `end_time`, `day`, `month`, `week`, `dd`, `d` and `year`.
+// The UTC values are kept unchanged on purpose: changing them would rename notes
+// and break note-exists matching for existing users. Fixing them is a separate decision.
 interface EventTemplateVariables {
   event_title: string;
+  // UTC in ISO format (see the time zone note above)
   date: string;
+  // Always UTC (YYYY-MM-DD)
   "date-iso": string;
+  // UTC in ISO format (see the time zone note above)
   start_date: string;
+  // Always UTC (YYYY-MM-DD)
   "start_date-iso": string;
+  // UTC in ISO format (see the time zone note above)
   end_date: string;
+  // Always UTC (YYYY-MM-DD)
   "end_date-iso": string;
   start_time: string;
   end_time: string;
