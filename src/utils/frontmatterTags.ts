@@ -180,6 +180,28 @@ function isFlowSafeItem(item: string): boolean {
 }
 
 /**
+ * Decode a complete single- or double-quoted YAML scalar.
+ * @param item A trimmed item from splitFlowItems
+ * @returns The string value, or null when the item is not a quoted scalar this
+ *   decoder handles (plain, malformed, or a YAML-only escape such as `\x41`)
+ */
+function unquoteScalar(item: string): string | null {
+  if (/^'(?:[^']|'')*'$/.test(item)) {
+    return item.slice(1, -1).replace(/''/g, "'");
+  }
+  if (item[0] === '"') {
+    try {
+      // JSON's escapes are a subset of YAML's double-quoted escapes.
+      const value: unknown = JSON.parse(item);
+      return typeof value === "string" ? value : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
  * Quote a calendar tag only when it would not parse as a plain YAML string
  * (indicator characters, `: `/trailing `:`, ` #`, or a null/bool/number form).
  * Ordinary tags are returned unchanged.
@@ -360,11 +382,23 @@ export function mergeCalendarTags(
     // plain scalar) would make the rewritten `[...]` invalid YAML.
     return untouched;
   }
-  const add = pickNew(items);
+  // A single quoted string with commas is one YAML string that Obsidian splits
+  // into several tags, like the unquoted comma form. Moving it into `[...]`
+  // as-is would make it one (invalid) tag, so split it into its parts.
+  const quotedValue = items.length === 1 ? unquoteScalar(items[0]) : null;
+  const userItems =
+    quotedValue !== null && quotedValue.includes(",")
+      ? quotedValue
+          .split(",")
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0)
+          .map((part) => yamlSafeTag(part, true))
+      : items;
+  const add = pickNew(userItems);
   if (add.length === 0) {
     return complete;
   }
-  const merged = [...items, ...add.map((tag) => yamlSafeTag(tag, true))];
+  const merged = [...userItems, ...add.map((tag) => yamlSafeTag(tag, true))];
   const out = [...lines];
   out[i] = `${keyPart} [${merged.join(", ")}]${commentSuffix}`;
   return { found: true, skipped: false, content: out.join("\n") };

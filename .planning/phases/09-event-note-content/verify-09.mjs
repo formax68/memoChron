@@ -744,6 +744,20 @@ async function checkTagsShapes() {
     sourceTags: ["work"],
   });
 
+  // A quoted comma string is split like the unquoted comma form, so Obsidian
+  // still reads the same separate tags after the merge (IN-05).
+  const quotedComma = [
+    ["F28", ['tags: "a, b"'], ["tags: [a, b, c]"], ["a", "b", "c"], ["c"]],
+    ["F29", ["tags: 'x, #y'"], ['tags: [x, "#y", c]'], ["x", "#y", "c"], ["c"]],
+    ["F30", ['tags: "a, B" # n'], ["tags: [a, B, c] # n"], ["a", "B", "c"], ["b", "c"]],
+    ["F31", ['tags: "a"'], ['tags: ["a", c]'], ["a", "c"], ["c"]],
+  ];
+  for (const [label, input, expected, parsed, cal] of quotedComma) {
+    const fm = await expectTags(label, input, expected, one(cal));
+    assert.deepEqual(YAML.parse(fm).tags, parsed, `${label} (yaml)`);
+    assert.deepEqual(jsyaml.load(fm).tags, parsed, `${label} (js-yaml)`);
+  }
+
   // CRLF frontmatter is normalized, so its tags key merges instead of getting
   // a duplicate appended (IN-03).
   await expectTags(
