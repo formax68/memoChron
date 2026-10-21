@@ -541,6 +541,16 @@ async function checkTagsTracer() {
     ["type: event", "date: x"],
     ["type: event", "date: x", "tags:", "  - event", "  - meeting", "  - Work"]
   );
+  // T8b (WR-03, D-02 amendment): the no-key append quotes tags that are not
+  // plain YAML strings; ordinary tags stay unquoted as in 1.15.0.
+  const t8b = await expectTags(
+    "T8b",
+    ["type: event"],
+    ["type: event", "tags:", '  - "#meeting"', '  - "a: b"', "  - work"],
+    { defaultTags: ["#meeting", "a: b", "work"], sourceTags: [] }
+  );
+  assert.deepEqual(YAML.parse(t8b).tags, ["#meeting", "a: b", "work"]);
+  assert.deepEqual(jsyaml.load(t8b).tags, ["#meeting", "a: b", "work"]);
   // T9: per-calendar default frontmatter replaces the global one (D-09).
   await expectTags("T9", ["tags: [g]"], ["tags:", "  - p", "  - event"], {
     defaultTags: ["event"],

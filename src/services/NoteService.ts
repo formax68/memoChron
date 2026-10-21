@@ -4,7 +4,7 @@ import { MemoChronSettings, CalendarNotesSettings } from "../settings/types";
 import { CalendarEvent } from "./CalendarService";
 import { errorMessage } from "../utils/errors";
 import { getEventDateVariables } from "../utils/eventDateVariables";
-import { mergeCalendarTags } from "../utils/frontmatterTags";
+import { mergeCalendarTags, yamlSafeTag } from "../utils/frontmatterTags";
 
 interface EventTemplateVariables {
   event_title: string;
@@ -265,7 +265,12 @@ export class NoteService {
   }
 
   private formatTagsYaml(tags: string[]): string {
-    return "tags:\n" + tags.map((tag) => `  - ${tag}`).join("\n");
+    // Quote only tags that are not plain YAML strings (e.g. "#meeting"), using
+    // the merger's rule; ordinary tags stay byte-identical to 1.15.0.
+    return (
+      "tags:\n" +
+      tags.map((tag) => `  - ${yamlSafeTag(tag, false)}`).join("\n")
+    );
   }
 
   private getEventTemplateVariables(

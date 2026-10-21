@@ -24,6 +24,7 @@ User delegated all gray areas ("sensible defaults on the above"). Every decision
   - **Scalar** (`tags: a`, or legacy comma form `tags: a, b`) → rewrite that one line as an inline array: `tags: [a, b, work]` (split on commas, trim whitespace). Keeps it to one line and is valid YAML for Obsidian Properties.
   - **Empty key** (`tags:` with no value and no following items) → emit calendar tags as a block list under it, identical in format to the existing `formatTagsYaml` output.
 - **D-02:** When the default frontmatter has no top-level `tags` key, keep the 1.15.0 behavior byte-for-byte (append `formatTagsYaml` block at the end). When the event has no calendar tags, frontmatter is untouched.
+  - *Amendment (code review WR-03):* the appended block now passes each tag through `yamlSafeTag(tag, false)`, the same quoting the merger uses. Ordinary tags stay byte-identical to 1.15.0; only tags that 1.15.0 wrote as broken YAML (e.g. `#meeting` parsed as `null`, `a: b` parsed as a mapping) are now double-quoted. No dedup/normalization is added on this path.
 - **D-03:** Hard invariant: the generated frontmatter never contains more than one top-level `tags` key emitted by MemoChron. If the user's `tags` value is in a shape the merger can't safely edit (e.g. a multi-line flow array, flow mapping), leave the user's `tags` lines untouched and skip adding calendar tags rather than emitting a second key.
 
 ### Tag order & dedup (BUG-09)
