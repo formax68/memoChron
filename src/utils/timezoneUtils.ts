@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { Time } from "ical.js";
+import { Component, Time, TimezoneService } from "ical.js";
 import { errorMessage } from "./errors";
 
 // Forensic-only flag for timezone debugging. Flip to true locally;
@@ -286,4 +286,19 @@ export function getMappedTimezone(tzid: string): string {
   if (!tzid) return "UTC";
   const normalizedTzid = normalizeTimezone(tzid);
   return TIMEZONE_MAP[normalizedTzid] || normalizedTzid;
+}
+
+/**
+ * Register every VTIMEZONE in a parsed calendar so ical.js can apply its rules.
+ * Without this, a DTSTART like `TZID=America/Denver` is read as local time.
+ */
+export function registerVTimezones(comp: Component): void {
+  comp.getAllSubcomponents("vtimezone").forEach((tz) => {
+    try {
+      TimezoneService.register(tz);
+    } catch {
+      // Silently ignore: timezone may already be registered, or registration
+      // failed and parsing will fall back to default handling.
+    }
+  });
 }
