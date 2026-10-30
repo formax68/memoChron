@@ -34,13 +34,24 @@ jobs:
             manifest.json
             styles.css
 
+      # Hyphenated tags publish as non-draft prereleases for BRAT; plain semver tags create drafts published by hand.
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
 
-          gh release create "$tag" \
-            --title="$tag" \
-            --draft \
-            main.js manifest.json styles.css
+          case "$tag" in
+            *-*)
+              gh release create "$tag" \
+                --title="$tag" \
+                --prerelease \
+                main.js manifest.json styles.css
+              ;;
+            *)
+              gh release create "$tag" \
+                --title="$tag" \
+                --draft \
+                main.js manifest.json styles.css
+              ;;
+          esac
