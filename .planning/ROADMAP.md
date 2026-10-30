@@ -30,10 +30,10 @@
 
 ### v1.15 Directory Compliance (active)
 
-- [ ] **Phase 5: Guardrails & Trivial Fixes** — Install ESLint + CI lint gate; land DIR-11 manifest punctuation and DIR-12 release attestation so the rest of the milestone runs against enforced rules
+- [x] **Phase 5: Guardrails & Trivial Fixes** — Install ESLint + CI lint gate; land DIR-11 manifest punctuation and DIR-12 release attestation so the rest of the milestone runs against enforced rules (completed 2026-05-13)
 - [x] **Phase 6: DOM API Refactor** — Replace every `innerHTML`/`outerHTML` write, every `element.style.*` assignment, and every raw `document.createElement` call with Obsidian's `createEl` / `createDiv` / `setText` / `setCssProps` helpers, in one coordinated pass across the view layer (completed 2026-05-14)
-- [ ] **Phase 7: Lifecycle & Compatibility** — Remove the view-in-`registerView` memory leak, add popout-window helpers, narrow `as TFile` casts via `instanceof`, fix floating promises and `MarkdownRenderChild` return-type mismatches, and resolve BUG-07 (settings modal closes on plugin toggle)
-- [ ] **Phase 8: Type Hygiene & Conventions** — Console logging gated/removed, `any`/`??`/`case`-block/escape-char violations cleaned, ~21 unused vars removed, and `CLAUDE.md` + `.planning/codebase/CONVENTIONS.md` updated so future plans land compliant by default
+- [x] **Phase 7: Lifecycle & Compatibility** — Remove the view-in-`registerView` memory leak, add popout-window helpers, narrow `as TFile` casts via `instanceof`, fix floating promises and `MarkdownRenderChild` return-type mismatches, and resolve BUG-07 (settings modal closes on plugin toggle) (completed 2026-05-16)
+- [x] **Phase 8: Type Hygiene & Conventions** — Console logging gated/removed, `any`/`??`/`case`-block/escape-char violations cleaned, ~21 unused vars removed, and `CLAUDE.md` + `.planning/codebase/CONVENTIONS.md` updated so future plans land compliant by default (completed 2026-05-17)
 
 ## Phase Details
 
@@ -87,7 +87,13 @@
   4. The `description` field in `manifest.json` ends with `.`, `!`, or `?`
   5. The GitHub release workflow that publishes `manifest.json`, `main.js`, and `styles.css` attaches a GitHub artifact attestation to every release asset (verified by inspecting the workflow YAML and the next pre-release output)
 
-**Plans**: TBD
+**Plans**: 4/4 plans complete
+Plans:
+
+- [x] 05-01-PLAN.md — DIR-11: manifest.json description terminating punctuation
+- [x] 05-02-PLAN.md — DIR-12: release workflow artifact attestation (actions/attest-build-provenance@v3)
+- [x] 05-03-PLAN.md — DOC-01: ESLint 9 flat config + CI lint gate with phase-tagged overrides
+- [x] 05-04-PLAN.md — DIR-12 acceptance: 1.15.0-beta.1 pre-release attestation verified
 
 ### Phase 6: DOM API Refactor
 
@@ -127,7 +133,7 @@ Plans:
   5. Manual UAT: disabling MemoChron in Obsidian's Community Plugins list does NOT close the Settings modal (or, if root cause is Obsidian-side, a written closure note is committed under `.planning/phases/07-*/` with reproduction steps and Obsidian-version evidence)
   6. Manual UAT: opening the plugin in an Obsidian popout window (right-click pane → "Move to new window") renders the calendar grid correctly, navigation works, and timers continue to fire — verifying DIR-06's `activeDocument` / `activeWindow` adoption
 
-**Plans**: 7 plans (final commit 7 is conditional on UAT step 3 outcome — 6 plans if BUG-07 falls out of plan 07-01, 7 plans if a closure note is required)
+**Plans**: 7/7 plans complete (final commit 7 is conditional on UAT step 3 outcome — 6 plans if BUG-07 falls out of plan 07-01, 7 plans if a closure note is required)
 Plans:
 **Wave 1**
 
@@ -174,7 +180,7 @@ Plans:
   6. Milestone-level: a fresh run of the Obsidian community-plugin Review scorecard against the v1.15 main-branch snapshot shows zero remaining "Avoid …" findings from the v1.13.1 report
 
 
-**Plans**: 5 plans (4 waves; Plans 04 and 05 land sequentially within Wave 4)
+**Plans**: 5/5 plans complete (4 waves; Plans 04 and 05 land sequentially within Wave 4)
 Plans:
 **Wave 1**
 

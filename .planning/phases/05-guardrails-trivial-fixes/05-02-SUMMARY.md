@@ -33,6 +33,7 @@ metrics:
   completed: "2026-05-13"
   tasks_completed: 1
   files_modified: 1
+requirements-completed: [DIR-12]
 ---
 
 # Phase 5 Plan 02: Release Attestation (DIR-12) Summary

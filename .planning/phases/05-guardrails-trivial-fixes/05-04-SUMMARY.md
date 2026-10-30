@@ -42,6 +42,7 @@ metrics:
   completed: "2026-05-13"
   tasks: 4
   files_changed: 4
+requirements-completed: [DIR-12]
 ---
 
 # Phase 5 Plan 04: Cut 1.15.0-beta.1 and Capture DIR-12 Acceptance Evidence Summary

@@ -163,3 +163,11 @@ No gaps. All five ROADMAP success criteria are met. Two critical bugs (CR-01, CR
 
 _Verified: 2026-05-13_
 _Verifier: Claude (gsd-verifier)_
+
+## Bookkeeping Addendum (Phase 08.1)
+
+Date: 2026-10-30
+
+- Back-filled `requirements-completed` in 05-01..05-04 SUMMARY frontmatter (DIR-11, DIR-12, DOC-01, DIR-12) from their PLAN requirements, per the v1.15 milestone audit. The existing verdict is unchanged: `status: passed`, 5/5.
+- Phase 08.1 plan 01 moved release.yml to checkout@v4, setup-node@v4, Node 20.x and npm ci, and added the hyphenated-tag non-draft prerelease path. The DIR-12 attestation step, permissions and three subjects are unchanged.
+- This addendum follows the SUMMARY metadata edits to preserve verification freshness. Historical attestation evidence remains intact; no new release, runner execution or BRAT installation is claimed.

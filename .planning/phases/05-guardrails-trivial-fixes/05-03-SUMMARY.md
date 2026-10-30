@@ -58,6 +58,7 @@ metrics:
   completed: "2026-05-13"
   tasks: 3
   files_changed: 8
+requirements-completed: [DOC-01]
 ---
 
 # Phase 5 Plan 03: ESLint 9 + obsidianmd + per-phase overrides + CI gate (DOC-01) Summary
