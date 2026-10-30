@@ -1,5 +1,5 @@
 {
-  "model_profile": "balanced",
+  "model_profile": "inherit",
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,
@@ -28,7 +28,8 @@
     "skip_discuss": false,
     "code_review": true,
     "code_review_depth": "standard",
-    "_auto_chain_active": false
+    "_auto_chain_active": false,
+    "use_worktrees": false
   },
   "hooks": {
     "context_warnings": true
