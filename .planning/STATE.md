@@ -1,17 +1,21 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v1.15
-milestone_name: Directory Compliance
-status: milestone_complete
+milestone_name: Directory Compliance (active)
+current_phase: "08.1"
+current_phase_name: "Address tech debt: release prerelease flag, inline styles, CSS cleanup (INSERTED)"
+status: executing
 stopped_at: Milestone complete (Phase 08 was final phase)
-last_updated: 2026-05-17T13:38:46.565Z
-last_activity: 2026-05-16 -- Phase 08 execution started
+last_updated: "2026-10-30T11:12:20.057Z"
+last_activity: 2026-10-30
+last_activity_desc: Phase 08.1 planning complete
+state_head: c7341c300bb2fe35a875c19f2cb5ca922ae85afc
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 7
-  total_plans: 46
+  total_plans: 49
   completed_plans: 46
-  percent: 88
+  percent: 78
 ---
 
 # Project State
@@ -21,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-13)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Milestone complete
+**Current focus:** Phase 08.1 — tech debt cleanup
 
 ## Current Position
 
-Phase: 08
+Phase: 08.1 (Address tech debt: release prerelease flag, inline styles, CSS cleanup (INSERTED)) — READY TO EXECUTE
 Plan: Not started
-Status: Milestone complete
-Last activity: 2026-05-17
+Status: Ready to execute
+Last activity: 2026-10-30 — Phase 08.1 planning complete
 
 ## Performance Metrics
 
@@ -88,6 +92,10 @@ None yet (Phase 05 not yet planned).
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260515-l3j | Revert manifest/package/versions to 1.14.0 (fix Obsidian install) | 2026-05-15 | 64410f6 | [260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia](./quick/260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia/) |
+
+### Roadmap Evolution
+
+- Phase 08.1 inserted after Phase 8: Address tech debt: release prerelease flag, inline styles, CSS cleanup (URGENT)
 
 ## Deferred Items
 
