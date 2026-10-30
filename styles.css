@@ -348,10 +348,6 @@
   border-top: none;
 }
 
-.memochron-controls.calendar-hidden {
-  display: none;
-}
-
 .memochron-agenda h3 {
   margin: 0 0 var(--memochron-padding-lg);
   font-size: 0.9em;
@@ -366,6 +362,7 @@
   padding-bottom: var(--memochron-padding-lg);
 }
 
+/* .memochron-daily-note marks the Daily Note entry in the sidebar and embedded agendas. The plugin intentionally adds no rule for it (it inherits .memochron-agenda-event); it is kept as a stable hook for user CSS snippets, so do not remove it from the render paths. */
 .memochron-agenda-event {
   padding: var(--memochron-padding-sm);
   background: var(--background-secondary);
@@ -1169,11 +1166,6 @@
   border: none;
   padding: 0;
   margin: var(--size-4-3) 0;
-}
-
-.memochron-controls.calendar-hidden .memochron-nav {
-  justify-content: flex-start;
-  /* Align left when alone */
 }
 
 /* Inline color picker styles */
