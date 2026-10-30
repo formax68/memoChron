@@ -210,3 +210,29 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
 | 8. Type Hygiene & Conventions | v1.15 | 5/5 | Complete   | 2026-05-17 |
+
+### Phase 08.1: Address tech debt: release prerelease flag, inline styles, CSS cleanup (INSERTED)
+
+**Goal:** Close the v1.15 milestone-audit tech debt before the milestone is archived. Beta tags (`X.Y.Z-beta.N`) publish as non-draft GitHub prereleases that BRAT can install, while stable tags keep the draft flow. The release workflow runs on the same toolchain as the lint gate, with build-provenance attestation intact. Every remaining inline style write in `src/` goes through `setCssProps`. `styles.css` has no dead selectors. The REQUIREMENTS / ROADMAP / STATE / SUMMARY / VERIFICATION records match the verified state of Phases 5–8.
+**Requirements**: 05-WR-02, 05-IN-01, W1, 06-WR-02, 06-WR-03, 06-WR-04, I1, W3, BK-01, BK-02, BK-03, BK-04 (item IDs from `.planning/v1.15-MILESTONE-AUDIT.md` `tech_debt`; this phase has no REQUIREMENTS.md IDs. BK-01/02 = 05/06 SUMMARY `requirements-completed` back-fill, BK-03 = 06-VERIFICATION status, BK-04 = ROADMAP progress/checkboxes + STATE counters)
+**Depends on:** Phase 8
+**Success Criteria** (what must be TRUE):
+
+  1. Pushing a hyphenated tag (e.g. `1.16.0-beta.1`) runs `gh release create … --prerelease` without `--draft`. A plain semver tag still runs `--draft`. The `actions/attest-build-provenance@v3` step for `main.js` / `manifest.json` / `styles.css` still runs before release creation.
+  2. `release.yml` uses `actions/checkout@v4`, `actions/setup-node@v4`, Node `20.x` and `npm ci`, with no dependency cache, and its job permissions are unchanged.
+  3. `git ls-files src/ | xargs grep -nE '\.style\.'` returns zero matches. Settings color dots and swatches use `setCssProps({ "--memochron-swatch-color": … })`, and agenda colors use `setCssProps({ "--event-color": … })`. `npm run lint && npm run build` exit 0, and colors look unchanged in the settings tab, sidebar agenda and embedded agenda.
+  4. `styles.css` has no `calendar-hidden` selector, ends with a newline, and documents `memochron-daily-note` as an intentional theming hook (the class is kept).
+  5. REQUIREMENTS.md shows all 15 v1 requirements checked and Complete. ROADMAP shows Phases 5–8 checked and Phase 6 at 5/5 Complete. The 05-01..05-04 and 06-01..06-05 SUMMARYs carry `requirements-completed`. 06-VERIFICATION.md is `passed`.
+  6. These audit items are recorded as deferred with reasons: the Nyquist VALIDATION gaps (05–08), I2 (`window.setInterval`), the ical.js `no-unsafe-*` override, the SC6 scorecard re-run, and the BUG-07 Obsidian-side enable-direction.
+
+**Plans:** 3 plans (2 waves; 01 and 02 run in parallel, 03 follows)
+
+Plans:
+**Wave 1**
+
+- [ ] 08.1-01-PLAN.md — Release workflow: hyphenated tags publish as BRAT-visible prereleases; checkout/setup-node v4, Node 20.x, npm ci; attestation preserved (05-WR-02, 05-IN-01)
+- [ ] 08.1-02-PLAN.md — Inline styles → `setCssProps` (`--memochron-swatch-color`, `--event-color`) + styles.css cleanup (stale `calendar-hidden` rules, trailing newline, `memochron-daily-note` hook) (W1, 06-WR-02/03/04, I1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 08.1-03-PLAN.md — Milestone records: 05/06 SUMMARY `requirements-completed`, 06-VERIFICATION passed, Phases 5–8 ticked, REQUIREMENTS Complete, STATE counters, CONVENTIONS rules, deferred-item list (W3, BK-01..04)
