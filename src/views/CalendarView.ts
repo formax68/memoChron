@@ -755,7 +755,7 @@ export class CalendarView extends ItemView {
           .getPropertyValue("--interactive-accent")
           .trim() ||
         "#7c3aed";
-      dailyNoteEl.style.setProperty("--event-color", dailyNoteColor);
+      dailyNoteEl.setCssProps({ "--event-color": dailyNoteColor });
     }
 
     // Add title first
@@ -826,7 +826,7 @@ export class CalendarView extends ItemView {
     // Add colored left border if colors are enabled
     if (this.plugin.settings.enableCalendarColors && event.color) {
       eventEl.addClass("with-color");
-      eventEl.style.setProperty("--event-color", event.color);
+      eventEl.setCssProps({ "--event-color": event.color });
     }
 
     this.renderEventTime(eventEl, event);
