@@ -191,9 +191,11 @@ export function convertIcalTimeToDate(
   const zone = mappedZone || normalizedTzid;
 
   try {
-    // If tzid is not in our map (custom/unknown), defer to ical.js to respect VTIMEZONE
-    // This allows ical.js to apply any VTIMEZONE rules embedded in the ICS file
-    if (!mappedZone) {
+    // If tzid is not in our map (custom/unknown) and ical.js resolved it from a
+    // registered VTIMEZONE, defer to ical.js so the embedded rules are honored.
+    // An unregistered tzid leaves the time floating, which toJSDate() would read
+    // as local time, so those fall through to Luxon (e.g. IANA ids without a VTIMEZONE).
+    if (!mappedZone && icalTime.zone?.tzid === tzid) {
       try {
         return icalTime.toJSDate();
       } catch {
