@@ -1,21 +1,16 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Directory Compliance (active)
-current_phase: "08.1"
-current_phase_name: "Address tech debt: release prerelease flag, inline styles, CSS cleanup (INSERTED)"
 status: executing
-stopped_at: Milestone complete (Phase 08 was final phase)
-last_updated: "2026-10-30T11:12:20.057Z"
+last_updated: "2026-10-30T12:06:23.387Z"
 last_activity: 2026-10-30
-last_activity_desc: Phase 08.1 planning complete
-state_head: c7341c300bb2fe35a875c19f2cb5ca922ae85afc
 progress:
   total_phases: 9
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 49
-  completed_plans: 46
-  percent: 78
+  completed_plans: 47
+  percent: 89
 ---
 
 # Project State
@@ -25,14 +20,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-13)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 08.1 — tech debt cleanup
+**Current focus:** Phase 08.1 — Address tech debt: release prerelease flag, inline styles, CSS cleanup
 
 ## Current Position
 
-Phase: 08.1 (Address tech debt: release prerelease flag, inline styles, CSS cleanup (INSERTED)) — READY TO EXECUTE
-Plan: Not started
+Phase: 08.1 (Address tech debt: release prerelease flag, inline styles, CSS cleanup) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-10-30 — Phase 08.1 planning complete
+Last activity: 2026-10-30
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -62,6 +58,7 @@ Last activity: 2026-10-30 — Phase 08.1 planning complete
 
 *Updated after each plan completion*
 | Phase 05 P01 | 5m | 1 tasks | 1 files |
+| Phase 08.1 P01 | 10min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -76,6 +73,9 @@ Recent decisions affecting current work:
 - Roadmap (v1.15): DOC-02 (CLAUDE.md + CONVENTIONS update) is the FINAL deliverable of the milestone, landing in Phase 08. Ending with the conventions document captures every rule actually used during the milestone, rather than aspirational rules written at planning time.
 - Roadmap (v1.15): Phases 01–04 are preserved as historical entries in the active ROADMAP.md (collapsed in `<details>`). Phase numbering is monotonic — v1.15 starts at Phase 05.
 - [Phase ?]: One-character diff closes the terminating punctuation scorecard finding.
+- [Phase 08.1]: Hyphenated tags publish as prereleases; other tags remain manual-publish drafts.
+- [Phase 08.1]: Match lint CI with v4 actions and Node 20.x, but omit dependency caching on the attested release path.
+- [Phase 08.1]: Use the user-approved inherit model profile and sequential main working tree execution.
 
 ### Pending Todos
 
@@ -107,6 +107,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-16T14:08:31.857Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-type-hygiene-conventions/08-CONTEXT.md
+Last session: 2026-10-30T12:06:04.349Z
+Stopped at: Completed 08.1-01-PLAN.md; ready for 08.1-02
+Resume file: None

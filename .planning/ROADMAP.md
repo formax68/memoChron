@@ -225,12 +225,12 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
   5. REQUIREMENTS.md shows all 15 v1 requirements checked and Complete. ROADMAP shows Phases 5–8 checked and Phase 6 at 5/5 Complete. The 05-01..05-04 and 06-01..06-05 SUMMARYs carry `requirements-completed`. 06-VERIFICATION.md is `passed`.
   6. These audit items are recorded as deferred with reasons: the Nyquist VALIDATION gaps (05–08), I2 (`window.setInterval`), the ical.js `no-unsafe-*` override, the SC6 scorecard re-run, and the BUG-07 Obsidian-side enable-direction.
 
-**Plans:** 3 plans (2 waves; 01 and 02 run in parallel, 03 follows)
+**Plans:** 1/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 08.1-01-PLAN.md — Release workflow: hyphenated tags publish as BRAT-visible prereleases; checkout/setup-node v4, Node 20.x, npm ci; attestation preserved (05-WR-02, 05-IN-01)
+- [x] 08.1-01-PLAN.md — Release workflow: hyphenated tags publish as BRAT-visible prereleases; checkout/setup-node v4, Node 20.x, npm ci; attestation preserved (05-WR-02, 05-IN-01)
 - [ ] 08.1-02-PLAN.md — Inline styles → `setCssProps` (`--memochron-swatch-color`, `--event-color`) + styles.css cleanup (stale `calendar-hidden` rules, trailing newline, `memochron-daily-note` hook) (W1, 06-WR-02/03/04, I1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
