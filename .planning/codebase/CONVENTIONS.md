@@ -253,8 +253,15 @@ Closes scorecard findings **DIR-02** (`innerHTML`/`outerHTML`), **DIR-03** (inli
           assignment.
 **Do:** Add a CSS class to `styles.css` and toggle it via `el.toggleClass("memochron-...",
         condition)`. For dynamic values, use `el.setCssProps({ color: event.color })`.
+        For properties needing quoted keys (such as background-color), or styling
+        owned by a stylesheet rule, set a namespaced CSS custom property:
+        `el.setCssProps({ "--memochron-swatch-color": color })` or
+        `el.setCssProps({ "--event-color": event.color })`; consume it with `var(--…)`
+        in `styles.css`.
 **Why:** Bypasses Obsidian theming and breaks the
-         `obsidianmd/no-static-styles-assignment` rule.
+         `obsidianmd/no-static-styles-assignment` rule. The rule reports quoted
+         `setCssProps` keys not starting with `--`; assignments and `setProperty`
+         calls through the element's style object bypass the helper.
 **Docs:** https://github.com/obsidianmd/eslint-plugin/blob/master/docs/rules/no-static-styles-assignment.md
 
 **Don't:** Call `document.createElement("input")` or `new HTMLInputElement()`.
@@ -384,6 +391,14 @@ Closes scorecard findings **DIR-11** (`manifest.json` description punctuation),
          re-growing on future feature work.
 **Docs:** https://eslint.org/docs/latest/use/configure/rules
 
+**Don't:** Expect beta testers to see a release created as a draft.
+**Do:** Push hyphenated tags (`1.16.0-beta.1`, `1.16.0-rc.1`) for betas;
+        `release.yml` publishes them as non-draft GitHub prereleases (the BRAT channel).
+        Plain semver tags create drafts published by hand. The tag must equal the
+        `manifest.json` version.
+**Why:** BRAT reads published releases; drafts are invisible to it.
+**Docs:** https://github.com/TfTHacker/obsidian42-brat
+
 ### Verifying compliance
 
 ```bash
@@ -391,5 +406,6 @@ npm run lint                                                          # zero err
 git ls-files src/ | xargs grep -nE '\.(inner|outer)HTML\s*='          # zero matches
 git ls-files src/ | xargs grep -n 'document\.createElement'           # zero matches
 git ls-files src/ | xargs grep -n 'as TFile'                          # zero matches
+git ls-files src/ | xargs grep -nE '\.style\.'                        # zero matches
 grep -rnE '\b(null|undefined|""|0|false)\s*\?\?' src/                 # zero matches
 ```
