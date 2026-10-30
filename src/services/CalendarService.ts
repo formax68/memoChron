@@ -9,7 +9,10 @@ import {
   PathType,
   PathInfo,
 } from "../utils/pathUtils";
-import { convertIcalTimeToDate } from "../utils/timezoneUtils";
+import {
+  convertIcalTimeToDate,
+  registerVTimezones,
+} from "../utils/timezoneUtils";
 import { errorMessage } from "../utils/errors";
 
 // Forensic-only flag for cache/fetch debugging. Flip to true locally;
@@ -554,6 +557,7 @@ export class CalendarService {
   ): CalendarEvent[] {
     const jcalData = parse(data);
     const comp = new Component(jcalData);
+    registerVTimezones(comp);
     const vevents = comp.getAllSubcomponents("vevent");
 
     const events: CalendarEvent[] = [];

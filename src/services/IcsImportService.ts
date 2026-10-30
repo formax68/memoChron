@@ -1,11 +1,9 @@
-import {
-  Component,
-  Event as ICalEvent,
-  parse,
-  TimezoneService,
-} from "ical.js";
+import { Component, Event as ICalEvent, parse } from "ical.js";
 import { CalendarEvent } from "./CalendarService";
-import { convertIcalTimeToDate } from "../utils/timezoneUtils";
+import {
+  convertIcalTimeToDate,
+  registerVTimezones,
+} from "../utils/timezoneUtils";
 import { errorMessage } from "../utils/errors";
 
 export class IcsImportService {
@@ -22,16 +20,7 @@ export class IcsImportService {
       const jcalData = parse(icsContent);
       const comp = new Component(jcalData);
 
-      // Register any VTIMEZONE components so ical.js can apply their rules
-      const vtimezones = comp.getAllSubcomponents("vtimezone");
-      vtimezones.forEach((tz) => {
-        try {
-          TimezoneService.register(tz);
-        } catch {
-          // Silently ignore: timezone may already be registered, or registration
-          // failed and the import will fall back to default handling.
-        }
-      });
+      registerVTimezones(comp);
 
       const vevents = comp.getAllSubcomponents("vevent");
 
