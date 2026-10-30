@@ -4,16 +4,16 @@ milestone: v1.15
 milestone_name: Directory Compliance (active)
 current_phase: "08.1"
 current_phase_name: "Address tech debt: release prerelease flag, inline styles, CSS cleanup"
-status: executing
-stopped_at: Completed 08.1-02-PLAN.md; ready for 08.1-03
-last_updated: "2026-10-30T12:23:17.360Z"
+status: verifying
+stopped_at: Completed 08.1-03-PLAN.md; all plans executed, phase verifier and visual UAT pending
+last_updated: "2026-10-30T12:26:26.868Z"
 last_activity: 2026-10-30
-state_head: 85a337ab2730e055bd5dcdc3e01df5c7127d6fac
+state_head: 10fa9b6a9770440d4565ba2417d3107bdd30616b
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 49
-  completed_plans: 48
+  completed_plans: 49
   percent: 89
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 
 ## Current Position
 
-Phase: 08.1 (Address tech debt: release prerelease flag, inline styles, CSS cleanup) — EXECUTING
+Phase: 08.1 (Address tech debt: release prerelease flag, inline styles, CSS cleanup) — VERIFYING
 Plan: 3 of 3
-Status: Ready to execute
+Status: All plans executed — awaiting phase verification
 Last activity: 2026-10-30
 Progress: [█████████░] 89%
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 89%
 | Phase 05 P01 | 5m | 1 tasks | 1 files |
 | Phase 08.1 P01 | 10min | 2 tasks | 1 files |
 | Phase 08.1 P02 | 3min | 3 tasks | 5 files |
+| Phase 08.1 P03 | 5min | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,7 @@ Recent decisions affecting current work:
 - [Phase 08.1]: Match lint CI with v4 actions and Node 20.x, but omit dependency caching on the attested release path.
 - [Phase 08.1]: Use the user-approved inherit model profile and sequential main working tree execution.
 - [Phase 08.1]: Keep memochron-daily-note as an intentionally unstyled stable hook for user CSS snippets.
+- [Phase 08.1]: User authorized scoped historical checkbox reconciliation only after tooling and existing verification/UAT confirm completion; preserve recorded dates.
 
 ### Pending Todos
 
@@ -113,6 +115,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-30T12:11:04.669Z
-Stopped at: Completed 08.1-02-PLAN.md; ready for 08.1-03
+Last session: 2026-10-30T12:25:34.417Z
+Stopped at: Completed 08.1-03-PLAN.md; all plans executed, phase verifier and visual UAT pending
 Resume file: None

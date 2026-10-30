@@ -231,7 +231,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
   5. REQUIREMENTS.md shows all 15 v1 requirements checked and Complete. ROADMAP shows Phases 5–8 checked and Phase 6 at 5/5 Complete. The 05-01..05-04 and 06-01..06-05 SUMMARYs carry `requirements-completed`. 06-VERIFICATION.md is `passed`.
   6. These audit items are recorded as deferred with reasons: the Nyquist VALIDATION gaps (05–08), I2 (`window.setInterval`), the ical.js `no-unsafe-*` override, the SC6 scorecard re-run, and the BUG-07 Obsidian-side enable-direction.
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -241,4 +241,4 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 08.1-03-PLAN.md — Milestone records: 05/06 SUMMARY `requirements-completed`, 06-VERIFICATION passed, Phases 5–8 ticked, REQUIREMENTS Complete, STATE counters, CONVENTIONS rules, deferred-item list (W3, BK-01..04)
+- [x] 08.1-03-PLAN.md — Milestone records: 05/06 SUMMARY `requirements-completed`, 06-VERIFICATION passed, Phases 5–8 ticked, REQUIREMENTS Complete, STATE counters, CONVENTIONS rules, deferred-item list (W3, BK-01..04)
