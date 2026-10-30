@@ -31,7 +31,7 @@
 ### v1.15 Directory Compliance (active)
 
 - [ ] **Phase 5: Guardrails & Trivial Fixes** — Install ESLint + CI lint gate; land DIR-11 manifest punctuation and DIR-12 release attestation so the rest of the milestone runs against enforced rules
-- [ ] **Phase 6: DOM API Refactor** — Replace every `innerHTML`/`outerHTML` write, every `element.style.*` assignment, and every raw `document.createElement` call with Obsidian's `createEl` / `createDiv` / `setText` / `setCssProps` helpers, in one coordinated pass across the view layer
+- [x] **Phase 6: DOM API Refactor** — Replace every `innerHTML`/`outerHTML` write, every `element.style.*` assignment, and every raw `document.createElement` call with Obsidian's `createEl` / `createDiv` / `setText` / `setCssProps` helpers, in one coordinated pass across the view layer (completed 2026-05-14)
 - [ ] **Phase 7: Lifecycle & Compatibility** — Remove the view-in-`registerView` memory leak, add popout-window helpers, narrow `as TFile` casts via `instanceof`, fix floating promises and `MarkdownRenderChild` return-type mismatches, and resolve BUG-07 (settings modal closes on plugin toggle)
 - [ ] **Phase 8: Type Hygiene & Conventions** — Console logging gated/removed, `any`/`??`/`case`-block/escape-char violations cleaned, ~21 unused vars removed, and `CLAUDE.md` + `.planning/codebase/CONVENTIONS.md` updated so future plans land compliant by default
 
@@ -102,7 +102,7 @@
   4. The Phase 5 ESLint overrides covering `no-inner-html`, the inline-style rule, and `document.createElement` are removed from `.eslintrc` and `npm run lint` still passes
   5. Manual UAT: opening the sidebar calendar, switching month/week view, opening an embedded calendar code block, and opening the settings tab all render visually identically to the v1.14.0 baseline (no layout, color, or interactivity regressions)
 
-**Plans**: 5 plans
+**Plans**: 5/5 plans complete
 Plans:
 
 - [x] 06-01-PLAN.md — DIR-02: replace setup-guide innerHTML with createEl + appendText (5 sites in SettingsTab.ts)
@@ -207,7 +207,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 3. Date Parsing & Navigation Bugs | v1.14.0 | 3/3 | Complete | 2026-05-12 |
 | 4. UX Enhancements | v1.14.0 | 5/5 | Complete | 2026-05-12 |
 | 5. Guardrails & Trivial Fixes | v1.15 | 4/4 | Complete   | 2026-05-13 |
-| 6. DOM API Refactor | v1.15 | 0/5 | Not started | - |
+| 6. DOM API Refactor | v1.15 | 5/5 | Complete   | 2026-05-14 |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
 | 8. Type Hygiene & Conventions | v1.15 | 5/5 | Complete   | 2026-05-17 |
 

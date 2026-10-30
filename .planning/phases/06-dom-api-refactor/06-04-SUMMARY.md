@@ -36,6 +36,7 @@ metrics:
   completed: "2026-05-13"
   tasks_completed: 3
   files_modified: 7
+requirements-completed: [DIR-02, DIR-03, DIR-04]
 ---
 
 # Phase 06 Plan 04: ESLint override removal + sentence-case resolution Summary

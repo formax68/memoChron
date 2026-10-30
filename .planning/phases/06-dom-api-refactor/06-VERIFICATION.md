@@ -1,8 +1,8 @@
 ---
 phase: 06-dom-api-refactor
 verified: 2026-05-13T12:00:00Z
-status: human_needed
-score: 4/5 must-haves verified (SC5 is human UAT — pre-recorded evidence accepted; see note)
+status: passed
+score: 5/5 must-haves verified (SC5 satisfied by completed 06-HUMAN-UAT.md)
 overrides_applied: 0
 human_verification:
   - test: "Confirm HUMAN-UAT.md was executed live by a human reviewer (formax68)"
@@ -14,7 +14,7 @@ human_verification:
 
 **Phase Goal:** Eliminate every directory finding tied to raw DOM construction in one coordinated pass. DIR-02, DIR-03, and DIR-04 are bundled because they touch the same files. At phase end, the view layer constructs DOM exclusively through Obsidian's typed helpers, dynamic styling is driven by CSS classes or setCssProps, and the ESLint overrides for these rules from Phase 5 are removed.
 **Verified:** 2026-05-13
-**Status:** human_needed
+**Status:** passed
 **Re-verification:** No — initial verification
 
 ---
@@ -29,7 +29,7 @@ human_verification:
 | 2 | `git ls-files src/ \| xargs grep -nE '\.style\.(border\|color\|cursor\|display\|fontSize\|height\|left\|margin\|marginTop\|opacity\|padding\|position\|textAlign\|top\|width)\s*='` returns zero matches | ✓ VERIFIED | Grep exits 1 (no matches) — zero flagged inline-style writes remain |
 | 3 | `git ls-files src/ \| xargs grep -n 'document\.createElement'` returns zero matches for non-NS calls; createElementNS for SVG is permitted per D-12 | ✓ VERIFIED | Only 3 `createElementNS` hits at SettingsTab.ts:562, 567, 585 (SVG namespace — explicitly permitted). No plain `createElement` matches. |
 | 4 | Phase-5 ESLint overrides for DIR-02/03/04 removed; `npm run lint` exits 0 | ✓ VERIFIED | `grep 'Phase 6' eslint.config.mjs` → 0 matches; `grep '"@microsoft/sdl/no-inner-html": "off"'` → 0; `grep '"obsidianmd/no-static-styles-assignment": "off"'` → 0; `grep '"obsidianmd/ui/sentence-case"'` → 0; `npm run lint` exits 0 |
-| 5 | Manual UAT confirms visual parity with v1.14.0 baseline for sidebar calendar, month/week view, embedded calendar code block, settings tab | ? UNCERTAIN | 06-HUMAN-UAT.md exists with `status: complete`, all 5 mandatory steps marked `[x] Pass`, Overall Acceptance PASS, reviewer `formax68 (mike@efstratiadis.me)`, date 2026-05-14. Cannot programmatically confirm live execution. |
+| 5 | Manual UAT confirms visual parity with v1.14.0 baseline for sidebar calendar, month/week view, embedded calendar code block, settings tab | ✓ VERIFIED | 06-HUMAN-UAT.md exists with `status: complete`, all 5 mandatory steps marked `[x] Pass`, Overall Acceptance PASS, reviewer `formax68 (mike@efstratiadis.me)`, date 2026-05-14. Cannot programmatically confirm live execution. Confirmed: UAT recorded complete by formax68 on 2026-05-14; accepted by the v1.15 milestone audit. |
 
 **Score:** 4/5 automated truths VERIFIED; 1 human-required (SC5)
 
@@ -44,7 +44,7 @@ human_verification:
 | `src/utils/viewRenderers.ts` | Dynamic dot color uses setCssProps (1 site) | ✓ VERIFIED | `setCssProps` count: 1 |
 | `styles.css` | New `.memochron-hidden` rule; new `.memochron-help-buttons` rule; augmented `.memochron-error-message`, `.memochron-help-btn`, `.memochron-help-doc-link`, `.memochron-inline-color-custom-label`, `.memochron-inline-color-input` | ✓ VERIFIED | All 7 rules present; `.memochron-inline-color-custom-label` has `position: relative; display: inline-block; width: 24px; height: 24px`; `.memochron-help-btn` has `margin-top: 0.5em`; `.memochron-help-doc-link` has `margin-top: 1em`; `var(--text-error, #c92424)` present; 0 `memochron-custom-color-wrapper` |
 | `eslint.config.mjs` | Phase-6 override blocks (lines 65-98) deleted; Phase-7/8 blocks preserved | ✓ VERIFIED | `grep 'Phase 6'` → 0; `grep 'Phase 7'` → 3 hits; `grep 'Phase 8'` → 4 hits; `npm run lint` exits 0 |
-| `.planning/phases/06-dom-api-refactor/06-HUMAN-UAT.md` | status: complete; all 5 mandatory UAT steps pass; reviewer and date present | ? UNCERTAIN | File exists with correct structure and content; cannot verify live execution vs. programmatic population |
+| `.planning/phases/06-dom-api-refactor/06-HUMAN-UAT.md` | status: complete; all 5 mandatory UAT steps pass; reviewer and date present | ✓ VERIFIED | File exists with correct structure and content; cannot verify live execution vs. programmatic population. Confirmed: UAT recorded complete by formax68 on 2026-05-14; accepted by the v1.15 milestone audit. |
 
 ---
 
@@ -148,3 +148,12 @@ These four advisory items are documented for awareness but do not prevent phase 
 
 *Verified: 2026-05-13*
 *Verifier: Claude (gsd-verifier)*
+
+## Re-verification Addendum (Phase 08.1)
+
+Date: 2026-10-30
+
+- Changed the recorded status from `human_needed` to `passed`: `06-HUMAN-UAT.md` is `status: complete`, with all 5 mandatory steps PASS and Overall Acceptance PASS, recorded by formax68 on 2026-05-14 and accepted by `.planning/v1.15-MILESTONE-AUDIT.md`. This reconciles existing evidence; no new human walkthrough is claimed. The original score narrative and human-verification discussion above are preserved as historical evidence.
+- Back-filled `requirements-completed` in 06-01..06-05 SUMMARY frontmatter from their respective PLAN requirements; this addendum follows those edits to preserve verification freshness.
+- Phase 08.1 plan 02 closed WR-01..WR-04: style-object writes now use `setCssProps` with `--memochron-swatch-color` / `--event-color`, stale `calendar-hidden` rules were removed, and styles.css now ends with a newline. See `08.1-02-SUMMARY.md` for commits and automated checks.
+- Historical Phase 6 acceptance does not establish visual parity for the new Phase 08.1 changes. That Obsidian visual backstop remains pending; the optional Phase 6 mobile check remains skipped.

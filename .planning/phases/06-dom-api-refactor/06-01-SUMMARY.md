@@ -21,6 +21,7 @@ metrics:
   completed: "2026-05-13"
   tasks_completed: 2
   files_modified: 1
+requirements-completed: [DIR-02]
 ---
 
 # Phase 06 Plan 01: Setup-guide innerHTML rewrite (DIR-02) Summary
