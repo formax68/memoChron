@@ -1060,6 +1060,7 @@
 }
 
 .memochron-calendar-color-dot {
+  background-color: var(--memochron-swatch-color);
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -1184,6 +1185,7 @@
 }
 
 .memochron-inline-color-swatch {
+  background-color: var(--memochron-swatch-color);
   width: 24px;
   height: 24px;
   border-radius: var(--radius-s);

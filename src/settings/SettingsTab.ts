@@ -222,7 +222,7 @@ export class SettingsTab extends PluginSettingTab {
     // Color dot (if colors enabled)
     if (this.plugin.settings.enableCalendarColors && source.color) {
       const colorDot = headerEl.createDiv({ cls: "memochron-calendar-color-dot" });
-      colorDot.style.backgroundColor = source.color;
+      colorDot.setCssProps({ "--memochron-swatch-color": source.color });
     }
 
     // Calendar name
@@ -617,7 +617,7 @@ export class SettingsTab extends PluginSettingTab {
           .getPropertyValue(color.cssVar)
           .trim() || color.fallback
         : color.fallback;
-      swatch.style.backgroundColor = finalColor;
+      swatch.setCssProps({ "--memochron-swatch-color": finalColor });
       if (finalColor === currentColor) {
         swatch.classList.add("selected");
       }
@@ -686,7 +686,7 @@ export class SettingsTab extends PluginSettingTab {
           .getPropertyValue(color.cssVar)
           .trim() || color.fallback
         : color.fallback;
-      swatch.style.backgroundColor = finalColor;
+      swatch.setCssProps({ "--memochron-swatch-color": finalColor });
       if (finalColor === currentColor) {
         swatch.classList.add("selected");
       }
