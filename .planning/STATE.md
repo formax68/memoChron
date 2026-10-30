@@ -3,42 +3,42 @@ gsd_state_version: "1.0"
 milestone: v1.15
 milestone_name: Directory Compliance (active)
 current_phase: "08.1"
-current_phase_name: "Address tech debt: release prerelease flag, inline styles, CSS cleanup"
-status: verifying
-stopped_at: Phase 08.1 verification human_needed; four UAT checks pending
-last_updated: "2026-10-30T12:37:57Z"
+status: completed
+stopped_at: Phase 08.1 complete — all phases complete
+last_updated: "2026-10-30T14:02:16Z"
 last_activity: 2026-10-30
-state_head: 10fa9b6a9770440d4565ba2417d3107bdd30616b
+last_activity_desc: Phase 08.1 complete
+state_head: a80309bb692e2d151823a1a789ef3dd126a42305
 progress:
-  total_phases: 9
-  completed_phases: 8
-  total_plans: 49
-  completed_plans: 49
-  percent: 89
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 24
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-13)
+See: .planning/PROJECT.md (updated 2026-10-30)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 08.1 — Address tech debt: release prerelease flag, inline styles, CSS cleanup
+**Current focus:** v1.15 milestone audit and archival preparation — Phase 08.1 complete
 
 ## Current Position
 
-Phase: 08.1 (Address tech debt: release prerelease flag, inline styles, CSS cleanup) — VERIFYING
-Plan: 3 of 3
-Status: All plans executed — review clean; verification human_needed (11/13 must-haves verified)
-Last activity: 2026-10-30
-Progress: [█████████░] 89%
+Phase: 08.1
+Plan: 3 of 3 complete
+Status: All phases complete
+Last activity: 2026-10-30 — Phase 08.1 complete
+Progress: [████████████████████] 24/24 plans (100%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 40 (v1.14.0)
+- Total plans completed: 24 (active v1.15 milestone)
 - Average duration: -
 - Total execution time: 0 hours (v1.15)
 
@@ -54,6 +54,7 @@ Progress: [█████████░] 89%
 | 06 | 5 | - | - |
 | 07 | 7 | - | - |
 | 08 | 5 | - | - |
+| 08.1 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -87,12 +88,13 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet (Phase 05 not yet planned).
+No pending Phase 08.1 tasks. Milestone audit and archival remain next.
 
 ### Blockers/Concerns
 
-- Phase 08.1: Four human checks remain in 08.1-HUMAN-UAT.md (settings colors, agenda colors, hide-calendar layout, and next authorized beta release/attestation/BRAT validation). Phase completion remains pending.
-- Phase 08.1: Security enforcement is enabled; run /gsd-secure-phase 08.1 before advancing. Codebase drift advisory has no mapped baseline and misclassifies root files as directories; optional mapping refresh is deferred.
+- Phase 08.1: Four UAT checks user-confirmed passed; canonical completion predicate passed; security register closed (12/12). Manual-only coverage approved; persistent tests remain deferred (08.1-VALIDATION.md).
+- Phase 08.1: Advisory UI audit could not start: configured subagent model `gpt-5.3-codex/` unavailable. No UI-REVIEW.md or automated visual-audit score claimed. Live visual acceptance is recorded in UAT tests 1-3.
+- Phase 08.1: Codebase drift advisory has no mapped baseline and misclassifies root files as directories; optional mapping refresh is deferred. Completion tooling mixed historical and active-milestone counters; normalized progress to the active five phases and 24 plans after its successful completion verdict.
 - Phase 05 (DOC-01): The ESLint configuration must use temporary overrides so the lint gate passes against the v1.15 starting tree, but every override must be commented with the phase that will remove it. Silent rule disables would defeat the milestone.
 - Phase 07 (DIR-06): Popout-window compatibility cannot be fully verified without a manual test in an Obsidian popout window. UAT step is mandatory.
 - Phase 07 (BUG-07): Root cause may be in Obsidian core, not MemoChron. If so, close with a written explanation under `.planning/phases/07-*/` rather than forcing a workaround.
@@ -117,6 +119,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-30T12:37:57Z
-Stopped at: Phase 08.1 verification human_needed; four UAT checks pending
-Resume file: .planning/phases/08.1-address-tech-debt-release-prerelease-flag-inline-styles-css/08.1-HUMAN-UAT.md
+Last session: 2026-10-30T14:02:16Z
+Stopped at: Phase 08.1 complete — ready for v1.15 milestone audit and archival
+Resume file: None

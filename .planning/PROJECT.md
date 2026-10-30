@@ -72,6 +72,10 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - ✓ **DIR-08** — Floating + misused promises classified per D-09 buckets (`void` / `.catch` / `await`); `EmbeddedCalendarView` + `EmbeddedAgendaView` use sync `onload(): void` wrappers with internal `try/catch` + `Notice` — Validated in Phase 7 (Lifecycle & Compatibility)
 - ✓ **BUG-07** — Closed Obsidian-side: A1 (deletion of `detachLeavesOfType` from `onunload`) eliminated the disable-direction modal-close; remaining enable-direction trigger is in Obsidian core's plugin-load path and affects core plugins identically. Closure recorded in `.planning/phases/07-lifecycle-compatibility/BUG-07-CLOSURE.md` — Validated in Phase 7 (Lifecycle & Compatibility)
 
+- ✓ **Hyphenated-tag prereleases and stable drafts** — Phase 08.1; release toolchain aligned to Node 20.x/v4 actions and uncached npm ci, preserving provenance attestation. Live-release acceptance user-confirmed in 08.1-HUMAN-UAT.md.
+- ✓ **Remaining dynamic colors use CSS custom properties through setCssProps** — Phase 08.1; settings and agenda visual parity user-confirmed; unused visibility selectors removed and Daily Note theming hook preserved.
+- ✓ **Evidence-backed milestone records reconciled** — Phase 08.1; historical requirements, summaries, verification and roadmap records aligned.
+
 ### Active
 
 <!-- v1.15 Directory Compliance milestone — close Obsidian community-plugin scorecard findings + add guardrails. -->
@@ -151,6 +155,11 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 
 ## Evolution
 
+Phase 08.1 decisions (2026-10-30):
+- Publish hyphenated beta/RC tags as non-draft prereleases; stable tags retain manual-publish drafts.
+- Retain the existing Daily Note CSS hook and use custom properties for dynamic painting.
+- Preserve the no-new-tests milestone constraint. Manual coverage was explicitly approved after all four UAT checks passed; automated behavioral coverage remains partial.
+
 This document evolves at phase transitions and milestone boundaries.
 
 **After each phase transition** (via `/gsd-transition`):
@@ -167,4 +176,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-17 — Phase 8 (Type Hygiene & Conventions) complete: DIR-01 / DIR-09 / DIR-10 / DOC-02 closed; Phase-8 ESLint override block deleted and replaced with narrow D-08-extension `no-unsafe-*: off` for ical.js consumption-site cascade (FRAG-02 still deferred); `## Directory Compliance` section now canonical in `.planning/codebase/CONVENTIONS.md` with `CLAUDE.md` pointer. Milestone v1.15 closed — ready to tag release.*
+*Last updated: 2026-10-30 after Phase 08.1 completion. Four UAT checks passed by user confirmation; security verified; manual-only validation accepted. All active milestone phases are complete; v1.15 milestone audit and archival remain next. Deferred tech debt remains recorded in 08.1-03-SUMMARY.md.*

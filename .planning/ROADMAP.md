@@ -34,6 +34,7 @@
 - [x] **Phase 6: DOM API Refactor** — Replace every `innerHTML`/`outerHTML` write, every `element.style.*` assignment, and every raw `document.createElement` call with Obsidian's `createEl` / `createDiv` / `setText` / `setCssProps` helpers, in one coordinated pass across the view layer (completed 2026-05-14)
 - [x] **Phase 7: Lifecycle & Compatibility** — Remove the view-in-`registerView` memory leak, add popout-window helpers, narrow `as TFile` casts via `instanceof`, fix floating promises and `MarkdownRenderChild` return-type mismatches, and resolve BUG-07 (settings modal closes on plugin toggle) (completed 2026-05-16)
 - [x] **Phase 8: Type Hygiene & Conventions** — Console logging gated/removed, `any`/`??`/`case`-block/escape-char violations cleaned, ~21 unused vars removed, and `CLAUDE.md` + `.planning/codebase/CONVENTIONS.md` updated so future plans land compliant by default (completed 2026-05-17)
+- [x] **Phase 08.1: Address tech debt** — Release prerelease routing, dynamic styles, CSS cleanup and verified planning records (completed 2026-10-30)
 
 ## Phase Details
 
@@ -216,6 +217,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
 | 6. DOM API Refactor | v1.15 | 5/5 | Complete   | 2026-05-14 |
 | 7. Lifecycle & Compatibility | v1.15 | 7/7 | Complete   | 2026-05-16 |
 | 8. Type Hygiene & Conventions | v1.15 | 5/5 | Complete   | 2026-05-17 |
+| 08.1. Address tech debt | v1.15 | 3/3 | Complete | 2026-10-30 |
 
 ### Phase 08.1: Address tech debt: release prerelease flag, inline styles, CSS cleanup (INSERTED)
 
@@ -231,7 +233,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 (v1.14.0, shipped) → 5 �
   5. REQUIREMENTS.md shows all 15 v1 requirements checked and Complete. ROADMAP shows Phases 5–8 checked and Phase 6 at 5/5 Complete. The 05-01..05-04 and 06-01..06-05 SUMMARYs carry `requirements-completed`. 06-VERIFICATION.md is `passed`.
   6. These audit items are recorded as deferred with reasons: the Nyquist VALIDATION gaps (05–08), I2 (`window.setInterval`), the ical.js `no-unsafe-*` override, the SC6 scorecard re-run, and the BUG-07 Obsidian-side enable-direction.
 
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
