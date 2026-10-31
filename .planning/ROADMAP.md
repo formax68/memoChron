@@ -257,7 +257,7 @@ Plans:
   3. `release.yml` runs Install dependencies → Lint → Build plugin → Attest → Create release on Node 20.x with no cache and no `if:` overrides; lint failure skips build, attestation and release. Prerelease/draft routing is unchanged.
   4. DOC-01 is reassigned to Phase 08.2 and re-checked only after 08.2 verification passes. The next real beta tag confirms the live gate (pending human verification).
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -269,4 +269,4 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 08.2-03-PLAN.md — Integrated B1+B2 proof recorded in VALIDATION, CONVENTIONS/CLAUDE.md policy alignment, DOC-01 reopened and retargeted to Phase 08.2 with 05 reopening addendum (DOC-01)
+- [x] 08.2-03-PLAN.md — Integrated B1+B2 proof recorded in VALIDATION, CONVENTIONS/CLAUDE.md policy alignment, DOC-01 reopened and retargeted to Phase 08.2 with 05 reopening addendum (DOC-01)
