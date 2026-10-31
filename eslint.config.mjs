@@ -1,10 +1,11 @@
-// eslint.config.mjs — Phase 5 (DOC-01) — MemoChron v1.15 Directory Compliance
+// eslint.config.mjs — Phase 5 / Phase 08.2 (DOC-01) — MemoChron v1.15 Directory Compliance
 //
 // This config enforces the directory-scorecard rule list. The per-file
 // "override" blocks below silence findings that exist on the v1.15 starting
-// tree; each block names the phase that will remove it. NO inline
-// `eslint-disable` comments are used for scorecard violations — all
-// suppression is here so the closing-phase diff is a single block delete.
+// tree; each block names the phase that will remove it. Suppression for
+// scorecard/DOC-01 rules lives only here (or in src/utils/debug.ts).
+// npm run lint:directives rejects every inline ESLint directive in src/
+// except a next-line obsidianmd/ui/sentence-case disable with a -- reason.
 //
 // Sources:
 //   https://github.com/obsidianmd/obsidian-sample-plugin/blob/master/eslint.config.mts
@@ -18,6 +19,8 @@ import { globalIgnores } from "eslint/config";
 
 export default tseslint.config(
   {
+    // A stale or ineffective inline disable is fatal.
+    linterOptions: { reportUnusedDisableDirectives: "error" },
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: {
@@ -47,6 +50,11 @@ export default tseslint.config(
       // DOC-01 lists no-unused-vars explicitly; recommended config makes
       // it "warn" — bump to error so it actually blocks the build.
       "@typescript-eslint/no-unused-vars": ["error", { args: "none" }],
+
+      // DIR-06 popout safety: the preset sets this to warn.
+      "obsidianmd/prefer-active-doc": "error",
+      // DOC-01: the preset sets file-manager trash guidance to warn.
+      "obsidianmd/prefer-file-manager-trash-file": "error",
 
       // DOC-01 / DIR-01: reject every console method. The preset disables core
       // no-console and wraps it here; with no allow list the wrapped rule emits
