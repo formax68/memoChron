@@ -1,0 +1,58 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v1.15 — Directory Compliance (active)",
+  "phases": [
+    {
+      "number": "1",
+      "name": "Foundation",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Security & Correctness",
+      "status": "complete"
+    },
+    {
+      "number": "3",
+      "name": "Date Parsing & Navigation Bugs",
+      "status": "complete"
+    },
+    {
+      "number": "4",
+      "name": "UX Enhancements",
+      "status": "complete"
+    },
+    {
+      "number": "5",
+      "name": "Guardrails & Trivial Fixes",
+      "status": "complete"
+    },
+    {
+      "number": "6",
+      "name": "DOM API Refactor",
+      "status": "complete"
+    },
+    {
+      "number": "7",
+      "name": "Lifecycle & Compatibility",
+      "status": "complete"
+    },
+    {
+      "number": "8",
+      "name": "Type Hygiene & Conventions",
+      "status": "complete"
+    },
+    {
+      "number": "08.1",
+      "name": "Address tech debt",
+      "status": "complete"
+    }
+  ],
+  "next": {
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 6 of 6 · 80% · executing"
+  },
+  "updated_at": "2026-10-31T09:54:51.873Z"
+}
