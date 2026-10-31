@@ -10,7 +10,7 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 
 ## Current State
 
-**Shipped:** v1.15 Directory Compliance (milestone closed 2026-10-31; plugin release `1.15.0`, beta `1.16.0-beta.1` published to verify the release lint gate). All 15 requirements are validated across Phases 05–08.2. Every v1.13.1 scorecard finding is closed in source, and lint, CI and release guardrails now enforce the same rules. Details: `.planning/MILESTONES.md`.
+**Shipped:** v1.15 Directory Compliance (milestone closed 2026-10-31; plugin release `1.16.0` published 2026-10-31, including the IANA time zone fix from PRs #64/#65). All 15 requirements are validated across Phases 05–08.2. Every v1.13.1 scorecard finding is closed in source, and lint, CI and release guardrails now enforce the same rules. Details: `.planning/MILESTONES.md`.
 
 ## Next Milestone Goals
 
@@ -106,7 +106,7 @@ Not yet defined. Run `/gsd-new-milestone`. Candidates from carried-forward debt 
 ## Context
 
 **Existing brownfield codebase** mapped on 2026-05-09 (`.planning/codebase/`):
-- TypeScript plugin, **current shipped version `1.15.0`** (`manifest.json` on main; betas carry their own bumped manifest on the tag only)
+- TypeScript plugin, **current shipped version `1.16.0`** (`manifest.json` on main; betas carry their own bumped manifest on the tag only)
 - ~7,100 lines of TypeScript in `src/`, ~1,300 lines in `styles.css`
 - Built with esbuild → `main.js` (CJS), externalizes `obsidian`/Electron/CodeMirror
 - Source layout: `src/main.ts`, `src/services/`, `src/views/`, `src/settings/`, `src/utils/`, `src/types/`
