@@ -232,9 +232,14 @@ noteTimeFormat: "12h" | "24h";
 
 Every rule below maps to a finding from the Obsidian community-plugin directory scorecard
 report on v1.13.1. Closing all of them was the goal of milestone v1.15. Rules are grouped
-by cluster, not by individual DIR-NN finding. ESLint enforces each rule via
-`eslint.config.mjs`; intentional, single-site exceptions use a per-line
-`eslint-disable-next-line <rule> -- <reason>` comment.
+by cluster, not by individual DIR-NN finding. Exceptions for scorecard/DOC-01
+rules belong only in phase-tagged `eslint.config.mjs` blocks with a reason or in
+the `src/utils/debug.ts` helper, never in inline directives. `npm run lint` runs
+`eslint src/ --max-warnings=0` and `npm run lint:directives`. The guard rejects
+every inline ESLint directive in `src/` except a next-line
+`obsidianmd/ui/sentence-case` disable followed by `-- <reason>`, for UI copy
+with proper nouns or acronyms; that rule is not on DOC-01's list. Stale disables
+fail via `reportUnusedDisableDirectives: "error"`.
 
 ### DOM API
 
@@ -321,22 +326,22 @@ useless escapes), **DIR-10** (no unused vars / imports).
 
 **Don't:** Leave `console.log`, `console.error`, `console.warn`, `console.info`, or
           `console.debug` in shipped code.
-**Do:** Delete the call. If a forensic log is genuinely useful (cache debugging,
-        fetch failure forensics), wrap it in a compile-time `const DEBUG = false`
-        guard at the top of the file: `if (DEBUG) console.log(...)`. The constant
-        tree-shakes out of production builds.
+**Do:** Delete the call, or use `debugLog`, `debugWarn`, or `debugError` from
+        `src/utils/debug.ts` for genuinely useful forensic logging. That helper owns
+        the single `const DEBUG = false` and is the only file exempt from the console
+        rule. Never declare a per-file DEBUG constant or reference console elsewhere.
+        With DEBUG false the production bundle reduces the wrappers to empty functions.
 **Why:** Default off keeps the user's developer console clean; forensic logs are
         opt-in via a one-line code edit, not a setting.
 **Docs:** https://eslint.org/docs/latest/rules/no-console
 
 **Don't:** Use `: any` in source code (`src/**/*.ts`). Don't use `as any`.
 **Do:** Use `unknown` for type-guard inputs and narrow inside the guard; use real
-        domain types (`CalendarEvent`, `ical.Time`, etc.); for documented intentional
-        escape hatches at single sites use
-        `// eslint-disable-next-line @typescript-eslint/no-explicit-any -- <reason>`.
-        Ambient `.d.ts` files are excluded by config.
+        domain types (`CalendarEvent`, `ical.Time`, etc.). An unavoidable exception
+        goes in a commented `eslint.config.mjs` block, as with the ambient `.d.ts`
+        exclusion.
 **Why:** `any` defeats the type system. `unknown` forces narrowing at the use site;
-         per-line disables document intent visibly. Global rule overrides hide intent.
+         a documented, scoped config exception makes unavoidable cases explicit.
 **Docs:** https://typescript-eslint.io/rules/no-explicit-any/
 
 **Don't:** Declare `let` or `const` directly inside a `case` block.
