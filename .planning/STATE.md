@@ -1,20 +1,20 @@
 ---
 gsd_state_version: "1.0"
 milestone: v1.15
-milestone_name: Directory Compliance (active)
-current_phase: "08.2"
-status: completed
-stopped_at: Phase 08.2 complete — all phases complete
-last_updated: "2026-10-31T15:37:18.557Z"
+milestone_name: Directory Compliance (shipped)
+status: Awaiting next milestone
+stopped_at: Milestone v1.15 completed and archived
+last_updated: "2026-10-31T15:41:23.874Z"
 last_activity: 2026-10-31
-last_activity_desc: Phase 08.2 complete
-state_head: 105420ec19f75902783184360f672d66a0f312a7
+last_activity_desc: Milestone v1.15 completed and archived
+state_head: 76616494636655083b1738e1c86017dd7c092430
 progress:
   total_phases: 6
-  completed_phases: 8
+  completed_phases: 6
   total_plans: 27
-  completed_plans: 52
+  completed_plans: 27
   percent: 100
+current_phase: "08.2"
 ---
 
 # Project State
@@ -24,94 +24,38 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-31)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** v1.15 milestone audit and archival (all phases complete)
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 08.2
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-10-31 — Phase 08.2 complete
-Progress: [████████████████████] 27/27 plans (100%)
+Phase: Milestone v1.15 complete (next phase number: 09)
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-10-31 — Milestone v1.15 completed and archived
 
 ## Performance Metrics
 
-**Velocity:**
-
-- Total plans completed: 50 (active v1.15 milestone)
-- Average duration: -
-- Total execution time: 0 hours (v1.15)
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01 | 10 | - | - |
-| 02 | 5 | - | - |
-| 03 | 3 | - | - |
-| 04 | 5 | - | - |
-| 05 | 4 | - | - |
-| 06 | 5 | - | - |
-| 07 | 7 | - | - |
-| 08 | 5 | - | - |
-| 08.1 | 3 | - | - |
-| 08.2 | 3 | - | - |
-
-**Recent Trend:**
-
-- Last 5 plans: 04-01 through 04-05 (v1.14.0 Phase 4, all complete)
-- Trend: -
-
-*Updated after each plan completion*
-| Phase 05 P01 | 5m | 1 tasks | 1 files |
-| Phase 08.1 P01 | 10min | 2 tasks | 1 files |
-| Phase 08.1 P02 | 3min | 3 tasks | 5 files |
-| Phase 08.1 P03 | 5min | 3 tasks | 15 files |
-**Per-Plan Metrics:**
-
-| Plan | Duration | Tasks | Files |
-|------|----------|-------|-------|
-| Phase 08.2 P01 | 3min | 2 tasks | 5 files |
-| Phase 08.2 P02 | 1min | 2 tasks | 1 files |
-| Phase 08.2 P03 | 2min | 3 tasks | 5 files |
+**v1.15 (archived):** 6 phases, 27 plans, 74 tasks; 2026-05-13 → 2026-10-31. Per-phase detail in `.planning/milestones/v1.15-ROADMAP.md`.
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Roadmap (v1.15): Phase 05 lands ESLint + CI lint gate FIRST, before any code-touching phase, so the rules being enforced are the same rules subsequent phases are fixing. ESLint is wired with per-file/per-rule overrides that name the phase responsible for removing them — no rule is silently disabled.
-- Roadmap (v1.15): DIR-02, DIR-03, DIR-04 travel together in Phase 06 because they touch the same files (CalendarView, EmbeddedCalendarView, EmbeddedAgendaView, SettingsTab, viewRenderers). Splitting them would double-touch the same lines and produce avoidable merge churn.
-- Roadmap (v1.15): BUG-07 joins Phase 07 (Lifecycle & Compatibility), not its own phase, because root-cause analysis points at the same view-lifecycle area as DIR-05. The bug either falls out of DIR-05's fix or closes with a documented Obsidian-side explanation.
-- Roadmap (v1.15): DOC-02 (CLAUDE.md + CONVENTIONS update) is the FINAL deliverable of the milestone, landing in Phase 08. Ending with the conventions document captures every rule actually used during the milestone, rather than aspirational rules written at planning time.
-- Roadmap (v1.15): Phases 01–04 are preserved as historical entries in the active ROADMAP.md (collapsed in `<details>`). Phase numbering is monotonic — v1.15 starts at Phase 05.
-- [Phase ?]: One-character diff closes the terminating punctuation scorecard finding.
-- [Phase 08.1]: Hyphenated tags publish as prereleases; other tags remain manual-publish drafts.
-- [Phase 08.1]: Match lint CI with v4 actions and Node 20.x, but omit dependency caching on the attested release path.
-- [Phase 08.1]: Use the user-approved inherit model profile and sequential main working tree execution.
-- [Phase 08.1]: Keep memochron-daily-note as an intentionally unstyled stable hook for user CSS snippets.
-- [Phase 08.1]: User authorized scoped historical checkbox reconciliation only after tooling and existing verification/UAT confirm completion; preserve recorded dates.
-- [Phase 08.2]: Keep core no-console disabled and enforce through the guidelines-linked wrapper; exempt only debug.ts.
-- [Phase 08.2]: Preserve justified sentence-case directives using the exact researched allow-list guard.
-- [Phase 08.2]: Keep install, lint and build as separate consecutive steps with default success gating.
-- [Phase 08.2]: DOC-01 closed: live release gate confirmed on 1.16.0-beta.1 (run 41215382995); stale `## Logging` docs accepted as out of scope.
-- [Phase 08.2]: Beta tags carry the bumped manifest; main stays on the last stable version (reverted to 1.15.0 in e9f7175) so Obsidian does not offer betas to stable users.
+Decisions are logged in PROJECT.md Key Decisions table (v1.15 outcomes recorded at milestone close).
 
 ### Pending Todos
 
-No pending phase tasks. Milestone audit and archival remain next.
+None. Start the next milestone with `/gsd-new-milestone`.
 
 ### Blockers/Concerns
 
-- Phase 08.2: UAT 2/2 passed; verification passed (re-verified after merging origin/main PRs #64/#65 and the 1.15.0 version revert). Failing-lint path on GitHub not exercised live (D-11, no throwaway tags) — accepted risk.
-- Phase 08.2: `## Logging` sections in CONVENTIONS.md and CLAUDE.md still describe raw console.* — accepted out of scope for DOC-01; candidate docs cleanup.
-- Phase 08.1: Four UAT checks user-confirmed passed; canonical completion predicate passed; security register closed (12/12). Manual-only coverage approved; persistent tests remain deferred (08.1-VALIDATION.md).
-- Phase 08.1: Advisory UI audit could not start: configured subagent model `gpt-5.3-codex/` unavailable. No UI-REVIEW.md or automated visual-audit score claimed. Live visual acceptance is recorded in UAT tests 1-3.
-- Phase 08.1: Codebase drift advisory has no mapped baseline and misclassifies root files as directories; optional mapping refresh is deferred. Completion tooling mixed historical and active-milestone counters; normalized progress to the active five phases and 24 plans after its successful completion verdict.
-- Phase 07 (DIR-06): Popout-window compatibility cannot be fully verified without a manual test in an Obsidian popout window. UAT step is mandatory.
-- Phase 07 (BUG-07): Root cause may be in Obsidian core, not MemoChron. If so, close with a written explanation under `.planning/phases/07-*/` rather than forcing a workaround.
+Carried forward from v1.15 (open; candidates for next milestone):
+
+- `## Logging` sections in CONVENTIONS.md and CLAUDE.md still describe raw `console.*` (the code uses `src/utils/debug.ts`).
+- The release gate's failing-lint path has not been run live on GitHub (only the local simulation), which was accepted as a risk.
+- The Obsidian directory scorecard has not been re-checked against v1.15 (SC6 deferred).
+- No automated tests; 05/08.1 VALIDATION docs remain draft.
+- Phases 01–04 (v1.14.0) were never archived and remain in `.planning/phases/`.
 
 ### Quick Tasks Completed
 
@@ -119,21 +63,22 @@ No pending phase tasks. Milestone audit and archival remain next.
 |---|-------------|------|--------|-----------|
 | 260515-l3j | Revert manifest/package/versions to 1.14.0 (fix Obsidian install) | 2026-05-15 | 64410f6 | [260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia](./quick/260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia/) |
 
-### Roadmap Evolution
-
-- Phase 08.1 inserted after Phase 8: Address tech debt: release prerelease flag, inline styles, CSS cleanup (URGENT)
-- Phase 08.2 inserted after Phase 08.1: Close DOC-01 audit gaps B1/B2: enforce required lint rules and gate release builds before v1.15 archival (URGENT)
-
 ## Deferred Items
 
-Items acknowledged and carried forward from previous milestone close:
+Items acknowledged and deferred at milestone close, most recent first:
 
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| *(none)* | | | |
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| verification_gaps | 02/02-VERIFICATION.md | human_needed | 2026-10-31 | v1.15 |
+| quick_tasks | 260515-l3j-revert-manifest-to-1-14-0-to-fix-obsidia | unknown | 2026-10-31 | v1.15 |
+| deferred_items | 08.1/deferred-items.md: Pre-existing doc inconsistencies (CONVENTIONS attestation @v2 vs @v3; stale 08-VERIFICATION body label; PROJECT.md DIR-11/12 checkboxes — reconciled at v1.15 close; progress-tool counter drift) | acknowledged | 2026-10-31 | v1.15 |
 
 ## Session Continuity
 
-Last session: 2026-10-31T15:50:00Z
-Stopped at: Phase 08.2 UAT + verification passed — all phases complete; ready for milestone audit
+Last session: 2026-10-31
+Stopped at: Milestone v1.15 archived
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

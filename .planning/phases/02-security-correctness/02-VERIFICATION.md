@@ -33,6 +33,10 @@ deferred_concerns: # Known plan-acknowledged scope exclusions surfaced by review
   - concern: "WR-02 — firstDayOfWeek lacks bounds-checking in loadSettings"
     decision: "Pre-existing condition; SC #4 is scoped to firstDayOfWeek 0..6 which is what the settings dropdown produces. Tampered data.json with invalid firstDayOfWeek not in the phase scope"
     risk: "Low — consistent with the SEC-01 threat model, but not explicitly required by phase 2"
+audit_acknowledged:
+  milestone: v1.15
+  at: 2026-10-31
+  status: human_needed
 ---
 
 # Phase 2: Security & Correctness Verification Report

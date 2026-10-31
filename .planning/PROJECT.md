@@ -8,24 +8,23 @@ MemoChron is an Obsidian plugin that integrates public iCalendar (`.ics`) feeds 
 
 Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
 
-## Current Milestone: v1.15 Directory Compliance
+## Current State
 
-**Goal:** Close every finding on the Obsidian community-plugin Review scorecard (lift the badge from "Risks" → "Excellent") and install lint/doc guardrails so the same rules cannot lapse on future work.
+**Shipped:** v1.15 Directory Compliance (milestone closed 2026-10-31; plugin release `1.15.0`, beta `1.16.0-beta.1` published to verify the release lint gate). All 15 requirements are validated across Phases 05–08.2. Every v1.13.1 scorecard finding is closed in source, and lint, CI and release guardrails now enforce the same rules. Details: `.planning/MILESTONES.md`.
 
-**Target features:**
-- Console-logging cleanup at flagged sites + codebase audit for the same pattern
-- Eliminate `innerHTML` / `outerHTML` writes; adopt `createEl` / `createDiv` / `setText` everywhere
-- Replace `element.style.*` inline styles with CSS classes / `setCssProps`
-- Remove the view-in-`registerView` memory-leak pattern (`plugin.calendarView = view`)
-- Popout-window compatibility (`activeDocument`, `activeWindow.setTimeout()`)
-- `instanceof TFile` narrowing instead of `as TFile` casts
-- Promise hygiene (no floating promises; no `Promise`-returning methods on `void`-typed interfaces)
-- TypeScript hygiene (no `any`, fix nullish-on-lhs of `??`, lexical decls in `case`, unnecessary escape chars)
-- Unused vars/imports cleanup (~21 named symbols flagged by the scorecard)
-- Manifest description punctuation
-- GitHub release artifact attestation (workflow change)
-- Lint guardrails (`.eslintrc` with Obsidian plugin rules + CI hook) and updated `CLAUDE.md` / `.planning/codebase/` conventions to prevent regression
-- Fix `BUG-07`: toggling the plugin in Obsidian Settings closes the Settings modal
+## Next Milestone Goals
+
+Not yet defined. Run `/gsd-new-milestone`. Candidates from carried-forward debt and Out of Scope:
+- Re-submit to the Obsidian directory and confirm the scorecard badge moves from "Risks" to "Excellent" (deferred SC6 re-run)
+- Docs cleanup: update `## Logging` in CONVENTIONS.md/CLAUDE.md to describe `debugLog` instead of raw `console.*`, and fix the attestation `@v2` → `@v3` reference
+- A test-suite milestone (parser, timezone, file-path) or a feature milestone (CalDAV #30, bulk import #38, localization #56)
+
+<details>
+<summary>Previous milestone goal: v1.15 Directory Compliance (shipped 2026-10-31)</summary>
+
+**Goal:** Close every finding on the Obsidian community-plugin Review scorecard (lift the badge from "Risks" to "Excellent") and install lint/doc guardrails so the same rules cannot lapse on future work. Target areas: console logging, `innerHTML`/`outerHTML`, inline styles, view-in-`registerView` leak, popout compatibility, `as TFile` casts, promise hygiene, TypeScript hygiene, unused vars, manifest punctuation, release attestation, lint/CI guardrails + conventions, and BUG-07.
+
+</details>
 
 ## Requirements
 
@@ -66,40 +65,28 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - ✓ **`DD-MM-YYYY` (NL/EU) date-format option for note titles** — v1.14.0 / Phase 4 (ENH-04)
 - ✓ **`{{day}}` and `{{month}}` template variables emit named day/month** — v1.14.0 / Phase 4 (ENH-05)
 - ✓ **`{{cursor}}` template marker places editor cursor after note open** — v1.14.0 / Phase 4 (ENH-06)
-- ✓ **DIR-05** — `plugin.calendarView` field removed; `registerView` callback is pure factory; `getCalendarView()` helper uses `instanceof CalendarView` narrowing — Validated in Phase 7 (Lifecycle & Compatibility)
-- ✓ **DIR-06** — `activeDocument.documentElement` for `getComputedStyle` reads in view code; `window.*` prefix on all timers (per amendment A2) — Validated in Phase 7 (Lifecycle & Compatibility)
-- ✓ **DIR-07** — `instanceof TFile` narrowing replaces all 4 `as TFile` casts — Validated in Phase 7 (Lifecycle & Compatibility)
-- ✓ **DIR-08** — Floating + misused promises classified per D-09 buckets (`void` / `.catch` / `await`); `EmbeddedCalendarView` + `EmbeddedAgendaView` use sync `onload(): void` wrappers with internal `try/catch` + `Notice` — Validated in Phase 7 (Lifecycle & Compatibility)
-- ✓ **BUG-07** — Closed Obsidian-side: A1 (deletion of `detachLeavesOfType` from `onunload`) eliminated the disable-direction modal-close; remaining enable-direction trigger is in Obsidian core's plugin-load path and affects core plugins identically. Closure recorded in `.planning/phases/07-lifecycle-compatibility/BUG-07-CLOSURE.md` — Validated in Phase 7 (Lifecycle & Compatibility)
-
-- ✓ **Hyphenated-tag prereleases and stable drafts** — Phase 08.1; release toolchain aligned to Node 20.x/v4 actions and uncached npm ci, preserving provenance attestation. Live-release acceptance user-confirmed in 08.1-HUMAN-UAT.md.
-- ✓ **Remaining dynamic colors use CSS custom properties through setCssProps** — Phase 08.1; settings and agenda visual parity user-confirmed; unused visibility selectors removed and Daily Note theming hook preserved.
-- ✓ **Evidence-backed milestone records reconciled** — Phase 08.1; historical requirements, summaries, verification and roadmap records aligned.
+- ✓ **DIR-01**: Console logging — 33 sites deleted; forensic logs routed through the silent `src/utils/debug.ts` helper (the only lint-exempt file) — v1.15 (Phases 8, 08.2)
+- ✓ **DIR-02**: `innerHTML` / `outerHTML` writes replaced with `createEl` / `createDiv` / `setText` / DOM API at every site — v1.15 (Phase 6)
+- ✓ **DIR-03**: `element.style.*` inline assignments replaced with CSS classes or `setCssProps` (custom properties for dynamic colors) — v1.15 (Phases 6, 08.1)
+- ✓ **DIR-04**: All view DOM construction uses Obsidian's `createEl` / `createDiv` / `createSpan` helpers — v1.15 (Phase 6)
+- ✓ **DIR-05**: `plugin.calendarView` field removed; `registerView` callback is a pure factory; `getCalendarView()` narrows via `instanceof CalendarView` — v1.15 (Phase 7)
+- ✓ **DIR-06**: `activeDocument` for document reads in view code; `window.*` prefix on all timers (per amendment A2) — v1.15 (Phase 7)
+- ✓ **DIR-07**: `instanceof TFile` narrowing replaces all 4 `as TFile` casts — v1.15 (Phase 7)
+- ✓ **DIR-08**: Floating + misused promises classified (`void` / `.catch` / `await`); embedded views use sync `onload(): void` wrappers — v1.15 (Phase 7)
+- ✓ **DIR-09**: TypeScript hygiene — 16 `any` sites closed, `no-case-declarations`, `no-useless-escape`, `??` audit clean; typed `moment` import — v1.15 (Phase 8)
+- ✓ **DIR-10**: All 21 scorecard-named unused symbols deleted or genuinely consumed — v1.15 (Phase 8)
+- ✓ **DIR-11**: `manifest.json` description ends with terminating punctuation — v1.15 (Phase 5)
+- ✓ **DIR-12**: Release workflow attests `main.js`, `manifest.json`, `styles.css` (`attest-build-provenance@v3`, verified via `gh attestation verify`) — v1.15 (Phase 5)
+- ✓ **BUG-07**: Closed Obsidian-side per `BUG-07-CLOSURE.md`; A1 mitigation removed the disable-direction modal close — v1.15 (Phase 7)
+- ✓ **DOC-01**: ESLint enforces the scorecard rules; `npm run lint` fails on any warning or unauthorized inline bypass; CI lints every push/PR and tag releases stop at Lint before build/attest/publish — v1.15 (Phases 5, 08.2; live gate confirmed on 1.16.0-beta.1)
+- ✓ **DOC-02**: `## Directory Compliance` do/don't rules in CONVENTIONS.md + CLAUDE.md pointer — v1.15 (Phase 8)
+- ✓ **Hyphenated-tag prereleases and stable drafts** — v1.15 (Phase 08.1); Node 20.x/v4 actions, uncached `npm ci`, provenance attestation preserved
 
 ### Active
 
-<!-- v1.15 Directory Compliance milestone — close Obsidian community-plugin scorecard findings + add guardrails. -->
+<!-- Next milestone not yet defined — populated by /gsd-new-milestone. -->
 
-**Directory scorecard findings (Obsidian Review):**
-- [x] **DIR-01**: Console logging — 33 sites deleted, 6 forensic sites gated behind `const DEBUG = false` in `CalendarService.ts` and `timezoneUtils.ts` — Validated in Phase 8 (Type Hygiene & Conventions)
-- [x] **DIR-02**: `innerHTML` / `outerHTML` writes replaced with `createEl` / `createDiv` / `setText` / DOM API at every site — Validated in Phase 6 (DOM API Refactor)
-- [x] **DIR-03**: `element.style.*` inline assignments (border, color, cursor, display, fontSize, height, left, margin, marginTop, opacity, padding, position, textAlign, top, width) replaced with CSS classes or `setCssProps` — Validated in Phase 6 (DOM API Refactor)
-- [x] **DIR-04**: String-literal element-creation patterns replaced with the Obsidian `createEl({ cls, text })` / `createDiv({ cls })` helpers across views (calendar grid, agenda, settings, embedded views) — Validated in Phase 6 (DOM API Refactor)
-- [x] **DIR-05**: View memory-leak fixed — `plugin.calendarView = view` removed from inside `registerView`; the view is constructed and returned directly — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-06**: Popout-window compatibility — `document` → `activeDocument`, timers prefixed with `window.*` (per amendment A2) — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-07**: `instanceof TFile` narrowing replaces all `as TFile` casts — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-08**: Promise hygiene — no floating promises; methods overriding `MarkdownRenderChild` lifecycle return the declared type; `.catch` / `void` annotations at fire-and-forget sites — Validated in Phase 7 (Lifecycle & Compatibility)
-- [x] **DIR-09**: TypeScript hygiene — 16 `any` sites closed, `no-case-declarations` fixed, `no-useless-escape` fixed, `??`-with-constant-LHS audit clean; `(window as any).moment` migrated to typed `import { moment } from "obsidian"` — Validated in Phase 8 (Type Hygiene & Conventions)
-- [x] **DIR-10**: 18 `@typescript-eslint/no-unused-vars` sites resolved (all 21 scorecard-named symbols deleted or genuinely consumed); 2 catch bindings converted to `catch { }` — Validated in Phase 8 (Type Hygiene & Conventions)
-- [ ] **DIR-11**: `manifest.json` `description` ends with terminating punctuation (`.`, `!`, or `?`)
-- [ ] **DIR-12**: GitHub release workflow attaches artifact attestation to `manifest.json`, `main.js`, `styles.css`
-
-**Bug fixes (open issues from this milestone):**
-- [x] **BUG-07**: Closed Obsidian-side per `BUG-07-CLOSURE.md`; A1 mitigation applied — Validated in Phase 7 (Lifecycle & Compatibility)
-
-**Documentation & guardrails:**
-- [x] **DOC-01**: ESLint (`eslint.config.mjs`) enforces the directory scorecard rules; `npm run lint` fails on any warning or inline rule bypass (`--max-warnings=0` + `lint:directives`); CI lints every push/PR and the tag-triggered release stops at Lint before build, attestation and publish — Validated in Phase 08.2 (live gate confirmed on 1.16.0-beta.1)
-- [x] **DOC-02**: `## Directory Compliance` section landed in `.planning/codebase/CONVENTIONS.md` (4 clusters, 16 rule blocks in `Don't:`/`Do:`/`Why:`/`Docs:` format); `CLAUDE.md` pointer section replaces stale TODO block; `### Beta Release Strategy` and `### Memory Reminders` preserved verbatim — Validated in Phase 8 (Type Hygiene & Conventions)
+(None yet. See Next Milestone Goals.)
 
 ### Out of Scope
 
@@ -119,13 +106,17 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 ## Context
 
 **Existing brownfield codebase** mapped on 2026-05-09 (`.planning/codebase/`):
-- TypeScript 4.7.4 plugin, **current shipped version `1.14.0`** (`manifest.json`)
+- TypeScript plugin, **current shipped version `1.15.0`** (`manifest.json` on main; betas carry their own bumped manifest on the tag only)
+- ~7,100 lines of TypeScript in `src/`, ~1,300 lines in `styles.css`
 - Built with esbuild → `main.js` (CJS), externalizes `obsidian`/Electron/CodeMirror
 - Source layout: `src/main.ts`, `src/services/`, `src/views/`, `src/settings/`, `src/utils/`, `src/types/`
 - Critical runtime deps: `ical.js`, `luxon`, `obsidian-daily-notes-interface`
-- No tests; no `.eslintrc` despite eslint devDependencies installed (v1.15 fixes this)
+- Guardrails (since v1.15): ESLint 9 flat config (`eslint.config.mjs`) with Obsidian rules, `--max-warnings=0` and a directive check. CI lints every push/PR, and the tag-triggered release runs Lint before Build, Attest and Release.
+- No tests (by scope decision)
 
-**Why this milestone now:** the **Obsidian community-plugin Review scorecard** for v1.13.1 currently shows **"Risks" (1/4 red)** — driven by a long list of guideline violations (console logging, `innerHTML`, inline styles, `as TFile` casts, view-in-`registerView` memory leak, missing popout-window helpers, floating promises, `any` usage, missing release attestation). None are blockers, but together they keep the badge red, which is a passive disincentive for new users browsing the directory. The v1.14.0 release also has not been re-checked by the directory yet, so this is the right moment to land everything in one compliance pass before re-submission. Critically, **without lint/CI guardrails the same issues will re-grow** — so the milestone explicitly includes installing those guardrails.
+**Known issues / debt after v1.15:** `## Logging` docs still describe raw `console.*`. The release gate's failing-lint path has been tested locally but not live on GitHub. VALIDATION docs for 05/08.1 are still drafts. The scorecard has not been re-checked yet. The deferred items are listed in `MILESTONES.md`.
+
+**Background for v1.15 (historical):** the Obsidian Review scorecard for v1.13.1 showed "Risks" (1/4), driven by guideline violations. v1.15 closed them in one pass and added lint/CI guardrails so they cannot regrow.
 
 **Distribution model:** beta releases via GitHub pre-release + BRAT; production release tags are uploaded with `manifest.json`, `main.js`, `styles.css` as binary assets. `versions.json` maps plugin version → minimum Obsidian version. See `CLAUDE.md` for full release strategy.
 
@@ -149,9 +140,14 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 | Defer test suite to its own milestone | A meaningful suite (parser, timezone, file-path) is non-trivial and would dominate this milestone's time budget | Still deferred |
 | Defer accessibility work to its own milestone | Keyboard nav + ARIA across calendar grid is significant UX work, not a side-quest | Still deferred |
 | Cherry-pick #56 sub-items: indicators + dates + caret only | Locale, template-files, and Outlook attendees are each substantial sub-projects; the rest fit a stabilization milestone | Shipped as v1.14.0 |
-| **v1.15 Directory Compliance milestone** | Obsidian scorecard reads "Risks" on v1.13.1 — close every finding so the next directory re-check flips it to "Excellent" | — Pending |
-| **Install lint/CI guardrails alongside the fixes** | Without `.eslintrc` enforcing the same rules, the violations will re-grow in any future feature milestone | — Pending |
-| **Fold previously-deferred FRAG-04 (`innerHTML` → `createEl`) into v1.15** | It is a directory scorecard finding (DIR-02 / DIR-04); cheaper to do in this pass than to keep deferring | — Pending |
+| **v1.15 Directory Compliance milestone** | Obsidian scorecard reads "Risks" on v1.13.1 — close every finding so the next directory re-check flips it to "Excellent" | ✓ Good — shipped 2026-10-31; scorecard re-check still pending |
+| **Install lint/CI guardrails alongside the fixes** | Without `.eslintrc` enforcing the same rules, the violations will re-grow in any future feature milestone | ✓ Good — the audit found the gate was weak (B1/B2); 08.2 hardened it |
+| **Fold previously-deferred FRAG-04 (`innerHTML` → `createEl`) into v1.15** | It is a directory scorecard finding (DIR-02 / DIR-04); cheaper to do in this pass than to keep deferring | ✓ Good |
+| **Lint gate first, using phase-tagged overrides** | Rules are enforced while the rest of the milestone runs; each override names the phase that removes it | ✓ Good — every override was removed by Phase 8 |
+| **BUG-07 closed Obsidian-side** | Enable-direction modal close is in Obsidian core and affects core plugins too | ✓ Good |
+| **Release runs Lint before Build/Attest/Publish** | A tag must not ship code that fails lint (audit B1) | ✓ Good — confirmed live on 1.16.0-beta.1 |
+| **Beta tags carry the bumped manifest; main stays stable** | Stops Obsidian offering betas to stable users | ✓ Good |
+| **Single silent `debug.ts` helper is the only console exemption** | Keeps `no-console` fatal everywhere else (audit B2) | ✓ Good; Logging docs still need updating |
 
 ## Evolution
 
@@ -176,4 +172,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-31 after Phase 08.2 completion. DOC-01 validated: UAT 2/2 passed (live release gate on 1.16.0-beta.1), re-verification passed after merging origin/main (PRs #64/#65). Stale `## Logging` docs accepted as out of scope. All milestone phases complete; v1.15 milestone audit and archival remain next.*
+*Last updated: 2026-10-31 after v1.15 milestone*

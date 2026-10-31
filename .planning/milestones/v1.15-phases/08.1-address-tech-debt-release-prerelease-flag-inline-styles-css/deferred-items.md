@@ -8,3 +8,4 @@
 - Installed progress tooling reported 78% in stdout while persisting 89% (8/9 verified phases) during Task 3. Preserve tool-owned values and investigate upstream separately; neither implies Phase 08.1 passed verification.
 
 The eight scoped audit deferrals and their routes are recorded verbatim in `08.1-03-SUMMARY.md`.
+  status: acknowledged

@@ -26,6 +26,10 @@ metrics:
   completed: 2026-05-15
 requirements:
   - REVERT-VERSION-01
+audit_acknowledged:
+  milestone: v1.15
+  at: 2026-10-31
+  status: unknown
 ---
 
 # Quick 260515-l3j: Revert Manifest to 1.14.0 to Fix Obsidian Install Failures Summary
