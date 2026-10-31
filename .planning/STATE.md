@@ -4,17 +4,17 @@ milestone: v1.15
 milestone_name: Directory Compliance (active)
 current_phase: "08.2"
 current_phase_name: "Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)"
-status: Awaiting Phase 08.2 discussion and planning
-stopped_at: Phase 08.2 context gathered
-last_updated: "2026-10-31T07:04:07.310Z"
-last_activity: 2026-10-30
-last_activity_desc: Phase 08.1 complete
-state_head: e4f3ae8d02fe5855e808210465d862d70043fcd2
+status: executing
+stopped_at: Completed 08.2-01-PLAN.md; ready for 08.2-02
+last_updated: "2026-10-31T09:54:53.765Z"
+last_activity: 2026-10-31
+last_activity_desc: Phase 08.2 execution started
+state_head: 5f44db4d9a35ed5afb626f6b1072990bf9333d3b
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 52
-  completed_plans: 49
+  completed_plans: 50
   percent: 80
 ---
 
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-30)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Close DOC-01 audit gaps before v1.15 archival
+**Current focus:** Phase 08.2 — Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)
 
 ## Current Position
 
-Phase: 08.2 (Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)) — READY TO EXECUTE
-Plan: 3 of 3 complete
-Status: Awaiting Phase 08.2 discussion and planning
-Last activity: 2026-10-30 — Phase 08.1 complete
+Phase: 08.2 (Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-10-31 — Phase 08.2 execution started
 Progress: [████████████████████] 24/24 plans ([████████░░] 80%)
 
 ## Performance Metrics
@@ -67,6 +67,11 @@ Progress: [████████████████████] 24/24 p
 | Phase 08.1 P01 | 10min | 2 tasks | 1 files |
 | Phase 08.1 P02 | 3min | 3 tasks | 5 files |
 | Phase 08.1 P03 | 5min | 3 tasks | 15 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 08.2 P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -86,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase 08.1]: Use the user-approved inherit model profile and sequential main working tree execution.
 - [Phase 08.1]: Keep memochron-daily-note as an intentionally unstyled stable hook for user CSS snippets.
 - [Phase 08.1]: User authorized scoped historical checkbox reconciliation only after tooling and existing verification/UAT confirm completion; preserve recorded dates.
+- [Phase 08.2]: Keep core no-console disabled and enforce through the guidelines-linked wrapper; exempt only debug.ts.
+- [Phase 08.2]: Preserve justified sentence-case directives using the exact researched allow-list guard.
 
 ### Pending Todos
 
@@ -121,6 +128,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-31T06:33:17.517Z
-Stopped at: Phase 08.2 context gathered
-Resume file: .planning/phases/08.2-close-doc-01-gaps-enforce-required-lint-rules-and-gate-relea/08.2-CONTEXT.md
+Last session: 2026-10-31T09:54:53.524Z
+Stopped at: Completed 08.2-01-PLAN.md; ready for 08.2-02
+Resume file: None
