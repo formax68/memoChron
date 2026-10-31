@@ -248,8 +248,15 @@ Plans:
 ### Phase 08.2: Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)
 
 **Goal:** Close v1.15 audit blockers B1 and B2 so DOC-01 is genuinely satisfied. Every DOC-01-required violation (any console call outside the debug helper, bare `document` access, warnings, inline rule bypasses) makes `npm run lint` fail, and a failing lint stops the tag-triggered release before build, attestation and publish.
-**Requirements**: TBD
+**Requirements**: DOC-01
 **Depends on:** Phase 8
+**Success Criteria** (what must be TRUE):
+
+  1. Any `console.*` call outside `src/utils/debug.ts`, bare `document` access, lint warning, or inline ESLint directive other than the sentence-case-with-reason form makes `npm run lint` fail.
+  2. The six forensic logs use `debugLog`/`debugWarn`/`debugError` in `src/utils/debug.ts`, the single exempt file, and the real tree passes `npm run lint && npm run build`.
+  3. `release.yml` runs Install dependencies → Lint → Build plugin → Attest → Create release on Node 20.x with no cache and no `if:` overrides; lint failure skips build, attestation and release. Prerelease/draft routing is unchanged.
+  4. DOC-01 is reassigned to Phase 08.2 and re-checked only after 08.2 verification passes. The next real beta tag confirms the live gate (pending human verification).
+
 **Plans:** 2/3 plans executed
 
 Plans:

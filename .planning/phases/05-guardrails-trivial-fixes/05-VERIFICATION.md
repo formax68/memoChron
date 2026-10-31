@@ -171,3 +171,13 @@ Date: 2026-10-30
 - Back-filled `requirements-completed` in 05-01..05-04 SUMMARY frontmatter (DIR-11, DIR-12, DOC-01, DIR-12) from their PLAN requirements, per the v1.15 milestone audit. The existing verdict is unchanged: `status: passed`, 5/5.
 - Phase 08.1 plan 01 moved release.yml to checkout@v4, setup-node@v4, Node 20.x and npm ci, and added the hyphenated-tag non-draft prerelease path. The DIR-12 attestation step, permissions and three subjects are unchanged.
 - This addendum follows the SUMMARY metadata edits to preserve verification freshness. Historical attestation evidence remains intact; no new release, runner execution or BRAT installation is claimed.
+
+## Reopening Addendum (Phase 08.2)
+
+Date: 2026-10-31
+
+- The v1.15 milestone audit reopened DOC-01.
+- B1: `release.yml` built, attested and released without running lint.
+- B2: ungated `console.debug`, `console.warn` and `console.error` produced no diagnostics, and bare `document` access was only a warning.
+- DOC-01 is retargeted to Phase 08.2 (Pending); the Phase 5 verdict remains historical.
+- DOC-01 will be re-checked only after Phase 08.2 verification passes.
