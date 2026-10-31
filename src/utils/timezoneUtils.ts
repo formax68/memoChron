@@ -1,10 +1,7 @@
 import { DateTime } from "luxon";
 import { Time } from "ical.js";
 import { errorMessage } from "./errors";
-
-// Forensic-only flag for timezone debugging. Flip to true locally;
-// tree-shakes to nothing in production builds when false.
-const DEBUG = false;
+import { debugWarn, debugError } from "./debug";
 
 // Single source of truth for timezone mappings
 // Comprehensive mapping of Windows/Exchange timezone names to IANA timezone identifiers
@@ -208,7 +205,7 @@ export function convertIcalTimeToDate(
     );
 
     if (!dt.isValid) {
-      if (DEBUG) console.warn(
+      debugWarn(
         `MemoChron: Invalid timezone conversion for zone: ${normalizedTzid} (mapped to ${zone}), falling back to local time`
       );
       return new Date(year, month - 1, day, hour, minute, second);
@@ -217,7 +214,7 @@ export function convertIcalTimeToDate(
     // Convert to local timezone
     return dt.toLocal().toJSDate();
   } catch (error) {
-    if (DEBUG) console.error("MemoChron: Failed to convert ICAL time:", errorMessage(error), {
+    debugError("MemoChron: Failed to convert ICAL time:", errorMessage(error), {
       icalTime,
       tzid: normalizedTzid,
       mappedZone: mappedZone,

@@ -48,6 +48,23 @@ export default tseslint.config(
       // it "warn" — bump to error so it actually blocks the build.
       "@typescript-eslint/no-unused-vars": ["error", { args: "none" }],
 
+      // DOC-01 / DIR-01: reject every console method. The preset disables core
+      // no-console and wraps it here; with no allow list the wrapped rule emits
+      // "Unexpected console statement." so the message key must match that text.
+      // options MUST be [{}] — [] crashes the wrapped rule and silently passes all calls.
+      "obsidianmd/rule-custom-message": [
+        "error",
+        {
+          "no-console": {
+            messages: {
+              "Unexpected console statement.":
+                "Avoid unnecessary logging to console. See https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Avoid+unnecessary+logging+to+console",
+            },
+            options: [{}],
+          },
+        },
+      ],
+
       // DIR-04: catch `document.createElement` — the obsidianmd plugin
       // version 0.3.0 does NOT yet register `prefer-create-el`.
       "no-restricted-syntax": [
@@ -88,6 +105,14 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-return": "off",
     },
+  },
+
+  // DOC-01 / DIR-01 — the single developer-debug exemption. src/utils/debug.ts
+  // owns `const DEBUG = false` and is the only file allowed to reference
+  // console. Every other file must call debugLog/debugWarn/debugError.
+  {
+    files: ["src/utils/debug.ts"],
+    rules: { "obsidianmd/rule-custom-message": "off" },
   },
 
   globalIgnores([

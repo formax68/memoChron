@@ -11,10 +11,7 @@ import {
 } from "../utils/pathUtils";
 import { convertIcalTimeToDate } from "../utils/timezoneUtils";
 import { errorMessage } from "../utils/errors";
-
-// Forensic-only flag for cache/fetch debugging. Flip to true locally;
-// tree-shakes to nothing in production builds when false.
-const DEBUG = false;
+import { debugLog, debugError } from "../utils/debug";
 
 export interface CalendarEvent {
   id: string;
@@ -299,7 +296,7 @@ export class CalendarService {
         return cacheData.events;
       }
     } catch (error) {
-      if (DEBUG) console.debug("MemoChron: No cache found or cache invalid", errorMessage(error));
+      debugLog("MemoChron: No cache found or cache invalid", errorMessage(error));
     } finally {
       this.isLoadingCache = false;
     }
@@ -384,7 +381,7 @@ export class CalendarService {
         } else if (response.status === 404) {
           new Notice(`MemoChron: Calendar "${source.name}" not found. Please check the URL.`);
         } else {
-          if (DEBUG) console.error(
+          debugError(
             `Failed to fetch calendar ${source.name}: ${response.status} ${
               response.text || "Unknown error"
             }`
@@ -402,7 +399,7 @@ export class CalendarService {
       return this.parseCalendarData(response.text, source);
     } catch (error) {
       const message = errorMessage(error);
-      if (DEBUG) console.error(`Error fetching calendar ${source.name}:`, message);
+      debugError(`Error fetching calendar ${source.name}:`, message);
 
       // Check for specific error types
       if (message.includes('CORS')) {
@@ -452,7 +449,7 @@ export class CalendarService {
                             (response.text && (response.text.includes('<!DOCTYPE html') || response.text.includes('<html')));
       
       if (isHtmlResponse) {
-        if (DEBUG) console.error(`Outlook calendar returned HTML error page for ${url.substring(0, 50)}...`);
+        debugError(`Outlook calendar returned HTML error page for ${url.substring(0, 50)}...`);
 
 
         // Try with no headers at all (let Obsidian use defaults)
