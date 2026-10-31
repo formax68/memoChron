@@ -244,3 +244,20 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 08.1-03-PLAN.md — Milestone records: 05/06 SUMMARY `requirements-completed`, 06-VERIFICATION passed, Phases 5–8 ticked, REQUIREMENTS Complete, STATE counters, CONVENTIONS rules, deferred-item list (W3, BK-01..04)
+
+### Phase 08.2: Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)
+
+**Goal:** Close v1.15 audit blockers B1 and B2 so DOC-01 is genuinely satisfied. Every DOC-01-required violation (any console call outside the debug helper, bare `document` access, warnings, inline rule bypasses) makes `npm run lint` fail, and a failing lint stops the tag-triggered release before build, attestation and publish.
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 3 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 08.2-01-PLAN.md — Lint enforcement (B2): `src/utils/debug.ts` helper + six-site migration, console wrapper override with guidelines link, popout/trash rules at error, unused-directive errors, `--max-warnings=0`, `lint:directives` allow-list guard (DOC-01)
+- [ ] 08.2-02-PLAN.md — Release gate (B1): release.yml Install dependencies → Lint → Build plugin, Node 20.x uncached, routing unchanged, local gate simulation (DOC-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 08.2-03-PLAN.md — Integrated B1+B2 proof recorded in VALIDATION, CONVENTIONS/CLAUDE.md policy alignment, DOC-01 reopened and retargeted to Phase 08.2 with 05 reopening addendum (DOC-01)
