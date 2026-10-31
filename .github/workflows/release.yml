@@ -22,10 +22,15 @@ jobs:
         with:
           node-version: "20.x"
 
+      - name: Install dependencies
+        run: npm ci
+
+      # DOC-01: a failing lint stops the job here; build, attestation and release are skipped.
+      - name: Lint
+        run: npm run lint
+
       - name: Build plugin
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       - name: Attest release artifacts
         uses: actions/attest-build-provenance@v3
