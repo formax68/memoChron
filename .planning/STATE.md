@@ -3,43 +3,42 @@ gsd_state_version: "1.0"
 milestone: v1.15
 milestone_name: Directory Compliance (active)
 current_phase: "08.2"
-current_phase_name: "Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)"
-status: verifying
-stopped_at: Completed 08.2-03-PLAN.md
-last_updated: "2026-10-31T15:18:42.019Z"
+status: completed
+stopped_at: Phase 08.2 complete — all phases complete
+last_updated: "2026-10-31T15:37:18.557Z"
 last_activity: 2026-10-31
-last_activity_desc: Phase 08.2 execution started
-state_head: 7692dac1c2a65f24989f20126f753ee00d0f03a7
+last_activity_desc: Phase 08.2 complete
+state_head: 105420ec19f75902783184360f672d66a0f312a7
 progress:
-  total_phases: 10
+  total_phases: 6
   completed_phases: 8
-  total_plans: 52
+  total_plans: 27
   completed_plans: 52
-  percent: 80
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-30)
+See: .planning/PROJECT.md (updated 2026-10-31)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** Phase 08.2 — Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)
+**Current focus:** v1.15 milestone audit and archival (all phases complete)
 
 ## Current Position
 
-Phase: 08.2 (Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-10-31 — Phase 08.2 execution started
-Progress: [████████████████████] 24/24 plans ([████████░░] 80%)
+Phase: 08.2
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-10-31 — Phase 08.2 complete
+Progress: [████████████████████] 27/27 plans (100%)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 24 (active v1.15 milestone)
+- Total plans completed: 50 (active v1.15 milestone)
 - Average duration: -
 - Total execution time: 0 hours (v1.15)
 
@@ -56,6 +55,7 @@ Progress: [████████████████████] 24/24 p
 | 07 | 7 | - | - |
 | 08 | 5 | - | - |
 | 08.1 | 3 | - | - |
+| 08.2 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -96,18 +96,20 @@ Recent decisions affecting current work:
 - [Phase 08.2]: Keep core no-console disabled and enforce through the guidelines-linked wrapper; exempt only debug.ts.
 - [Phase 08.2]: Preserve justified sentence-case directives using the exact researched allow-list guard.
 - [Phase 08.2]: Keep install, lint and build as separate consecutive steps with default success gating.
-- [Phase 08.2]: Keep DOC-01 pending until phase verification passes; the next real beta tag confirms the live gate.
+- [Phase 08.2]: DOC-01 closed: live release gate confirmed on 1.16.0-beta.1 (run 41215382995); stale `## Logging` docs accepted as out of scope.
+- [Phase 08.2]: Beta tags carry the bumped manifest; main stays on the last stable version (reverted to 1.15.0 in e9f7175) so Obsidian does not offer betas to stable users.
 
 ### Pending Todos
 
-No pending Phase 08.1 tasks. Milestone audit and archival remain next.
+No pending phase tasks. Milestone audit and archival remain next.
 
 ### Blockers/Concerns
 
+- Phase 08.2: UAT 2/2 passed; verification passed (re-verified after merging origin/main PRs #64/#65 and the 1.15.0 version revert). Failing-lint path on GitHub not exercised live (D-11, no throwaway tags) — accepted risk.
+- Phase 08.2: `## Logging` sections in CONVENTIONS.md and CLAUDE.md still describe raw console.* — accepted out of scope for DOC-01; candidate docs cleanup.
 - Phase 08.1: Four UAT checks user-confirmed passed; canonical completion predicate passed; security register closed (12/12). Manual-only coverage approved; persistent tests remain deferred (08.1-VALIDATION.md).
 - Phase 08.1: Advisory UI audit could not start: configured subagent model `gpt-5.3-codex/` unavailable. No UI-REVIEW.md or automated visual-audit score claimed. Live visual acceptance is recorded in UAT tests 1-3.
 - Phase 08.1: Codebase drift advisory has no mapped baseline and misclassifies root files as directories; optional mapping refresh is deferred. Completion tooling mixed historical and active-milestone counters; normalized progress to the active five phases and 24 plans after its successful completion verdict.
-- Phase 05 (DOC-01): The ESLint configuration must use temporary overrides so the lint gate passes against the v1.15 starting tree, but every override must be commented with the phase that will remove it. Silent rule disables would defeat the milestone.
 - Phase 07 (DIR-06): Popout-window compatibility cannot be fully verified without a manual test in an Obsidian popout window. UAT step is mandatory.
 - Phase 07 (BUG-07): Root cause may be in Obsidian core, not MemoChron. If so, close with a written explanation under `.planning/phases/07-*/` rather than forcing a workaround.
 
@@ -132,6 +134,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-31T15:18:41.761Z
-Stopped at: Completed 08.2-03-PLAN.md
+Last session: 2026-10-31T15:50:00Z
+Stopped at: Phase 08.2 UAT + verification passed — all phases complete; ready for milestone audit
 Resume file: None

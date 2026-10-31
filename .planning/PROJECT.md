@@ -98,7 +98,7 @@ Show the user's calendar inside Obsidian and let them turn any event into a stru
 - [x] **BUG-07**: Closed Obsidian-side per `BUG-07-CLOSURE.md`; A1 mitigation applied — Validated in Phase 7 (Lifecycle & Compatibility)
 
 **Documentation & guardrails:**
-- [ ] **DOC-01**: `.eslintrc` (or `eslint.config.js`) installed and wired with rules matching the directory scorecard (no `innerHTML`, no inline styles, no `console.log`, no `as TFile`, no `Promise`-returning `MarkdownRenderChild` overrides, no floating promises, no `any`); `npm run lint` script added; CI runs lint
+- [x] **DOC-01**: ESLint (`eslint.config.mjs`) enforces the directory scorecard rules; `npm run lint` fails on any warning or inline rule bypass (`--max-warnings=0` + `lint:directives`); CI lints every push/PR and the tag-triggered release stops at Lint before build, attestation and publish — Validated in Phase 08.2 (live gate confirmed on 1.16.0-beta.1)
 - [x] **DOC-02**: `## Directory Compliance` section landed in `.planning/codebase/CONVENTIONS.md` (4 clusters, 16 rule blocks in `Don't:`/`Do:`/`Why:`/`Docs:` format); `CLAUDE.md` pointer section replaces stale TODO block; `### Beta Release Strategy` and `### Memory Reminders` preserved verbatim — Validated in Phase 8 (Type Hygiene & Conventions)
 
 ### Out of Scope
@@ -176,4 +176,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-30 after Phase 08.1 completion. Four UAT checks passed by user confirmation; security verified; manual-only validation accepted. All active milestone phases are complete; v1.15 milestone audit and archival remain next. Deferred tech debt remains recorded in 08.1-03-SUMMARY.md.*
+*Last updated: 2026-10-31 after Phase 08.2 completion. DOC-01 validated: UAT 2/2 passed (live release gate on 1.16.0-beta.1), re-verification passed after merging origin/main (PRs #64/#65). Stale `## Logging` docs accepted as out of scope. All milestone phases complete; v1.15 milestone audit and archival remain next.*
