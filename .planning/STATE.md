@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v1.15
 milestone_name: Directory Compliance (active)
-current_phase: "08.1"
-status: completed
-stopped_at: Phase 08.1 complete — all phases complete
-last_updated: "2026-10-30T14:02:16Z"
+current_phase: "08.2"
+status: Awaiting Phase 08.2 discussion and planning
+stopped_at: Phase 08.2 context gathered
+last_updated: "2026-10-31T06:33:17.777Z"
 last_activity: 2026-10-30
 last_activity_desc: Phase 08.1 complete
-state_head: a80309bb692e2d151823a1a789ef3dd126a42305
+state_head: 3d291d27b57440bc8f2a41fbd3f7517be1646158
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 24
-  completed_plans: 24
-  percent: 100
+  total_phases: 10
+  completed_phases: 8
+  total_plans: 49
+  completed_plans: 49
+  percent: 80
 ---
 
 # Project State
@@ -24,15 +24,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-30)
 
 **Core value:** Show the user's calendar inside Obsidian and let them turn any event into a structured note in one click — reliably, across desktop and mobile.
-**Current focus:** v1.15 milestone audit and archival preparation — Phase 08.1 complete
+**Current focus:** Close DOC-01 audit gaps before v1.15 archival
 
 ## Current Position
 
-Phase: 08.1
+Phase: 08.2
 Plan: 3 of 3 complete
-Status: All phases complete
+Status: Awaiting Phase 08.2 discussion and planning
 Last activity: 2026-10-30 — Phase 08.1 complete
-Progress: [████████████████████] 24/24 plans (100%)
+Progress: [████████████████████] 24/24 plans ([████████░░] 80%)
 
 ## Performance Metrics
 
@@ -108,6 +108,7 @@ No pending Phase 08.1 tasks. Milestone audit and archival remain next.
 ### Roadmap Evolution
 
 - Phase 08.1 inserted after Phase 8: Address tech debt: release prerelease flag, inline styles, CSS cleanup (URGENT)
+- Phase 08.2 inserted after Phase 08.1: Close DOC-01 audit gaps B1/B2: enforce required lint rules and gate release builds before v1.15 archival (URGENT)
 
 ## Deferred Items
 
@@ -119,6 +120,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-30T14:02:16Z
-Stopped at: Phase 08.1 complete — ready for v1.15 milestone audit and archival
-Resume file: None
+Last session: 2026-10-31T06:33:17.517Z
+Stopped at: Phase 08.2 context gathered
+Resume file: .planning/phases/08.2-close-doc-01-gaps-enforce-required-lint-rules-and-gate-relea/08.2-CONTEXT.md
