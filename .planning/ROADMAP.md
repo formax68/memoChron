@@ -250,7 +250,7 @@ Plans:
 **Goal:** Close v1.15 audit blockers B1 and B2 so DOC-01 is genuinely satisfied. Every DOC-01-required violation (any console call outside the debug helper, bare `document` access, warnings, inline rule bypasses) makes `npm run lint` fail, and a failing lint stops the tag-triggered release before build, attestation and publish.
 **Requirements**: TBD
 **Depends on:** Phase 8
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -258,7 +258,7 @@ Plans:
 - [x] 08.2-01-PLAN.md — Lint enforcement (B2): `src/utils/debug.ts` helper + six-site migration, console wrapper override with guidelines link, popout/trash rules at error, unused-directive errors, `--max-warnings=0`, `lint:directives` allow-list guard (DOC-01)
 **Wave 2** *(blocked on Wave 1 completion — its simulation copies and lints Plan 01's files in the same working tree)*
 
-- [ ] 08.2-02-PLAN.md — Release gate (B1): release.yml Install dependencies → Lint → Build plugin, Node 20.x uncached, routing unchanged, local gate simulation (DOC-01)
+- [x] 08.2-02-PLAN.md — Release gate (B1): release.yml Install dependencies → Lint → Build plugin, Node 20.x uncached, routing unchanged, local gate simulation (DOC-01)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

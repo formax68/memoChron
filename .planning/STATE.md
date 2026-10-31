@@ -5,16 +5,16 @@ milestone_name: Directory Compliance (active)
 current_phase: "08.2"
 current_phase_name: "Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)"
 status: executing
-stopped_at: Completed 08.2-01-PLAN.md; ready for 08.2-02
-last_updated: "2026-10-31T09:54:53.765Z"
+stopped_at: Completed 08.2-02-PLAN.md
+last_updated: "2026-10-31T15:16:01.659Z"
 last_activity: 2026-10-31
 last_activity_desc: Phase 08.2 execution started
-state_head: 5f44db4d9a35ed5afb626f6b1072990bf9333d3b
+state_head: 162424342bd98fe82d9112f36b988ce520569b88
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 52
-  completed_plans: 50
+  completed_plans: 51
   percent: 80
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-10-30)
 ## Current Position
 
 Phase: 08.2 (Close DOC-01 gaps: enforce required lint rules and gate release builds (INSERTED)) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-10-31 — Phase 08.2 execution started
 Progress: [████████████████████] 24/24 plans ([████████░░] 80%)
@@ -72,6 +72,7 @@ Progress: [████████████████████] 24/24 p
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 08.2 P01 | 3min | 2 tasks | 5 files |
+| Phase 08.2 P02 | 1min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,7 @@ Recent decisions affecting current work:
 - [Phase 08.1]: User authorized scoped historical checkbox reconciliation only after tooling and existing verification/UAT confirm completion; preserve recorded dates.
 - [Phase 08.2]: Keep core no-console disabled and enforce through the guidelines-linked wrapper; exempt only debug.ts.
 - [Phase 08.2]: Preserve justified sentence-case directives using the exact researched allow-list guard.
+- [Phase 08.2]: Keep install, lint and build as separate consecutive steps with default success gating.
 
 ### Pending Todos
 
@@ -128,6 +130,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-31T09:54:53.524Z
-Stopped at: Completed 08.2-01-PLAN.md; ready for 08.2-02
+Last session: 2026-10-31T15:16:01.406Z
+Stopped at: Completed 08.2-02-PLAN.md
 Resume file: None
