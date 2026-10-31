@@ -256,8 +256,10 @@ Plans:
 **Wave 1**
 
 - [ ] 08.2-01-PLAN.md — Lint enforcement (B2): `src/utils/debug.ts` helper + six-site migration, console wrapper override with guidelines link, popout/trash rules at error, unused-directive errors, `--max-warnings=0`, `lint:directives` allow-list guard (DOC-01)
+**Wave 2** *(blocked on Wave 1 completion — its simulation copies and lints Plan 01's files in the same working tree)*
+
 - [ ] 08.2-02-PLAN.md — Release gate (B1): release.yml Install dependencies → Lint → Build plugin, Node 20.x uncached, routing unchanged, local gate simulation (DOC-01)
 
-**Wave 2** *(blocked on Wave 1 completion)*
+**Wave 3** *(blocked on Wave 2 completion)*
 
 - [ ] 08.2-03-PLAN.md — Integrated B1+B2 proof recorded in VALIDATION, CONVENTIONS/CLAUDE.md policy alignment, DOC-01 reopened and retargeted to Phase 08.2 with 05 reopening addendum (DOC-01)
