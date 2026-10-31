@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { Time } from "ical.js";
+import { Component, Time, TimezoneService } from "ical.js";
 import { errorMessage } from "./errors";
 import { debugWarn, debugError } from "./debug";
 
@@ -188,9 +188,11 @@ export function convertIcalTimeToDate(
   const zone = mappedZone || normalizedTzid;
 
   try {
-    // If tzid is not in our map (custom/unknown), defer to ical.js to respect VTIMEZONE
-    // This allows ical.js to apply any VTIMEZONE rules embedded in the ICS file
-    if (!mappedZone) {
+    // If tzid is not in our map (custom/unknown) and ical.js resolved it from a
+    // registered VTIMEZONE, defer to ical.js so the embedded rules are honored.
+    // An unregistered tzid leaves the time floating, which toJSDate() would read
+    // as local time, so those fall through to Luxon (e.g. IANA ids without a VTIMEZONE).
+    if (!mappedZone && icalTime.zone?.tzid === tzid) {
       try {
         return icalTime.toJSDate();
       } catch {
@@ -283,4 +285,19 @@ export function getMappedTimezone(tzid: string): string {
   if (!tzid) return "UTC";
   const normalizedTzid = normalizeTimezone(tzid);
   return TIMEZONE_MAP[normalizedTzid] || normalizedTzid;
+}
+
+/**
+ * Register every VTIMEZONE in a parsed calendar so ical.js can apply its rules.
+ * Without this, a DTSTART like `TZID=America/Denver` is read as local time.
+ */
+export function registerVTimezones(comp: Component): void {
+  comp.getAllSubcomponents("vtimezone").forEach((tz) => {
+    try {
+      TimezoneService.register(tz);
+    } catch {
+      // Silently ignore: timezone may already be registered, or registration
+      // failed and parsing will fall back to default handling.
+    }
+  });
 }
